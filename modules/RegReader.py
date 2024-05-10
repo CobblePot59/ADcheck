@@ -119,7 +119,9 @@ class RegReader:
                 value = self.__print_all_subkeys_and_entries(dce, f'{subKey}\\', ans2['phkResult'])
                 new_value = []
                 for av in value:
-                    new_value .append({f"{self.__keyName.split('\\')[0].upper()}\\{key.split('\\', 1)[0]}\\{key.split('\\', 1)[1]}": value for key, value in av.items()})
+                    for key, value in av.items():
+                        subkey_strings = "{}\\{}\\{}".format(self.__keyName.split('\\')[0].upper(), key.split('\\', 1)[0], key.split('\\', 1)[1])
+                        new_value.append({subkey_strings: value})
                 return new_value
             else:
                 value = rrp.hBaseRegQueryValue(dce, ans2['phkResult'], Key)

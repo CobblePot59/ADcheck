@@ -7,7 +7,7 @@ Although textual, a simple color scheme is used to navigate through the returned
 
 It is suitable for both pentesters to facilitate research work (hopefully) and administrators concerned about the security of their environment.
 
-At present, this tool has 74 checks and more are to come (see the TODO). The collected information includes :
+At present, this tool has 74 checks and more are to come (see the [![TODO]((#TODO)). The collected information includes :
 - Number of accounts which have never expiring passwords
 - Admin accounts that can be delegated
 - Admin accounts not in Protected Users group

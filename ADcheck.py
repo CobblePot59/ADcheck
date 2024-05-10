@@ -904,7 +904,7 @@ class ADcheck:
         for key, value in reg_items:
             if len(value) > 0:
                 result.append(value[0]['(Default)'])
-        print(f'AMSI installed is : {result or 'Windows Defender'}')
+        print(f"AMSI installed is : {result or 'Windows Defender'}")
 
     @admin_required
     def reg_pwsh_event(self):

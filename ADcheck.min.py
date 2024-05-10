@@ -283,7 +283,7 @@ class ADcheck:
         print(f'Supported encryption by Domain Controllers :\n{json.dumps(result, indent=4)}')
 
     def constrained_delegation(self):
-        result = [f'{computer.samAccountName.value}: {computer['msDS-AllowedToDelegateTo'].value}' for computer in self.computer_entries if hasattr(computer, 'msDS-AllowedToDelegateTo')]
+        result = [f"{computer.samAccountName.value}: {computer['msDS-AllowedToDelegateTo'].value}" for computer in self.computer_entries if hasattr(computer, 'msDS-AllowedToDelegateTo')]
         print_with_color(result, f'Computers with constrained delegation :\n{json.dumps(result, indent=4)}')
 
     def rbac(self):

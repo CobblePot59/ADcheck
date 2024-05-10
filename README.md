@@ -91,8 +91,8 @@ Refer to the help to see the launch options:
 ![alt text](https://raw.githubusercontent.com/CobblePot59/ADcheck/main/pictures/ADcheck_help.png)
 
 # TODO
-registry access rights
-Trusts
-Azure
-Weak certificate cipher
-persistent attack trace(mimikatz, pywhisker, ticket, dsrm, acl)
+- Registry access rights
+- Trusts
+- Azure
+- Weak certificate cipher
+- Persistent attack trace(mimikatz, pywhisker, ticket, dsrm, acl)

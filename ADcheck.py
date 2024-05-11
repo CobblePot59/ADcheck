@@ -10,6 +10,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 import json
 import re
+import dns
 
 def launch_all_methods(obj, is_admin=False, debug=False):
     i = 0
@@ -371,9 +372,13 @@ class ADcheck:
 
     def can_update_dns(self):
         result = False
-        if self.ad_client.add_DNSentry('adcheck', '7.7.7.7'):
-            result = True
-        self.ad_client.del_DNSentry('adcheck')
+        try:
+            if self.ad_client.add_DNSentry('adcheck', '7.7.7.7'):
+                result = True
+            self.ad_client.del_DNSentry('adcheck')
+        except dns.resolver.NoResolverConfiguration:
+            print("Error: No DNS resolver is configured.")
+            return
         print_with_color(result, f'User can create dns record : {result}')
 
     def auth_attributes(self):
@@ -687,7 +692,12 @@ class ADcheck:
         # bloodhound-python -u username -p password -ns dc_ip -d domain -c all
         auth = ADAuthentication(username=username, password=password, domain=domain, auth_method='auto')
         ad = AD(auth=auth, domain=domain, nameserver=dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=secure)
-        ad.dns_resolve(domain=domain)
+        try:
+            ad = AD(auth=auth, domain=domain, nameserver=dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=secure)
+            ad.dns_resolve(domain=domain)
+        except dns.resolver.NoResolverConfiguration:
+            print("Error: No DNS resolver is configured.")
+            return
 
         bloodhound = BloodHound(ad)
         bloodhound.connect()

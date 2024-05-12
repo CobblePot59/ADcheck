@@ -24,11 +24,12 @@ class CustomRemoteOperations(RemoteOperations):
         self.__rrp.bind(rrp.MSRPC_UUID_RRP)
 
 class RegReader:
-    def __init__(self, remoteHost, username, password, domain, keyName, subKey=False):
+    def __init__(self, remoteHost, username, password, domain, nthash, keyName, subKey=False):
         self.__remoteHost = remoteHost
         self.__username = username
         self.__password = password
         self.__domain = domain
+        self.__nthash = nthash
         self.__keyName = keyName
         self.__smbConnection = None
         self.__doKerberos = False
@@ -99,7 +100,7 @@ class RegReader:
 
     def connect(self):
         self.__smbConnection = SMBConnection(self.__remoteHost, self.__remoteHost)
-        self.__smbConnection.login(self.__username, self.__password, self.__domain)
+        self.__smbConnection.login(self.__username, self.__password, self.__domain, nthash=self.__nthash)
         self.__remoteOps  = RemoteOperations(self.__smbConnection, self.__doKerberos)
 
         try:

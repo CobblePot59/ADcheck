@@ -4,11 +4,12 @@ from impacket.smbconnection import SMBConnection
 from impacket.examples.secretsdump import RemoteOperations, SAMHashes, LSASecrets, NTDSHashes
 
 class DumpSecrets:
-    def __init__(self, remoteHost, username, password, domain, options=None):
+    def __init__(self, remoteHost, username, password, domain, nthash, options=None):
         self.__remoteHost = remoteHost
         self.__username = username
         self.__password = password
         self.__domain = domain
+        self.__nthash = nthash
         self.__smbConnection = None
         self.__remoteOps = None
         self.__isRemote = True
@@ -21,7 +22,7 @@ class DumpSecrets:
 
     def connect(self):
         self.__smbConnection = SMBConnection(self.__remoteHost, self.__remoteHost)
-        self.__smbConnection.login(self.__username, self.__password, self.__domain)
+        self.__smbConnection.login(self.__username, self.__password, self.__domain, nthash=self.__nthash)
 
     def dump(self):
         self.connect()

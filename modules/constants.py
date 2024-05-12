@@ -272,6 +272,7 @@ LAPS_PROPERTIES_UUID = {
 }
 
 DELEGATIONS_ACE = {
+    # "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': [], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': []}]"
     "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['User'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['User']}]": "Create, delete and manage user accounts",
     "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['User']}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['User']}]": "Reset user passwords and force password change at next logon",
     "[{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['User']}]": "Read all user information",

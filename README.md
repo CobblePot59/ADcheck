@@ -53,7 +53,7 @@ At present, this tool has 74 checks and more are to come (see the [TODO](#TODO))
   - [x] Get Default password policy
   - [x] Get Group policy folder/file rights
   - [x] Name of Pre-Windows 2000 Compatible Access group members
-  - [x] Get Privilege Rights (SeDebugPrivilege, SeBackupPrivilege, ...)
+  - [x] Get Privilege Rights (`SeDebugPrivilege`, `SeBackupPrivilege`, ...)
   - [x] Get List of users in Privesc group
   - [x] Get Password Settings Object
   - [x] Name of Computers with rbac

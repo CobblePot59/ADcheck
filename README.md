@@ -10,7 +10,7 @@ It is suitable for both pentesters to facilitate research work (hopefully) and a
 At present, this tool has 74 checks and more are to come (see the [TODO](#TODO)). The collected information includes :
 - [x] **Accounts**
   - [x] Admin accounts that can be delegated.
-  - [x] Admin accounts not in "_Protected Users" group.
+  - [x] Admin accounts not in "_Protected Users_" group.
   - [x] Accounts which can use DES authentication.
   - [x] Accounts vulnerable to ASRepRoasting attack.
   - [x] Accounts with `altSecurityIdentities` attributes.

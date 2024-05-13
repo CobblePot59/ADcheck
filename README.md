@@ -1,5 +1,5 @@
 # ADcheck
-Assess the security of your Active Directory with few or all privileges. This tool offers functionalities similar to PingCastle, Oradad, or even PurpleKnight (with some bonuses).
+Assess the security of your Active Directory with few or all privileges. This tool offers functionalities similar to [PingCastle](https://github.com/vletoux/pingcastle), [ORADAD](https://github.com/ANSSI-FR/ORADAD), or even [PurpleKnight](https://www.semperis.com/fr/purple-knight/) (with some bonuses).
 
 ADcheck is developed in pure Python to bypass operating system constraints.
 

@@ -12,14 +12,14 @@ At present, this tool has 74 checks and more are to come (see the [TODO](#TODO))
   - [x] Admin accounts that can be delegated.
   - [x] Admin accounts not in "_Protected Users" group.
   - [x] Accounts which can use DES authentication.
-  - [x] Accounts vulnerable to asreproasting attack.
+  - [x] Accounts vulnerable to ASRepRoasting attack.
   - [x] Accounts with `altSecurityIdentities` attributes.
   - [x] Accounts with `userPassword` attributes.
   - [x] Accounts with `unixUserPassword` attributes.
   - [x] Accounts with `unicodePwd` attributes.
   - [x] Accounts with `msDS-HostServiceAccount` attribute.
   - [x] Accounts with blank password.
-  - [x] Accounts vulnerable to kerberoasting attack.
+  - [x] Accounts vulnerable to KerbeRoasting attack.
   - [x] Locked accounts.
   - [x] Number of accounts which have never expiring passwords.
   - [x] Number of accounts with identical passwords.

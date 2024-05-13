@@ -2,3 +2,4 @@ impacket
 aiowmi
 termcolor
 bloodhound
+ADmanage

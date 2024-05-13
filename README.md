@@ -90,12 +90,14 @@ At present, this tool has 74 checks and more are to come (see the [TODO](#TODO))
   - [x] Verify if The computer was recently backed up
   - [x] Verify if The computer is up to date
 
+## Usage
+
 Refer to the help to see the launch options:
 ![alt text](https://raw.githubusercontent.com/CobblePot59/ADcheck/main/pictures/ADcheck_help.png)
 
 # TODO
-- Registry access rights
-- Trusts
-- Azure
-- Weak certificate cipher
-- Persistent attack trace(mimikatz, pywhisker, ticket, dsrm, acl)
+- [ ] Registry access rights
+- [ ] Trusts
+- [ ] Azure (Entra ID)
+- [ ] Weak certificate cipher
+- [ ] Persistent attack trace (mimikatz, pywhisker, ticket, dsrm, acl)

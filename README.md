@@ -8,39 +8,44 @@ Although textual, a simple color scheme is used to navigate through the returned
 It is suitable for both pentesters to facilitate research work (hopefully) and administrators concerned about the security of their environment.
 
 At present, this tool has 74 checks and more are to come (see the [TODO](#TODO)). The collected information includes :
-- [x] Number of accounts which have never expiring passwords
-- [x] Admin accounts that can be delegated
-- [x] Admin accounts not in Protected Users group
-- [x] Number of accounts in Schema Admins group
-- [x] Accounts vulnerable to asreproasting attack
+- [x] **Accounts**
+  - [x] Admin accounts that can be delegated.
+  - [x] Admin accounts not in "_Protected Users" group.
+  - [x] Accounts which can use DES authentication.
+  - [x] Accounts vulnerable to asreproasting attack.
+  - [x] Accounts with `altSecurityIdentities` attributes.
+  - [x] Accounts with `userPassword` attributes.
+  - [x] Accounts with `unixUserPassword` attributes.
+  - [x] Accounts with `unicodePwd` attributes.
+  - [x] Accounts with `msDS-HostServiceAccount` attribute.
+  - [x] Accounts with blank password.
+  - [x] Accounts vulnerable to kerberoasting attack.
+  - [x] Locked accounts.
+  - [x] Number of accounts which have never expiring passwords.
+  - [x] Number of accounts with identical passwords.
+  - [x] Number of inactive accounts.
+  - [x] Number of accounts in "_Schema Admins_" group.
+  - [x] Accounts which have reversible passwords.
+  - [x] Accounts vulnerable to timeroasting attack.
+  - [x] Accounts that had admin rights in the past.
+
 - [x] Get Audit Policy
-- [x] Accounts with altSecurityIdentities attributes
-- [x] Accounts with userPassword attributes
-- [x] Accounts with unixUserPassword attributes
-- [x] Accounts with unicodePwd attributes
-- [x] Accounts with msDS-HostServiceAccount attribute
 - [x] Computers with bitlocker keys
-- [x] Accounts with blank password
 - [x] Verify if Non-admin users can add up to 10 computer(s) to a domain
 - [x] Verify if User can create dns record
 - [x] Computers with constrained delegation
 - [x] Get Control delegations by container
-- [x] Accounts which can use des authentication
 - [x] Get Domain Controllers
 - [x] Verify if Force logoff when logon hours expire
 - [x] Get Functional level of domain
 - [x] Get Group Managed Service Accounts
 - [x] Get Group Policy Object by Organizational Unit
 - [x] Name of Group Policy containing a password
-- [x] Number of accounts with identical password
-- [x] Number of inactive accounts
-- [x] Accounts vulnerable to kerberoasting attack
 - [x] Get Kerberos config
 - [x] Get Supported Kerberos encryption algorithms
 - [x] Verify if Kerberos password last changed < 40 days
 - [x] Verify if LAPS is installed
 - [x] Verify if LDAP signature was required on target
-- [x] Locked accounts
 - [x] Verify if The native administrator account has been used recently
 - [x] Accounts with password not required
 - [x] Get Default password policy
@@ -75,15 +80,12 @@ At present, this tool has 74 checks and more are to come (see the [TODO](#TODO))
 - [x] Verify if WPAD is disabled
 - [x] Verify if Windows Script Host is disabled
 - [x] Verify if WSUS server is not used
-- [x] Accounts which have reversible passwords
 - [x] Get Authentication policy silos
 - [x] Verify if SMB signing is required
 - [x] Verify if Spooler service is enabled on remote target
 - [x] Get Supported encryption by Domain Controllers
-- [x] Accounts vulnerable to timeroasting attack
 - [x] Name of Trust accounts for the delegation
 - [x] Get Users with description
-- [x] Accounts that were an admin
 - [x] Verify if The computer was recently backed up
 - [x] Verify if The computer is up to date
 

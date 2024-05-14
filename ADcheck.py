@@ -539,9 +539,8 @@ class ADcheck:
             result = {}
             result.setdefault(container['distinguishedName'], [])
             for user, permissions in user_permissions.items():
-                permission_strings = [f"{user} can {DELEGATIONS_ACE.get(str(permissions), [DELEGATIONS_ACE.get(f'[{permission}]') for permission in permissions])}"]
-                # permission_strings = [f"{user} can {str(permissions)}"]
-                result[container['distinguishedName']] = permission_strings
+                permissions_translation = [{'user': user, 'permissions': DELEGATIONS_ACE.get(str(permissions), [str(permission) for permission in permissions])}]
+                result[container['distinguishedName']] = permissions_translation
             print(f'{json.dumps(result, indent=4)}\n')
 
     def krbtgt_encryption(self):

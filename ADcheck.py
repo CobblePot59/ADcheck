@@ -613,15 +613,19 @@ class ADcheck:
     def audit_policy(self):
         from csv import DictReader
 
-        tree_id = self.smb_client.connectTree('C$')
-        file = self.smb_client.openFile(tree_id, 'Windows\\System32\\GroupPolicy\\Machine\\Microsoft\\Windows NT\\Audit\\audit.csv')
-        file_content = self.smb_client.readFile(tree_id, file)
-        self.smb_client.disconnectTree(tree_id)
+        try:
+            tree_id = self.smb_client.connectTree('C$')
+            file = self.smb_client.openFile(tree_id, 'Windows\\System32\\GroupPolicy\\Machine\\Microsoft\\Windows NT\\Audit\\audit.csv')
+            file_content = self.smb_client.readFile(tree_id, file)
+            self.smb_client.disconnectTree(tree_id)
 
-        
-        csv_reader = DictReader(file_content.decode('utf-8').splitlines())
-        result = [{'Subcategories': row['Subcategory'], 'Inclusion Settings': row['Inclusion Setting']} for row in csv_reader]
-        print(f'Audit policy configured : \n{json.dumps(result, indent=4)}')
+            
+            csv_reader = DictReader(file_content.decode('utf-8').splitlines())
+            result = [{'Subcategories': row['Subcategory'], 'Inclusion Settings': row['Inclusion Setting']} for row in csv_reader]
+            print(f'Audit policy configured : \n{json.dumps(result, indent=4)}')
+        except SessionError as e:
+            if 'STATUS_OBJECT_PATH_NOT_FOUND' in str(e):
+                print(colored('Audit policy not configured', 'red'))
         
     def priv_rights(self):
         gpo_content = []

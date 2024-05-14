@@ -568,7 +568,7 @@ class ADcheck:
         print_with_color(result, f'Group Policy containing a password : {result}')
 
     def timeroast(self):
-        computers_noLogonCount = [computer['sAMAccountName'] for computer in self.ad_client.get_ADobjects(custom_filter='(&(userAccountControl=4128)(logonCount=0))')]
+        computers_noLogonCount = [computer['sAMAccountName'] for computer in self.ad_client.get_ADobjects(custom_filter='(&(userAccountControl=4128)(logonCount=0))') or []]
         result = []
         for computer in computers_noLogonCount:
             try:
@@ -601,11 +601,13 @@ class ADcheck:
     @admin_required
     def wmi_last_backup(self):
         events = self.wmi_client("SELECT * FROM Win32_NTLogEvent WHERE LogFile='Directory Service' AND EventCode=1917")
-        last_backup = max(events, key=lambda x: x['TimeWritten'])['TimeWritten']
-        ndays = (datetime.now(timezone.utc) - last_backup).days
-
-        result = ndays < 1
-        print_with_color(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
+        if events:
+            last_backup = max(events, key=lambda x: x['TimeWritten'])['TimeWritten']
+            ndays = (datetime.now(timezone.utc) - last_backup).days
+            result = ndays < 1
+            print_with_color(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
+        else:
+            print(colored('The computer was never backed up', 'red'))
 
     @admin_required
     def audit_policy(self):
@@ -944,7 +946,9 @@ if __name__ == '__main__':
     domain = args.domain
     username = args.username
     hashes = args.hashes
-    nthash = hashes.split(':')[1]
+    nthash = ''
+    if hashes:
+        nthash = hashes.split(':')[1]
     password = args.password or hashes or getpass('Password :')
     dc_ip = args.dc_ip
     base_dn = args.base_dn or f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"

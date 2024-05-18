@@ -5,9 +5,6 @@ ADcheck is developed in pure Python to bypass operating system constraints.
 
 Although textual, a simple color scheme is used to navigate through the returned information (🔴 red for really bad, 🟢 green for okay, ⚪ white for purely informative). A sample report is available [here](https://html-preview.github.io/?url=https://raw.githubusercontent.com/CobblePot59/ADcheck/main/report.html).
 
-
-It is suitable for both pentesters to facilitate research work (hopefully) and administrators concerned about the security of their environment.
-
 > [!NOTE]
 > At present, this tool has 74 checks and more are to come (see the [TODO](#TODO)).
 

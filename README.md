@@ -3,7 +3,7 @@ Assess the security of your Active Directory with few or all privileges. This to
 
 ADcheck is developed in pure Python to bypass operating system constraints.
 
-Although textual, a simple color scheme is used to navigate through the returned information (🔴 red for really bad, 🟢 green for okay, white for purely informative).
+Although textual, a simple color scheme is used to navigate through the returned information (🔴 red for really bad, 🟢 green for okay, ⚪ white for purely informative).
 
 
 It is suitable for both pentesters to facilitate research work (hopefully) and administrators concerned about the security of their environment.

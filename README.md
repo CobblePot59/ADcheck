@@ -95,8 +95,43 @@ It is suitable for both pentesters to facilitate research work (hopefully) and a
 
 ## Usage
 
-Refer to the help to see the launch options:
+> [!WARNING]  
+> Currently, this tool is more geared towards penetration testers than auditors. If you intend to use it on Windows, it's necessary to exclude the project from the antivirus or Endpoint Detection and Response solution, as it utilizes Impacket, which is detected by these systems.
+
+1. Clone the ADcheck repository from GitHub :
+```
+git clone https://github.com/CobblePot59/ADcheck.git
+```
+
+2. Navigate to the ADcheck directory :
+```
+cd ADcheck
+```
+
+3. Create a virtual environment :
+```
+python -m venv ADcheck
+```
+
+4. Activate the virtual environment (on Windows) :
+```
+.\ADcheck\Scripts\activate
+```
+(Note: On Linux/macOS, the command is **source ADcheck/bin/activate**)
+
+5. Install dependencies from the requirements.txt file :
+```
+python -m pip install -r .\requirements.txt
+```
+
+6. Run the ADcheck.py script, specifying the necessary parameters :
+```
+python ADcheck.py -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
+```
+
+Refer to the help to view additional launch options :
 ![alt text](https://raw.githubusercontent.com/CobblePot59/ADcheck/main/pictures/ADcheck_help.png)
+
 
 # TODO
 - [ ] Registry access rights

@@ -15,7 +15,8 @@ import dns.resolver
 def launch_all_methods(obj, is_admin=False, debug=False):
     i = 0
     getattr(obj, 'get_policies')()
-    getattr(obj, 'bloodhound_file')()
+    if get_bhf:
+        getattr(obj, 'bloodhound_file')()
 
     excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'ntds_dump', 'get_policies', 'bloodhound_file']
     if hashes:
@@ -50,6 +51,7 @@ def parse_arguments():
     parser.add_argument('--dc-ip', required=True, help='IP address of the Domain Controller.')
     parser.add_argument('-b', '--base-dn', help='Base Distinguished Name (DN) for LDAP queries.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
+    parser.add_argument('-bhf', '--bloodhound-file', action='store_true', help='Generate json data to import in BloodHound.')
     args = parser.parse_args()
     return args
 
@@ -956,6 +958,7 @@ if __name__ == '__main__':
     dc_ip = args.dc_ip
     base_dn = args.base_dn or f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"
     secure = args.secure
+    get_bhf = args.bloodhound_file
 
     if not password:
         from getpass import getpass
@@ -963,12 +966,17 @@ if __name__ == '__main__':
         password = getpass("Password:")
 
     adcheck = ADcheck()
-    adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)            
+    adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)
 
     is_admin = False
-    for admin_group in ["Administrators", "Domain Admins", "Entreprise Admins"]:
-        for group in adcheck.ad_client.get_memberOf(username):
-            if admin_group in group:
+    admin_groups = ["Administrators", "Domain Admins", "Entreprise Admins"]
+    if not adcheck.ad_client.get_memberOf(username):
+        user_groups = ["Domain Users"]
+    else:
+        user_groups = [adcheck.ad_client.get_memberOf(username)]
+    for admin_group in admin_groups:
+        for user_group in user_groups:
+            if re.search(rf"CN={admin_group},", user_group):
                 is_admin = True
                 break
 

@@ -970,9 +970,10 @@ if __name__ == '__main__':
 
     is_admin = False
     admin_groups = ["Administrators", "Domain Admins", "Entreprise Admins"]
-    if not adcheck.ad_client.get_memberOf(username):
+    user_groups = adcheck.ad_client.get_memberOf(username)
+    if not user_groups:
         user_groups = ["Domain Users"]
-    else:
+    elif len(user_groups) == 1:
         user_groups = [adcheck.ad_client.get_memberOf(username)]
     for admin_group in admin_groups:
         for user_group in user_groups:

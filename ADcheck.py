@@ -973,8 +973,8 @@ if __name__ == '__main__':
     user_groups = adcheck.ad_client.get_memberOf(username)
     if not user_groups:
         user_groups = ["Domain Users"]
-    elif len(user_groups) == 1:
-        user_groups = [adcheck.ad_client.get_memberOf(username)]
+    elif isinstance(user_groups, str):
+        user_groups = [user_groups]
     for admin_group in admin_groups:
         for user_group in user_groups:
             if re.search(rf"CN={admin_group},", user_group):

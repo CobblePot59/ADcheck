@@ -127,7 +127,7 @@ python -m pip install -r .\requirements.txt
 ```
 python ADcheck.py -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```
-![ADcheck.gif](./pictures/ADcheck.gif)
+![ADcheck.gif](https://github.com/CobblePot59/ADcheck/blob/main/pictures/ADcheck.gif)
 
 # TODO
 - [ ] Registry access rights

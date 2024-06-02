@@ -289,20 +289,6 @@ DELEGATIONS_ACE = {
 }
 
 # https://learn.microsoft.com/fr-fr/windows/win32/sysinfo/registry-key-security-and-access-rights
-# REGISTRY_ACCESS_RIGHT = {
-#     1: 'KEY_QUERY_VALUE',
-#     2: 'KEY_SET_VALUE',
-#     4: 'KEY_CREATE_SUB_KEY',
-#     8: 'KEY_ENUMERATE_SUB_KEYS',
-#     16: 'KEY_NOTIFY',
-#     32: 'KEY_CREATE_LINK',
-#     256: 'KEY_WOW64_64KEY',
-#     512: 'KEY_WOW64_32KEY',
-#     131078: 'KEY_WRITE',
-#     131097: 'KEY_READ',
-#     983103: 'KEY_ALL_ACCESS'
-# }
-
 REGISTRY_ACCESS_RIGHT = {
     1: 'KEY_QUERY_VALUE',
     2: 'KEY_SET_VALUE',

@@ -35,12 +35,19 @@ def launch_all_methods(obj, is_admin=False, debug=False):
                 print(f'{i} - ', end='')
                 getattr(obj, method_name)()
 
-def print_with_color(result, message, reverse=False):
-    if (result and not reverse) or (not result and reverse):
-        color = 'red' 
+def pprint(result, message, reverse=False):
+    color = 'black' if result == 'INFO' else ('red' if (result and not reverse) or (not result and reverse) else 'green')
+    html = f'<span style="color:{color};">{message}</span>\n'
+    if result == 'INFO':
+        print(message)
+        if output:
+            with open("report.html", "a") as report:
+                report.write(html)
     else:
-        color = 'green'
-    print(colored(message, color))
+        print(colored(message, color))
+        if output:
+            with open("report.html", "a") as report:
+                report.write(html)
 
 def parse_arguments():
     parser = ArgumentParser(description="Process some arguments")
@@ -52,6 +59,7 @@ def parse_arguments():
     parser.add_argument('-b', '--base-dn', help='Base Distinguished Name (DN) for LDAP queries.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
     parser.add_argument('-bhf', '--bloodhound-file', action='store_true', help='Generate json data to import in BloodHound.')
+    parser.add_argument('-o', '--output', action='store_true', help='Generate HTML report file.')
     args = parser.parse_args()
     return args
 
@@ -99,11 +107,11 @@ class ADcheck:
         if _return:
             return result 
         else:
-            print(f'Domain Controllers: {result2}')
+            pprint(result, f'Domain Controllers: {result2}')
 
     def can_add_computer(self):
         result = self.root_entry['ms-DS-MachineAccountQuota']
-        print_with_color(result, f'Non-admin users can add up to {result} computer(s) to a domain')
+        pprint(result, f'Non-admin users can add up to {result} computer(s) to a domain')
 
     def accounts_never_expire(self):
         password_unexpire = []
@@ -114,7 +122,7 @@ class ADcheck:
         result = False
         if len(password_unexpire) > 50:
             result = True
-        print_with_color(result, f'Number of accounts which have never expiring passwords : {len(password_unexpire)}')
+        pprint(result, f'Number of accounts which have never expiring passwords : {len(password_unexpire)}')
 
     def native_admin_logon(self):
         admin_lastLogon = self.ad_client.get_ADobject('Administrator')['lastLogon']
@@ -124,18 +132,18 @@ class ADcheck:
         result = False
         if ndays < 30:
             result = True
-        print_with_color(result, f'The native administrator account has been used recently : {ndays} day(s) ago')
+        pprint(result, f'The native administrator account has been used recently : {ndays} day(s) ago')
 
     def admin_can_be_delegated(self):
         result = []
         for user in self.user_entries:
             if 'adminCount' in user and user['cn'] != 'krbtgt' and 'NOT_DELEGATED' not in uac_details(user['userAccountControl']):
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Admin accounts that can be delegated : {result}')
+        pprint(result, f'Admin accounts that can be delegated : {result}')
 
     def admins_schema(self):
         result = self.ad_client.get_member('Schema Admins')
-        print_with_color(result, f'Accounts in Schema Admins group : {result}')
+        pprint(result, f'Accounts in Schema Admins group : {result}')
 
     def admin_not_protected(self):
         result = []
@@ -149,24 +157,24 @@ class ADcheck:
                         break
                 if not is_protected_user:
                     result.append(user['sAMAccountName'])
-        print_with_color(result, f'Admin accounts not in Protected Users group : {result}')
+        pprint(result, f'Admin accounts not in Protected Users group : {result}')
 
     def ldap_signing(self):
         from ldap3.core.exceptions import LDAPBindError
 
         try:
             ADclient(domain=domain, username=username, password=password, hashes=hashes, dc_ip=dc_ip, base_dn=base_dn, secure=False)
-            print(colored(f'LDAP signature was required on target : False', 'red'))
+            pprint(True, f'LDAP signature was required on target : False')
         except LDAPBindError as e:
             if 'strongerAuthRequired:' in str(e):
-                print(colored(f'LDAP signature was required on target : True', 'green'))
+                pprint(False, f'LDAP signature was required on target : True')
 
     def pre2000_group(self):
         members = self.ad_client.get_member("Pre-Windows 2000 Compatible Access")
         result = members
         if 'S-1-5-11' in members:
             result = 'Authenticated Users'
-        print_with_color(result, f"Pre-Windows 2000 Compatible Access group members are : {result}")
+        pprint(result, f"Pre-Windows 2000 Compatible Access group members are : {result}")
 
     def privesc_group(self):
         from modules.constants import PRIVESC_GROUP
@@ -181,7 +189,7 @@ class ADcheck:
                     result[group] = ''.join(self.ad_client.get_member(group))
             else:
                 result[group] = []
-        print(f'Privesc group :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Privesc group :\n{json.dumps(result, indent=4)}')
 
     def krbtgt_password_age(self):
         krbtgt_pwdLastSet = self.ad_client.get_ADobject('krbtgt')['pwdLastSet']
@@ -191,7 +199,7 @@ class ADcheck:
         result = False
         if ndays > 40:
             result = True
-        print_with_color(result, f'Kerberos password last changed : {ndays} day(s) ago')
+        pprint(result, f'Kerberos password last changed : {ndays} day(s) ago')
 
     def spooler(self):
         from impacket.dcerpc.v5 import transport, rprn
@@ -203,7 +211,7 @@ class ADcheck:
         try:
             dce.connect()
             dce.bind(rprn.MSRPC_UUID_RPRN)
-            print(colored('Spooler service is enabled on remote target : True', 'red'))
+            pprint(True, 'Spooler service is enabled on remote target : True')
         except Exception as e:
             if 'STATUS_ACCESS_DENIED' in str(e):
                 message = 'Access denied'
@@ -211,14 +219,14 @@ class ADcheck:
                 message = 'Spooler service is enabled on remote target: False'
             else:
                 message = f'Unhandled exception occurred: {e}'
-            print(colored(message, 'green'))
+            pprint(False, message)
 
     def reversible_password(self):
         result = []
         for user in self.user_entries:
             if 'ENCRYPTED_TEXT_PASSWORD_ALLOWED' in uac_details(user['userAccountControl']):
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts which have reversible passwords : {result}')
+        pprint(result, f'Accounts which have reversible passwords : {result}')
 
     def inactive_accounts(self):
         result = []
@@ -231,7 +239,7 @@ class ADcheck:
             ndays = (datetime.now().date() - user_lastLogon_date).days
             if ndays >= 90:
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Number of inactive accounts: {len(result)}')
+        pprint(result, f'Number of inactive accounts: {len(result)}')
 
     def locked_accounts(self):
         naccounts = []
@@ -241,28 +249,28 @@ class ADcheck:
         result = False
         if len(naccounts) > 5:
             result = True
-        print_with_color(result, f'Locked accounts : {naccounts}')
+        pprint(result, f'Locked accounts : {naccounts}')
 
     def des_authentication(self):
         result = []
         for user in self.user_entries:
             if 'USE_DES_KEY_ONLY' in uac_details(user['userAccountControl']):
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts which can use des authentication : {result}')
+        pprint(result, f'Accounts which can use des authentication : {result}')
 
     def asreproast(self):
         result = []
         for user in self.user_entries:
             if 'DONT_REQ_PREAUTH' in uac_details(user['userAccountControl']):
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts vulnerable to asreproasting attack : {result}')
+        pprint(result, f'Accounts vulnerable to asreproasting attack : {result}')
 
     def kerberoast(self):
         result = []
         for user in self.user_entries:
             if 'servicePrincipalName' in user and user['cn'] != 'krbtgt':
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts vulnerable to kerberoasting attack : {result}')
+        pprint(result, f'Accounts vulnerable to kerberoasting attack : {result}')
 
     def trusted_for_delegation(self):
         users = []
@@ -276,14 +284,15 @@ class ADcheck:
                 computers.append(computer['sAMAccountName'])
 
         result = users + computers
-        print_with_color(result, f'Trust accounts for the delegation : {result}')
+        pprint(result, f'Trust accounts for the delegation : {result}')
 
     def password_not_required(self):
         result = []
         for user in self.user_entries:
             if 'PASSWD_NOTREQD' in uac_details(user['userAccountControl']):
-                result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts with password not required : {result}')
+                if user['sAMAccountName'] != 'Guest':
+                    result.append(user['sAMAccountName'])
+        pprint(result, f'Accounts with password not required : {result}')
 
     @admin_required
     def ntds_dump(self):
@@ -307,7 +316,7 @@ class ADcheck:
         for cpt in hash_counts.values():
             if cpt > 1:
                 result += 1
-        print_with_color(result, f'Number of accounts with identical password : {result}')
+        pprint(result, f'Number of accounts with identical password : {result}')
 
     @admin_required
     def blank_password(self):
@@ -318,14 +327,14 @@ class ADcheck:
 
             if  _hash == '31d6cfe0d16ae931b73c59d7e0c089c0' and  user != 'Guest':
                 result.append(user)
-        print_with_color(result, f'Accounts with blank password : {result}')
+        pprint(result, f'Accounts with blank password : {result}')
 
     def was_admin(self):
         result = []
         for user in self.user_entries:
             if 'adminCount' in user and user['cn'] != 'krbtgt' and user['cn'] != 'Administrator':
                 result.append(user['sAMAccountName'])
-        print_with_color(result, f'Accounts that were an admin : {result}')
+        pprint(result, f'Accounts that were an admin : {result}')
 
     def gpo_by_ou(self):
         policies = [{'name': policy['name'], 'displayName': policy['displayName']} for policy in self.policies_entries]
@@ -343,7 +352,7 @@ class ADcheck:
                     if policy['name'] == f'{{{name}}}':
                         group_result['gpLink'].append({'name': policy['name'], 'displayName': policy['displayName']})
             result.append(group_result)
-        print(f'Group Policy Object by Organizational Unit :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Group Policy Object by Organizational Unit :\n{json.dumps(result, indent=4)}')
 
     def get_policies(self):
         from modules.GPOBrowser import smb_download
@@ -354,7 +363,7 @@ class ADcheck:
         result = False
         if self.smb_client.isSigningRequired():
             result = True
-        print_with_color(result, f'SMB signing is required : {result}', reverse=True)
+        pprint(result, f'SMB signing is required : {result}', reverse=True)
 
     def password_policy(self):
         from modules.constants import PWD_PROPERTIES
@@ -368,19 +377,19 @@ class ADcheck:
                     'pwdHistoryLength': self.root_entry['pwdHistoryLength'],
                     'pwdProperties': PWD_PROPERTIES.get(int(self.root_entry['pwdProperties']))
                 }
-        print(f'Default password policy :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Default password policy :\n{json.dumps(result, indent=4)}')
 
     def functional_level(self):
         from modules.constants import FOREST_LEVELS
 
         result = FOREST_LEVELS.get(int(self.root_entry['msDS-Behavior-Version']))
-        print(f'Functional level of domain is : {result}')
+        pprint('INFO', f'Functional level of domain is : {result}')
 
     def force_logoff(self):
         result = False
         if self.root_entry['forceLogoff'] == 0:
             result = True
-        print_with_color(result, f'Force logoff when logon hours expire : {result}', reverse=True)
+        pprint(result, f'Force logoff when logon hours expire : {result}', reverse=True)
 
     def can_update_dns(self):
         result = False
@@ -389,9 +398,9 @@ class ADcheck:
                 result = True
             self.ad_client.del_DNSentry('adcheck')
         except dns.resolver.NoResolverConfiguration:
-            print("Error: No DNS resolver is configured.")
+            pprint("Error: No DNS resolver is configured.")
             return
-        print_with_color(result, f'User can create dns record : {result}')
+        pprint(result, f'User can create dns record : {result}')
 
     def auth_attributes(self):
         attributes = ['altSecurityIdentities', 'userPassword', 'unixUserPassword', 'unicodePwd', 'msDS-HostServiceAccount']
@@ -402,20 +411,20 @@ class ADcheck:
                 if attribute in user:
                     users_attribute[attribute].append(user['sAMAccountName'])
         for attribute, result in users_attribute.items():
-            print_with_color(result, f'Accounts with {attribute} attributes: {result}')
+            pprint(result, f'Accounts with {attribute} attributes: {result}')
     
     @admin_required
     def laps(self):
         try:
             self.smb_client.listPath('C$', 'Program Files\\LAPS\\AdmPwd.Utils.dll')
-            print(colored(f'LAPS legacy is installed : True', 'green'))
+            pprint(False, f'LAPS legacy is installed : True')
         except Exception as e:
             result = False
             for computer in self.computer_entries:
                 if 'msLAPS-PasswordExpirationTime' in computer:
                     result = True
                     break
-            print_with_color(result, f'LAPS is installed : {result}', reverse=True)
+            pprint(result, f'LAPS is installed : {result}', reverse=True)
 
     def pso(self):        
         pso = self.ad_client.get_ADobjects(custom_filter='(objectClass=msDS-PasswordSettings)')
@@ -440,25 +449,25 @@ class ADcheck:
                         }
                     }
                 )
-        print(f'Password Settings Object :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Password Settings Object :\n{json.dumps(result, indent=4)}')
 
     def supported_encryption(self):
         result = [f"{dc['sAMAccountName']}: [{SUPPORTED_ENCRYPTION.get(int(dc['msDS-SupportedEncryptionTypes']))}]" for dc in self.domain_controlers(_return=True)]
-        print(f'Supported encryption by Domain Controllers :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Supported encryption by Domain Controllers :\n{json.dumps(result, indent=4)}')
 
     def constrained_delegation(self):
         result = []
         for computer in self.computer_entries:
             if 'msDS-AllowedToDelegateTo' in computer:
                 result.append(f"{computer['sAMAccountName']}: {computer['msDS-AllowedToDelegateTo']}")
-        print_with_color(result, f'Computers with constrained delegation :\n{json.dumps(result, indent=4)}')
+        pprint(result, f'Computers with constrained delegation :\n{json.dumps(result, indent=4)}')
 
     def rbac(self):
         result = []
         for computer in self.computer_entries:
             if 'msDS-AllowedToActOnBehalfOfOtherIdentity' in computer:
                 result.append(computer['sAMAccountName'])
-        print_with_color(result, f'Computers with rbac :{result}')
+        pprint(result, f'Computers with rbac :{result}')
 
     def gMSA(self):
         gMSAs = self.ad_client.get_ADobjects(custom_filter='(objectClass=msDS-GroupManagedServiceAccount)')
@@ -467,7 +476,7 @@ class ADcheck:
         if gMSAs:
              for gMSA in gMSAs:
                 result.append({'dn': gMSA['distinguishedName'], 'msDS-HostServiceAccountBL': gMSA['msDS-HostServiceAccountBL'], 'msDS-ManagedPasswordInterval': gMSA['msDS-ManagedPasswordInterval']})
-        print(f'Group Managed Service Accounts :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Group Managed Service Accounts :\n{json.dumps(result, indent=4)}')
 
     def silos(self):
         authn_container = self.ad_client.get_ADobjects(custom_base_dn=f'CN=AuthN Policy Configuration,CN=Services,CN=Configuration,{base_dn}', custom_filter='(objectClass=*)')
@@ -508,15 +517,15 @@ class ADcheck:
                     }
                 }   
             )
-        print(f'Authentication policy silos :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Authentication policy silos :\n{json.dumps(result, indent=4)}')
 
     def recycle_bin(self):
         result = True if 'msDS-EnabledFeatureBL' in self.ad_client.get_ADobjects(custom_base_dn=f'CN=Recycle Bin Feature,CN=Optional Features,CN=Directory Service,CN=Windows NT,CN=Services,CN=Configuration,{base_dn}', custom_filter='(objectClass=*)')[0] else False
-        print_with_color(result, f'Recycle Bin is enabled : {result}', reverse=True)
+        pprint(result, f'Recycle Bin is enabled : {result}', reverse=True)
 
     @admin_required
     def control_delegations(self):
-        print('Control delegations :')
+        pprint('INFO', 'Control delegations :')
         ous_object = self.ad_client.get_ADobjects(custom_filter='(objectClass=organizationalUnit)', custom_attributes=['distinguishedName', 'nTSecurityDescriptor'])
         containers_name = [f'CN=Computers,{base_dn}', f'CN=ForeignSecurityPrincipals,{base_dn}', f'CN=Keys,{base_dn}', f'CN=Managed Service Accounts,{base_dn}', f'CN=Program Data,{base_dn}', f'CN=Users,{base_dn}']
         containers_object = [self.ad_client.get_ADobjects(custom_base_dn=container,custom_filter='(objectClass=container)', custom_attributes=['distinguishedName', 'nTSecurityDescriptor'])[0] for container in containers_name]
@@ -543,11 +552,11 @@ class ADcheck:
             for user, permissions in user_permissions.items():
                 permissions_translation = [{'user': user, 'permissions': DELEGATIONS_ACE.get(str(permissions), [str(permission) for permission in permissions])}]
                 result[container['distinguishedName']] = permissions_translation
-            print(f'{json.dumps(result, indent=4)}\n')
+            pprint('INFO', f'{json.dumps(result, indent=4)}\n')
 
     def krbtgt_encryption(self):
         result = SUPPORTED_ENCRYPTION.get(int(self.ad_client.get_ADobject('krbtgt')['msDS-SupportedEncryptionTypes']))
-        print(f'Supported Kerberos encryption algorithms : {result}')
+        pprint('INFO', f'Supported Kerberos encryption algorithms : {result}')
 
     def bitlocker(self):
         recovery_information = self.ad_client.get_ADobjects(custom_filter='(objectClass=msFVE-RecoveryInformation)')
@@ -555,7 +564,7 @@ class ADcheck:
         if recovery_information:
             for computer in recovery_information:
                 result.append(str(computer['distinguishedName']).split(','))
-        print(f'Computers with bitlocker keys : {result}')
+        pprint('INFO', f'Computers with bitlocker keys : {result}')
 
     def gpp_password(self):
         result = []
@@ -566,7 +575,7 @@ class ADcheck:
                     for policy in self.policies_entries:
                         if entry == policy['cn']:
                             result.append(policy['displayName'])
-        print_with_color(result, f'Group Policy containing a password : {result}')
+        pprint(result, f'Group Policy containing a password : {result}')
 
     def timeroast(self):
         computers_noLogonCount = [computer['sAMAccountName'] for computer in self.ad_client.get_ADobjects(custom_filter='(&(userAccountControl=4128)(logonCount=0))') or []]
@@ -577,7 +586,7 @@ class ADcheck:
             except SessionError as e:
                 if 'STATUS_NOLOGON_WORKSTATION_TRUST_ACCOUNT' in str(e):
                     result.append(computer)
-        print_with_color(result, f'Accounts vulnerable to timeroasting attack : {result}')
+        pprint(result, f'Accounts vulnerable to timeroasting attack : {result}')
 
     def kerberos_hardened(self):
         result = {}
@@ -586,7 +595,7 @@ class ADcheck:
                 match = re.match(r"(MaxTicketAge|MaxRenewAge|MaxServiceAge|MaxClockSkew|TicketValidateClient)\s*=\s*(\d+)", line)
                 if match:
                     result[match.group(1)] = match.group(2)
-        print(f'Kerberos config :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Kerberos config :\n{json.dumps(result, indent=4)}')
 
     @admin_required
     def wmi_last_update(self):
@@ -597,7 +606,7 @@ class ADcheck:
         ndays = (datetime.now() - last_update_date).days
 
         result = ndays < 30
-        print_with_color(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
+        pprint(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
 
     @admin_required
     def wmi_last_backup(self):
@@ -606,9 +615,9 @@ class ADcheck:
             last_backup = max(events, key=lambda x: x['TimeWritten'])['TimeWritten']
             ndays = (datetime.now(timezone.utc) - last_backup).days
             result = ndays < 1
-            print_with_color(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
+            pprint(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
         else:
-            print(colored('The computer was never backed up', 'red'))
+            pprint(True, 'The computer was never backed up')
 
     @admin_required
     def audit_policy(self):
@@ -623,16 +632,17 @@ class ADcheck:
             
             csv_reader = DictReader(file_content.decode('utf-8').splitlines())
             result = [{'Subcategories': row['Subcategory'], 'Inclusion Settings': row['Inclusion Setting']} for row in csv_reader]
-            print(f'Audit policy configured : \n{json.dumps(result, indent=4)}')
+            pprint('INFO', f'Audit policy configured : \n{json.dumps(result, indent=4)}')
         except SessionError as e:
             if 'STATUS_OBJECT_PATH_NOT_FOUND' in str(e):
-                print(colored('Audit policy not configured', 'red'))
+                pprint(True, 'Audit policy not configured')
         
     def priv_rights(self):
         gpo_content = []
         for file_path in Path('GPOS').rglob('*.inf'):
-            file_content = open(file_path, encoding='utf-16').read()
-            match = re.search(r'\[Privilege Rights\](.*?)\[(.*?)\]', file_content, re.DOTALL)
+            with open(file_path, encoding='utf-16') as file:
+                file_content = file.read()
+            match = re.search(r'\[Privilege Rights\](.*?)(\[\w+|\Z)', file_content, re.DOTALL)
             if match:
                 content = match.group(1).strip()
                 gpo_content.append(content)
@@ -648,7 +658,7 @@ class ADcheck:
                     value = self.NEW_WELL_KNOWN_SIDS.get(sid, sid)
                     values.append(value)
                 result[key] = values
-        print(f'Privilege Rights :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Privilege Rights :\n{json.dumps(result, indent=4)}')
 
     def policies_ace(self):
         from modules.GPOBrowser import smb_get_attributes
@@ -684,14 +694,14 @@ class ADcheck:
                     break
 
             result[f"User can {DIRECTORY_ACCESS_RIGHT.get(parent_rights)} {parent_policy_name}"] = list(child_results)
-        print(f'Group policy folder/file rights :\n{json.dumps(result, indent=4)}')
+        pprint('INFO', f'Group policy folder/file rights :\n{json.dumps(result, indent=4)}')
 
     def users_description(self):
         result = []
         for user in self.user_entries:
             if 'description' in user and not self.NEW_WELL_KNOWN_SIDS.get(user['objectSid']):
                 result.append(user['sAMAccountName'])
-        print(f'Users with description : {result}')
+        pprint('INFO', f'Users with description : {result}')
 
     # def reg_ace(self):
     #     from modules.RegReader import RegReader
@@ -731,7 +741,7 @@ class ADcheck:
             # 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\LocalAccountTokenFilterPolicy': 0
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'UAC configuration is secure : {result}', reverse=True)
+        pprint(result, f'UAC configuration is secure : {result}', reverse=True)
 
     @admin_required
     def reg_LMHASH(self):
@@ -739,7 +749,7 @@ class ADcheck:
             'HKLM\\System\\CurrentControlSet\\Control\\Lsa\\NoLMHash': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'LM hash storage disabled : {result}', reverse=True)
+        pprint(result, f'LM hash storage disabled : {result}', reverse=True)
 
     @admin_required
     def reg_NTLMv2(self):
@@ -747,7 +757,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\LmCompatibilityLevel': 5
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Authentication limited to NTLMv2 mechanism only : {result}', reverse=True)
+        pprint(result, f'Authentication limited to NTLMv2 mechanism only : {result}', reverse=True)
 
     @admin_required
     def reg_AlwaysInstallElevated(self):
@@ -755,7 +765,7 @@ class ADcheck:
             'HKCU\\SOFTWARE\\Policies\\Microsoft\\Windows\\Installer\\AlwaysInstallElevated': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'MSI packages are always installed with elevated privileges : {result}')
+        pprint(result, f'MSI packages are always installed with elevated privileges : {result}')
 
     @admin_required
     def reg_ipv4_only(self):
@@ -763,7 +773,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\\DisabledComponents': 128
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'IPv4 preferred over IPv6 : {result}', reverse=True)
+        pprint(result, f'IPv4 preferred over IPv6 : {result}', reverse=True)
 
     @admin_required
     def reg_wdigest(self):
@@ -771,7 +781,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest\\UseLogonCredential': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'WDigest authentication enabled : {result}')
+        pprint(result, f'WDigest authentication enabled : {result}')
 
     @admin_required
     def reg_lsa_cache(self):
@@ -780,9 +790,9 @@ class ADcheck:
         }
         try:
             result = all(int(self.reg_client(key).replace('\x00', '')) >= hives.get(key) for key in hives)
-            print_with_color(result, f'Too many logons are kept in the LSA cache : {result}')
+            pprint(result, f'Too many logons are kept in the LSA cache : {result}')
         except AttributeError :
-            print(colored('LSA cache length is not defined', 'red'))
+            pprint(True, 'LSA cache length is not defined')
 
     @admin_required
     def reg_wsus_config(self):
@@ -791,9 +801,9 @@ class ADcheck:
         }
         try:
             result = all(self.reg_client(key).startswith(hives.get(key)) for key in hives)
-            print_with_color(result, f'WSUS configuration is secure : {result}', reverse=True)
+            pprint(result, f'WSUS configuration is secure : {result}', reverse=True)
         except AttributeError :
-            print(colored('WSUS server is not used', 'red'))
+            pprint(True, 'WSUS server is not used')
 
     @admin_required
     def reg_rdp_timeout(self):
@@ -803,9 +813,9 @@ class ADcheck:
         }
         try:
             result = any(self.reg_client(key) <= hives.get(key) for key in hives)
-            print_with_color(result, f'RDP session timeout is too short : {result}')
+            pprint(result, f'RDP session timeout is too short : {result}')
         except:
-            print(colored('RDP session timeout is not defined', 'red'))
+            pprint(True, 'RDP session timeout is not defined')
 
     @admin_required
     def reg_CredentialGuard(self):
@@ -814,7 +824,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\LsaCfgFlags': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'CredentialGuard is enabled : {result}', reverse=True)
+        pprint(result, f'CredentialGuard is enabled : {result}', reverse=True)
 
     @admin_required
     def reg_lsass_ppl(self):
@@ -822,7 +832,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': '1'
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Lsass runs as a protected process : {result}', reverse=True)
+        pprint(result, f'Lsass runs as a protected process : {result}', reverse=True)
 
     @admin_required
     def reg_pwsh2(self):
@@ -830,7 +840,7 @@ class ADcheck:
             'HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine\\PSCompatibleVersion': '2.0'
         }
         result = all(hives.get(key) in self.reg_client(key) for key in hives)
-        print_with_color(result, f'Powershell v2 is enabled : {result}')
+        pprint(result, f'Powershell v2 is enabled : {result}')
 
     @admin_required
     def reg_rdp_nla(self):
@@ -838,7 +848,7 @@ class ADcheck:
             'HKLM\\System\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp\\UserAuthentication': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'RDP use NLA : {result}', reverse=True)
+        pprint(result, f'RDP use NLA : {result}', reverse=True)
 
     @admin_required
     def reg_rdp_nopth(self):
@@ -848,7 +858,7 @@ class ADcheck:
             'HKLM\\Software\\Policies\\Microsoft\\Windows\\CredentialsDelegation': 1
         }
         result = any(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'RDP is secured over pass the hash attack : {result}', reverse=True)
+        pprint(result, f'RDP is secured over pass the hash attack : {result}', reverse=True)
 
     @admin_required
     def reg_pwsh_restricted(self):
@@ -857,7 +867,7 @@ class ADcheck:
             'HKCU\\SOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds\\Microsoft.Powershell\\ExecutionPolicy': 'Restricted\x00'
         }
         result = any(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Powershell is configured in Restricted mode : {result}', reverse=True)
+        pprint(result, f'Powershell is configured in Restricted mode : {result}', reverse=True)
 
     @admin_required
     def reg_bitlocker(self):
@@ -866,7 +876,7 @@ class ADcheck:
             ('HKLM\\SOFTWARE\\Policies\\Microsoft\\FVE\\UseAdvancedStartup', 'HKLM\\SOFTWARE\\Policies\\Microsoft\\FVE\\UseTPM'): 1
         }
         result = any(all(self.reg_client(key) == value for key in keys) for keys, value in hives.items())
-        print_with_color(result, f'Bitlocker is enabled : {result}', reverse=True)
+        pprint(result, f'Bitlocker is enabled : {result}', reverse=True)
 
     @admin_required
     def reg_llmnr(self):
@@ -875,7 +885,7 @@ class ADcheck:
             'HKLM\\Software\\Policies\\Microsoft\\Windows NT\\DNSClient\\AllowMulticast': 0
         }
         result = any(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'LLMNR, NetBIOS or mDNS is disabled : {result}', reverse=True)
+        pprint(result, f'LLMNR, NetBIOS or mDNS is disabled : {result}', reverse=True)
 
     @admin_required
     def reg_applocker(self):
@@ -887,7 +897,7 @@ class ADcheck:
             'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\SrpV2\\Script\\EnforcementMode': 1
         }
         result = any(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'AppLocker rules defined : {result}', reverse=True)
+        pprint(result, f'AppLocker rules defined : {result}', reverse=True)
 
     @admin_required
     def reg_autologin(self):
@@ -895,7 +905,7 @@ class ADcheck:
             'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\AutoAdminLogon': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'gpp_autologon is enabled : {result}')
+        pprint(result, f'gpp_autologon is enabled : {result}')
 
     @admin_required
     def reg_wpad(self):
@@ -903,7 +913,7 @@ class ADcheck:
             'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\AutoDetect': 0
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'WPAD is disabled : {result}', reverse=True)
+        pprint(result, f'WPAD is disabled : {result}', reverse=True)
 
     @admin_required
     def reg_wsh(self):
@@ -911,7 +921,7 @@ class ADcheck:
             'HKLM\\SOFTWARE\\Microsoft\\Windows Script Host\\Settings\\Enabled': 0
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Windows Script Host is disabled : {result}', reverse=True)
+        pprint(result, f'Windows Script Host is disabled : {result}', reverse=True)
 
     @admin_required
     def reg_fw(self):
@@ -919,7 +929,7 @@ class ADcheck:
             'HKLM\\SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile\\EnableFirewall': 0
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Firewall is disabled : {result}')
+        pprint(result, f'Firewall is disabled : {result}')
     
     @admin_required
     def reg_av(self):
@@ -932,7 +942,7 @@ class ADcheck:
         for key, value in reg_items:
             if len(value) > 0:
                 result.append(value[0]['(Default)'])
-        print(f"AMSI installed is : {result or 'Windows Defender'}")
+        pprint('INFO', f"AMSI installed is : {result or 'Windows Defender'}")
 
     @admin_required
     def reg_pwsh_event(self):
@@ -941,13 +951,12 @@ class ADcheck:
             'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\ModuleLogging\\EnableModuleLogging': 1
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
-        print_with_color(result, f'Powershell events are logged : {result}', reverse=True)
+        pprint(result, f'Powershell events are logged : {result}', reverse=True)
 
 if __name__ == '__main__':
     from getpass import getpass
 
     args = parse_arguments()
-
     domain = args.domain
     username = args.username
     hashes = args.hashes
@@ -959,11 +968,7 @@ if __name__ == '__main__':
     base_dn = args.base_dn or f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"
     secure = args.secure
     get_bhf = args.bloodhound_file
-
-    if not password:
-        from getpass import getpass
-
-        password = getpass("Password:")
+    output = args.output
 
     adcheck = ADcheck()
     adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)
@@ -983,8 +988,12 @@ if __name__ == '__main__':
 
     if is_admin:
         adcheck = ADcheck(is_admin=True)
-        adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)  
+        adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)
         ntds_dump = adcheck.ntds_dump()
+        with open("report.html", "w") as report:
+            report.write('<html><body><pre>\n')
         launch_all_methods(adcheck, is_admin=True)
+        with open("report.html", "a") as report:
+            report.write('</pre></body></html>')
     else:
         launch_all_methods(adcheck)

@@ -11,25 +11,25 @@ Although textual, a simple color scheme is used to navigate through the returned
 The collected information includes :
 
 - [x] **Accounts**
-  - [x] Admin accounts that can be delegated.
-  - [x] Admin accounts not in "_Protected Users_" group.
-  - [x] Accounts which can use DES authentication.
-  - [x] Accounts vulnerable to ASRepRoasting attack.
-  - [x] Accounts with `altSecurityIdentities` attributes.
-  - [x] Accounts with `userPassword` attributes.
-  - [x] Accounts with `unixUserPassword` attributes.
-  - [x] Accounts with `unicodePwd` attributes.
-  - [x] Accounts with `msDS-HostServiceAccount` attribute.
-  - [x] Accounts with blank password.
-  - [x] Accounts vulnerable to KerbeRoasting attack.
-  - [x] Locked accounts.
-  - [x] Number of accounts which have never expiring passwords.
-  - [x] Number of accounts with identical passwords.
-  - [x] Number of inactive accounts.
-  - [x] Number of accounts in "_Schema Admins_" group.
-  - [x] Accounts which have reversible passwords.
-  - [x] Accounts vulnerable to timeroasting attack.
-  - [x] Accounts that had admin rights in the past.
+  - [x] Admin accounts that can be delegated
+  - [x] Admin accounts not in "_Protected Users_" group
+  - [x] Accounts which can use DES authentication
+  - [x] Accounts vulnerable to ASRepRoasting attack
+  - [x] Accounts with `altSecurityIdentities` attributes
+  - [x] Accounts with `userPassword` attributes
+  - [x] Accounts with `unixUserPassword` attributes
+  - [x] Accounts with `unicodePwd` attributes
+  - [x] Accounts with `msDS-HostServiceAccount` attribute
+  - [x] Accounts with blank password
+  - [x] Accounts vulnerable to KerbeRoasting attack
+  - [x] Locked accounts
+  - [x] Number of accounts which have never expiring passwords
+  - [x] Number of accounts with identical passwords
+  - [x] Number of inactive accounts
+  - [x] Number of accounts in "_Schema Admins_" group
+  - [x] Accounts which have reversible passwords
+  - [x] Accounts vulnerable to timeroasting attack
+  - [x] Accounts that had admin rights in the past
   - [x] Get Users with description
 
 - [x] **Configuration**

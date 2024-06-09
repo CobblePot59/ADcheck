@@ -3,7 +3,7 @@ from impacket.smbconnection import SMBConnection, SessionError
 from modules.MSuacCalc import uac_details
 from modules.MSaceCalc import ace_details
 from modules.decor import admin_required, capture_stdout
-from modules.constants import WELL_KNOWN_SIDS, DELEGATIONS_ACE, SUPPORTED_ENCRYPTION
+from modules.constants import WELL_KNOWN_SIDS, DELEGATIONS_ACE, SUPPORTED_ENCRYPTION, CHECKLIST
 from termcolor import colored
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,29 +11,30 @@ from argparse import ArgumentParser
 import json
 import re
 import dns.resolver
+import sys
 
 def launch_all_methods(obj, is_admin=False, debug=False):
     i = 0
     getattr(obj, 'get_policies')()
-    if get_bhf:
-        getattr(obj, 'bloodhound_file')()
+    if module:
+        getattr(obj, f'{module}')()
+    else:
+        excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'ntds_dump', 'get_policies', 'bloodhound_file']
+        if hashes:
+            excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'ntds_dump', 'get_policies', 'bloodhound_file', 'wmi_last_backup', 'wmi_last_update']
 
-    excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'ntds_dump', 'get_policies', 'bloodhound_file']
-    if hashes:
-        excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'ntds_dump', 'get_policies', 'bloodhound_file', 'wmi_last_backup', 'wmi_last_update']
-
-    methods = [method for method in dir(obj) if callable(getattr(obj, method)) and not method.startswith("__")]
-    for method_name in methods:
-        print(method_name) if debug else None
-        if method_name not in excluded_methods:
-            if not is_admin and not hasattr(getattr(ADcheck, method_name), "__wrapped__"):
-                i += 1
-                print(f'{i} - ', end='')
-                getattr(obj, method_name)()
-            elif is_admin:
-                i += 1
-                print(f'{i} - ', end='')
-                getattr(obj, method_name)()
+        methods = [method for method in dir(obj) if callable(getattr(obj, method)) and not method.startswith("__")]
+        for method_name in methods:
+            print(method_name) if debug else None
+            if method_name not in excluded_methods:
+                if not is_admin and not hasattr(getattr(ADcheck, method_name), "__wrapped__"):
+                    i += 1
+                    print(f'{i} - ', end='')
+                    getattr(obj, method_name)()
+                elif is_admin:
+                    i += 1
+                    print(f'{i} - ', end='')
+                    getattr(obj, method_name)()
 
 def pprint(result, message, reverse=False):
     color = 'black' if result == 'INFO' else ('red' if (result and not reverse) or (not result and reverse) else 'green')
@@ -56,9 +57,9 @@ def parse_arguments():
     parser.add_argument('-p', '--password', help='Password for authentication.')
     parser.add_argument('-H', '--hashes', help='Hashes for authentication.')
     parser.add_argument('--dc-ip', required=True, help='IP address of the Domain Controller.')
-    parser.add_argument('-b', '--base-dn', help='Base Distinguished Name (DN) for LDAP queries.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
-    parser.add_argument('-bhf', '--bloodhound-file', action='store_true', help='Generate json data to import in BloodHound.')
+    parser.add_argument('-L', '--list-modules', action='store_true', help='List available modules.')
+    parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', action='store_true', help='Generate HTML report file.')
     args = parser.parse_args()
     return args
@@ -965,10 +966,20 @@ if __name__ == '__main__':
         nthash = hashes.split(':')[1]
     password = args.password or hashes or getpass('Password :')
     dc_ip = args.dc_ip
-    base_dn = args.base_dn or f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"
+    base_dn = f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"
     secure = args.secure
-    get_bhf = args.bloodhound_file
+    module = args.module
     output = args.output
+
+    if args.list_modules:
+        for category, modules in CHECKLIST.items():
+            print(category)
+            for module_name, module_desc in modules:
+                if not module_name:
+                    print(f"{module_name.ljust(34)} {module_desc}")
+                else:
+                    print(f"[*] {module_name.ljust(30)} {module_desc}")
+        sys.exit(0)
 
     adcheck = ADcheck()
     adcheck.connect(domain, username, password, hashes, dc_ip, base_dn, secure)

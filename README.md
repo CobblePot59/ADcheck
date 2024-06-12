@@ -107,25 +107,14 @@ git clone https://github.com/CobblePot59/ADcheck.git
 cd ADcheck
 ```
 
-3. Create a virtual environment :
+3. Install the project locally :
 ```
-python -m venv ADcheck
-```
-
-4. Activate the virtual environment (on Windows) :
-```
-.\ADcheck\Scripts\activate
-```
-(Note: On Linux/macOS, the command is **source ADcheck/bin/activate**)
-
-5. Install dependencies from the requirements.txt file :
-```
-python -m pip install -r .\requirements.txt
+python -m pip install .
 ```
 
-6. Run the ADcheck.py script, specifying the necessary parameters :
+6. Run ADcheck, specifying the necessary parameters :
 ```
-python ADcheck.py -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
+python -m ADcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```
 ![ADcheck.gif](.github/pictures/ADcheck.gif)
 

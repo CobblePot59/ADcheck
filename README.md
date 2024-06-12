@@ -112,7 +112,7 @@ cd ADcheck
 python -m pip install .
 ```
 
-6. Run ADcheck, specifying the necessary parameters :
+4. Run ADcheck, specifying the necessary parameters :
 ```
 python -m ADcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```

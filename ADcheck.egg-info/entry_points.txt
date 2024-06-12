@@ -1,0 +1,2 @@
+[console_scripts]
+ADcheck = ADcheck:main

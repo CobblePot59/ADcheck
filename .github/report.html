@@ -1,1 +1,423 @@
-<html><body><pre>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Report</title>
+    <style>
+        .red { color: red; }
+        .green { color: green; }
+        .white { color: white; }
+        body {
+			background-color: #21344a;
+		}
+    </style>
+</head>
+<body>
+    <pre>
+	<span class="green">1 - Number of accounts which have never expiring passwords : 3</span>
+	<span class="red">2 - Admin accounts that can be delegated : ['Administrator']</span>
+	<span class="red">3 - Admin accounts not in Protected Users group : ['Administrator']</span>
+	<span class="red">4 - Accounts in Schema Admins group : CN=Administrator,CN=Users,DC=adcheck,DC=int</span>
+	<span class="red">5 - Accounts vulnerable to asreproasting attack : ['jbower']</span>
+	<span class="white">6 - Audit policy configured :</span>
+	<pre class="white">
+		[
+			{
+				"Subcategories": "Audit Kerberos Authentication Service",
+				"Inclusion Settings": "Success and Failure"
+			},
+			{
+				"Subcategories": "Audit Directory Service Changes",
+				"Inclusion Settings": "Success and Failure"
+			}
+		]
+	</pre>
+	<span class="red">7 - Accounts with altSecurityIdentities attributes: ['Administrator']</span>
+	<span class="green">Accounts with userPassword attributes: []</span>
+	<span class="green">Accounts with unixUserPassword attributes: []</span>
+	<span class="green">Accounts with unicodePwd attributes: []</span>
+	<span class="green">Accounts with msDS-HostServiceAccount attributes: []</span>
+	<span class="white">8 - Computers with bitlocker keys : []</span>
+	<span class="green">9 - Accounts with blank password : []</span>
+	<span class="red">10 - Non-admin users can add up to 10 computer(s) to a domain</span>
+	<span class="red">11 - User can create dns record : True</span>
+	<span class="green">12 - Computers with constrained delegation : []</span>
+	<span class="white">13 - Control delegations :</span>
+	<pre class="white">
+		{
+			"OU=Domain Controllers,DC=adcheck,DC=int": [
+				{
+					"user": "jbower",
+					"permissions": "Create, delete and manage user accounts"
+				}
+			]
+		}
+		{
+			"OU=Domain Users,DC=adcheck,DC=int": []
+		}
+		{
+			"CN=Computers,DC=adcheck,DC=int": [
+				{
+					"user": "jbower",
+					"permissions": [
+						"{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': ['msLAPS-Password'], 'InheritedObjectType': ['Computer']}",
+						"{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}"
+					]
+				}
+			]
+		}
+		{
+			"CN=ForeignSecurityPrincipals,DC=adcheck,DC=int": []
+		}
+		{
+			"CN=Keys,DC=adcheck,DC=int": []
+		}
+		{
+			"CN=Managed Service Accounts,DC=adcheck,DC=int": []
+		}
+		{
+			"CN=Program Data,DC=adcheck,DC=int": []
+		}
+		{
+			"CN=Users,DC=adcheck,DC=int": []
+		}
+		{
+			"DC=adcheck,DC=int": []
+		}
+	</pre>
+	<span class="green">14 - Accounts which can use des authentication : []</span>
+	<span class="white">15 - Domain Controllers: ['SRV-DC01$']</span>
+	<span class="red">16 - Force logoff when logon hours expire : False</span>
+	<span class="white">17 - Functional level of domain is : Windows Server 2016</span>
+	<span class="white">18 - Group Managed Service Accounts :</span>
+	<pre class="white">
+		[
+			{
+				"dn": "CN=test,CN=Managed Service Accounts,DC=adcheck,DC=int",
+				"msDS-HostServiceAccountBL": [
+					"CN=DESKTOP-89GI1RV,CN=Computers,DC=adcheck,DC=int",
+					"CN=SRV-DC01,OU=Domain Controllers,DC=adcheck,DC=int"
+				],
+				"msDS-ManagedPasswordInterval": "60"
+			}
+		]
+	</pre>
+	<span class="white">19 - Group Policy Object by Organizational Unit :</span>
+	<pre class="white">
+		[
+			{
+				"dn": "DC=adcheck,DC=int",
+				"gpLink": [
+					{
+						"name": "{1AF00522-4C69-4AAE-9CDE-AE284CB1ECE4}",
+						"displayName": "PASSWORD"
+					},
+					{
+						"name": "{31B2F340-016D-11D2-945F-00C04FB984F9}",
+						"displayName": "Default Domain Policy"
+					}
+				]
+			},
+			{
+				"dn": "OU=Domain Controllers,DC=adcheck,DC=int",
+				"gpLink": [
+					{
+						"name": "{6AC1786C-016F-11D2-945F-00C04fB984F9}",
+						"displayName": "Default Domain Controllers Policy"
+					}
+				]
+			}
+		]
+	</pre>
+	<span class="green">20 - Group Policy containing a password : []</span>
+	<span class="red">21 - Number of accounts with identical password : 1</span>
+	<span class="green">22 - Number of inactive accounts: 0</span>
+	<span class="green">23 - Accounts vulnerable to kerberoasting attack : []</span>
+	<span class="white">24 - Kerberos config :</span>
+	<pre class="white">
+		{
+			"MaxTicketAge": "10",
+			"MaxRenewAge": "7",
+			"MaxServiceAge": "600",
+			"MaxClockSkew": "5",
+			"TicketValidateClient": "1"
+		}
+	</pre>
+	<span class="white">25 - Supported Kerberos encryption algorithms : RC4_HMAC_MD5</span>
+	<span class="red">26 - Kerberos password last changed : 43 day(s) ago</span>
+	<span class="green">27 - LAPS is installed : True</span>
+	<span class="red">28 - LDAP signature was required on target : False</span>
+	<span class="green">29 - Locked accounts : []</span>
+	<span class="red">30 - The native administrator account has been used recently : 6 day(s) ago</span>
+	<span class="red">31 - Accounts with password not required : ['Guest']</span>
+	<span class="white">32 - Default password policy :</span>
+	<pre class="white">
+		{
+			"lockoutDuration": "0:10:00",
+			"lockOutObservationWindow": "0:10:00",
+			"maxPwdAge": "42 days, 0:00:00",
+			"minPwdAge": "1 day, 0:00:00",
+			"minPwdLength": "7",
+			"pwdHistoryLength": "24",
+			"pwdProperties": "DOMAIN_PASSWORD_COMPLEX"
+		}
+	</pre>
+	<span class="white">33 - Group policy folder/file rights :</span>
+	<pre class="white">
+		{
+			"User can write extended attributes PASSWORD": [
+				"User can be traversed adcheck.int/Policies/{1AF00522-4C69-4AAE-9CDE-AE284CB1ECE4}/Machine/Registry.pol",
+				"User can be traversed adcheck.int/Policies/{1AF00522-4C69-4AAE-9CDE-AE284CB1ECE4}/Machine/Microsoft/Windows NT/SecEdit/GptTmpl.inf",
+				"User can be traversed adcheck.int/Policies/{1AF00522-4C69-4AAE-9CDE-AE284CB1ECE4}/GPT.INI",
+				"User can be traversed adcheck.int/Policies/{1AF00522-4C69-4AAE-9CDE-AE284CB1ECE4}/Machine/comment.cmtx"
+			],
+			"User can write extended attributes Default Domain Policy": [
+				"User can be traversed adcheck.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/MACHINE/Registry.pol",
+				"User can be traversed adcheck.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/GPT.INI",
+				"User can be traversed adcheck.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/MACHINE/Microsoft/Windows NT/SecEdit/GptTmpl.inf"
+			],
+			"User can write extended attributes Default Domain Controllers Policy": [
+				"User can be traversed adcheck.int/Policies/{6AC1786C-016F-11D2-945F-00C04fB984F9}/GPT.INI",
+				"User can be traversed adcheck.int/Policies/{6AC1786C-016F-11D2-945F-00C04fB984F9}/MACHINE/Microsoft/Windows NT/SecEdit/GptTmpl.inf"
+			]
+		}
+	</pre>
+	<span class="red">34 - Pre-Windows 2000 Compatible Access group members are : Authenticated Users</span>
+	<span class="white">35 - Privilege Rights :</span>
+	<pre class="white">
+		{
+			"SeAssignPrimaryTokenPrivilege": [
+				"Network Service",
+				"NT Authority (Local Service)"
+			],
+			"SeAuditPrivilege": [
+				"Network Service",
+				"NT Authority (Local Service)"
+			],
+			"SeBackupPrivilege": [
+				"Server Operators",
+				"Backup Operators",
+				"Administrators"
+			],
+			"SeBatchLogonRight": [
+				"Builtin\\Performance Log Users",
+				"Backup Operators",
+				"Administrators"
+			],
+			"SeChangeNotifyPrivilege": [
+				"Builtin\\Pre-Windows 2000 Compatible Access",
+				"Authenticated Users",
+				"Administrators",
+				"Network Service",
+				"NT Authority (Local Service)",
+				"Everyone"
+			],
+			"SeCreatePagefilePrivilege": [
+				"Administrators"
+			],
+			"SeDebugPrivilege": [
+				"Administrators"
+			],
+			"SeIncreaseBasePriorityPrivilege": [
+				"System Managed Accounts Group",
+				"Administrators"
+			],
+			"SeIncreaseQuotaPrivilege": [
+				"Administrators",
+				"Network Service",
+				"NT Authority (Local Service)"
+			],
+			"SeInteractiveLogonRight": [
+				"Enterprise Domain Controllers",
+				"Print Operators",
+				"Server Operators",
+				"Account Operators",
+				"Backup Operators",
+				"Administrators"
+			],
+			"SeLoadDriverPrivilege": [
+				"Print Operators",
+				"Administrators"
+			],
+			"SeMachineAccountPrivilege": [
+				"Authenticated Users"
+			],
+			"SeNetworkLogonRight": [
+				"Builtin\\Pre-Windows 2000 Compatible Access",
+				"Enterprise Domain Controllers",
+				"Authenticated Users",
+				"Administrators",
+				"Everyone"
+			],
+			"SeProfileSingleProcessPrivilege": [
+				"Administrators"
+			],
+			"SeRemoteShutdownPrivilege": [
+				"Server Operators",
+				"Administrators"
+			],
+			"SeRestorePrivilege": [
+				"Server Operators",
+				"Backup Operators",
+				"Administrators"
+			],
+			"SeSecurityPrivilege": [
+				"Administrators"
+			],
+			"SeShutdownPrivilege": [
+				"Print Operators",
+				"Server Operators",
+				"Backup Operators",
+				"Administrators"
+			],
+			"SeSystemEnvironmentPrivilege": [
+				"Administrators"
+			],
+			"SeSystemProfilePrivilege": [
+				"S-1-5-80-3139157870-2983391045-3678747466-658725712-1809340420",
+				"Administrators"
+			],
+			"SeSystemTimePrivilege": [
+				"Server Operators",
+				"Administrators",
+				"NT Authority (Local Service)"
+			],
+			"SeTakeOwnershipPrivilege": [
+				"Administrators"
+			],
+			"SeUndockPrivilege": [
+				"Administrators"
+			],
+			"SeEnableDelegationPrivilege": [
+				"Administrators"
+		}
+	</pre>
+	<span class="white">36 - Privesc group :</span>
+	<pre class="white">
+		{
+			"Administrators": [
+				"CN=Domain Admins,CN=Users,DC=adcheck,DC=int",
+				"CN=Enterprise Admins,CN=Users,DC=adcheck,DC=int",
+				"CN=Administrator,CN=Users,DC=adcheck,DC=int"
+			],
+			"Domain Admins": "CN=Administrator,CN=Users,DC=adcheck,DC=int",
+			"Enterprise Admins": "CN=Administrator,CN=Users,DC=adcheck,DC=int",
+			"Enterprise Key Admins": [],
+			"Key Admins": [],
+			"Schema Admins": "CN=Administrator,CN=Users,DC=adcheck,DC=int",
+			"Replicator": [],
+			"Server Operators": [],
+			"Backup Operators": [],
+			"Print Operators": [],
+			"DnsAdmins": [],
+			"Account Operators": [],
+			"Remote Desktop Users": [],
+			"Certificate Operators": [],
+			"Cert Publishers": []
+		}
+	</pre>
+	<span class="white">37 - Password Settings Object :</span>
+	<pre class="white">
+		[
+			{
+				"admin_account": {
+					"lockoutDuration": 30.0,
+					"lockOutObservationWindow": 30.0,
+					"lockoutThreshold": "3",
+					"maxPwdAge": 42.0,
+					"minPwdAge": 1.0,
+					"minPwdLength": "8",
+					"psoAppliesTo": "CN=Domain Admins,CN=Users,DC=adcheck,DC=int",
+					"pwdComplexity": "True",
+					"pwdHistoryLength": "24",
+					"pwdReversibleEncryption": "False",
+					"pwdSettingsPrecedence": "1"
+				}
+			},
+			{
+				"user_account": {
+					"lockoutDuration": 10.0,
+					"lockOutObservationWindow": 10.0,
+					"lockoutThreshold": "3",
+					"maxPwdAge": 42.0,
+					"minPwdAge": 1.0,
+					"minPwdLength": "7",
+					"psoAppliesTo": "CN=Domain Users,CN=Users,DC=adcheck,DC=int",
+					"pwdComplexity": "True",
+					"pwdHistoryLength": "24",
+					"pwdReversibleEncryption": "False",
+					"pwdSettingsPrecedence": "1"
+				}
+			}
+		]
+	</pre>
+	<span class="red">38 - Computers with rbac :['DESKTOP-89GI1RV$']</span>
+	<span class="green">39 - Recycle Bin is enabled : True</span>
+	<span class="green">40 - MSI packages are always installed with elevated privileges : False</span>
+	<span class="red">41 - CredentialGuard is enabled : False</span>
+	<span class="green">42 - LM hash storage disabled : True</span>
+	<span class="red">43 - Authentication limited to NTLMv2 mechanism only : False</span>
+	<span class="red">44 - AppLocker rules defined : False</span>
+	<span class="green">45 - gpp_autologon is enabled : False</span>
+	<span class="white">46 - AMSI installed is : ['Avira']</span>
+	<span class="red">47 - Bitlocker is enabled : False</span>
+	<span class="green">48 - Firewall is disabled : False</span>
+	<span class="red">49 - IPv4 preferred over IPv6 : False</span>
+	<span class="red">50 - LLMNR, NetBIOS or mDNS is disabled : False</span>
+	<span class="red">51 - Too many logons are kept in the LSA cache : True</span>
+	<span class="red">52 - Lsass runs as a protected process : False</span>
+	<span class="red">53 - Powershell v2 is enabled : True</span>
+	<span class="white">54 - Powershell events are logged : True</span>
+	<span class="red">55 - Powershell is configured in Restricted mode : False</span>
+	<span class="green">56 - RDP use NLA : True</span>
+	<span class="red">57 - RDP is secured over pass the hash attack : False</span>
+	<span class="red">58 - RDP session timeout is too short : True</span>
+	<span class="green">59 - UAC configuration is secure : True</span>
+	<span class="green">60 - WDigest authentication enabled : False</span>
+	<span class="red">61 - WPAD is disabled : False</span>
+	<span class="red">62 - Windows Script Host is disabled : False</span>
+	<span class="red">63 - WSUS server is not used</span>
+	<span class="white">64 - Accounts which have reversible passwords : []</span>
+	<span class="white">65 - Authentication policy silos :</span>
+	<pre class="white">
+		{
+			"name": "silo_policy_test",
+			"AuthNPolicySiloEnforced": "True",
+			"AuthNPolicySiloMembers": [
+				"CN=SRV-DC01,OU=Domain Controllers,DC=adcheck,DC=int",
+				"CN=Administrator,CN=Users,DC=adcheck,DC=int"
+			],
+			"ComputerAuthNPolicy": {
+				"name": "auth_policy_test",
+				"ComputerTGTLifetime": 65.0
+			},
+			"ServiceAuthNPolicy": {
+				"name": "auth_policy_test",
+				"ServiceAllowedNTLMNetworkAuthentication": "True",
+				"ServiceTGTLifetime": 55.0
+			},
+			"UserAuthNPolicy": {
+				"name": "auth_policy_test2",
+				"StrongNTLMPolicy": "2",
+				"UserAllowedNTLMNetworkAuthentication": "True",
+				"UserTGTLifetime": 999.0
+			}
+		}
+	</pre>
+	<span class="green">66 - SMB signing is required : True</span>
+	<span class="red">67 - Spooler service is enabled on remote target : True</span>
+	<span class="white">68 - Supported encryption by Domain Controllers :</span>
+	<pre class="white">
+		[
+			"SRV-DC01$: [RC4, AES 128, AES 256]"
+		]
+	</pre>
+	<span class="red">69 - Accounts vulnerable to timeroasting attack : ['TEST2$']</span>
+	<span class="green">70 - Trust accounts for the delegation : []</span>
+	<span class="white">71 - Users with description : []</span>
+	<span class="green">72 - Accounts that were an admin : []</span>
+	<span class="red">73 - The computer was recently backed up (Last : 2024-05-01 13:29:12.472938+00:00) : False</span>
+	<span class="green">74 - The computer is up to date (Last : 5/2/2024) : True</span>
+	</pre>
+</body>

@@ -1,5 +1,0 @@
-ADmanage
-termcolor
-aiowmi
-bloodhound
-impacket

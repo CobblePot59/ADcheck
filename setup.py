@@ -25,7 +25,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'ADcheck=ADcheck:main',
+            'ADcheck=adcheck.app:main',
         ]
     }
 )

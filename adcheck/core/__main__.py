@@ -96,7 +96,7 @@ class ADcheck:
 
     def native_admin_logon(self):
         for user in self.user_entries:
-            if user['objectSid'] == f'{self.domain_sid}500':
+            if user['objectSid'] == f'{self.domain_sid}-500':
                 admin_lastLogon = user['lastLogon']
         admin_lastLogon_date = datetime.strptime(str(admin_lastLogon), '%Y-%m-%d %H:%M:%S.%f%z').date()
         ndays = (datetime.now().date() - admin_lastLogon_date).days

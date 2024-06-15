@@ -274,7 +274,8 @@ WELL_KNOWN_SIDS = {
     "S-1-5-32-575": "Builtin\\RDS Remote Access Servers",
     "S-1-5-32-580": "Builtin\\Remote Management Users",
     "S-1-5-32-582": "Builtin\\Storage Replica Administrators",
-    "S-1-5-90-0": "System Managed Accounts Group"
+    "S-1-5-90-0": "System Managed Accounts Group",
+    "S-1-15-2-1": "All Application Packages"
 }
 
 # https://learn.microsoft.com/en-us/windows/win32/wmisdk/file-and-directory-access-rights-constants
@@ -338,7 +339,7 @@ ENTRANCE_ACCESS_CONTROL = {
     "Delete all child objects": 2,
     "Delete subtree": 64,
     "All extended rights": 256,
-    "Full control": 983551,
+    "Full Control": 983551,
     "List contents": 4,
     "Read permissions": 131072,
     "Read all properties": 16,
@@ -349,12 +350,12 @@ ENTRANCE_ACCESS_CONTROL = {
 }
 
 LAPS_PROPERTIES_UUID = {
-    'msLAPS-EncryptedDSRMPassword' : b'/\xa87\x9e\xa2C!G\x98=7K\x82\xfd\xc0\xfa',
-    'msLAPS-EncryptedDSRMPasswordHistory' : b'\x10\xc6\xa9\x11\xa4?\xa2E\xbc\x04\x8dl\xdf\xdaw`',
-    'msLAPS-EncryptedPassword' : b"F;\xbc_y]+@\x8c~\xfc\xcal'\xb9\xc2",
-    'msLAPS-EncryptedPasswordHistory' : b'D\x8aJ\xb8j\xac\xcfA\x87\x1c\xaf\xf1.\xfd{d',
-    'msLAPS-Password' : b"\xe1\xec\x9c'\xbfq\x99B\x86\xe8\xff\xe0\xe9\xe5\x01.",
-    'msLAPS-PasswordExpirationTime' : b't\xdehF\x88\xa48K\xaf\xf8\xcf\x9fB\x8e\x89\xaa',
+    "msLAPS-EncryptedDSRMPassword" : b"/\xa87\x9e\xa2C!G\x98=7K\x82\xfd\xc0\xfa",
+    "msLAPS-EncryptedDSRMPasswordHistory" : b"\x10\xc6\xa9\x11\xa4?\xa2E\xbc\x04\x8dl\xdf\xdaw`",
+    "msLAPS-EncryptedPassword" : b"F;\xbc_y]+@\x8c~\xfc\xcal'\xb9\xc2",
+    "msLAPS-EncryptedPasswordHistory" : b"D\x8aJ\xb8j\xac\xcfA\x87\x1c\xaf\xf1.\xfd{d",
+    "msLAPS-Password" : b"\xe1\xec\x9c'\xbfq\x99B\x86\xe8\xff\xe0\xe9\xe5\x01.",
+    "msLAPS-PasswordExpirationTime" : b"t\xdehF\x88\xa48K\xaf\xf8\xcf\x9fB\x8e\x89\xaa",
 }
 
 DELEGATIONS_ACE = {
@@ -362,7 +363,7 @@ DELEGATIONS_ACE = {
     "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['User']}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['User']}]": "Reset user passwords and force password change at next logon",
     "[{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['User']}]": "Read all user information",
     "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['Group'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['Group']}]": "Create, delete and manage groups",
-    "[{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}]": "Modfy the membership of a group",
+    "[{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}]": "Modify the membership of a group",
     "[{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Link'], 'InheritedObjectType': None}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Options'], 'InheritedObjectType': None}]": "Manage Group Policy links",
     "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Planning)'], 'InheritedObjectType': None}]": "Generate Resultant Set of Policy (Planning)",
     "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Logging)'], 'InheritedObjectType': None}]": "Generate Resultant Set of Policy (Logging)",
@@ -375,16 +376,37 @@ DELEGATIONS_ACE = {
 }
 
 # https://learn.microsoft.com/fr-fr/windows/win32/sysinfo/registry-key-security-and-access-rights
+# REGISTRY_ACCESS_RIGHT = {
+#     "KEY_QUERY_VALUE": 1,
+#     "KEY_SET_VALUE": 2,
+#     "KEY_CREATE_SUB_KEY": 4,
+#     "KEY_ENUMERATE_SUB_KEYS": 8,
+#     "KEY_NOTIFY": 16,
+#     "KEY_CREATE_LINK": 32,
+#     "KEY_WOW64_64KEY": 256,
+#     "KEY_WOW64_32KEY": 512,
+#     "KEY_WRITE": 131078,
+#     "KEY_READ": 131097,
+#     "KEY_ALL_ACCESS": 983103
+# }
+
 REGISTRY_ACCESS_RIGHT = {
-    1: 'KEY_QUERY_VALUE',
-    2: 'KEY_SET_VALUE',
-    4: 'KEY_CREATE_SUB_KEY',
-    8: 'KEY_ENUMERATE_SUB_KEYS',
-    16: 'KEY_NOTIFY',
-    32: 'KEY_CREATE_LINK',
-    256: 'KEY_WOW64_64KEY',
-    512: 'KEY_WOW64_32KEY',
-    131078: 'KEY_WRITE',
-    131097: 'KEY_READ',
-    983103: 'KEY_ALL_ACCESS'
+    "Query Value": 1,
+    "Set Value": 2,
+    "Create Subkey": 4,
+    "Enumerate Subkeys": 8,
+    "Notify": 16,
+    "Create Link": 32,
+    "Delete": 65536,
+    "Read Control": 131072,
+    "Read": 131097,
+    "Write DAC": 262144,
+    "Write Owner": 524288,
+    "Full Control": 983103
+}
+
+REGISTRY_ACCESS_INHERITED = {
+    0: "This key only",
+    2: "This key and subkeys",
+    10: "Subkeys only"
 }

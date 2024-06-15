@@ -1,9 +1,9 @@
 from ADmanage import ADclient
 from impacket.smbconnection import SMBConnection, SessionError
 from adcheck.modules.MSuacCalc import uac_details
-from adcheck.modules.MSaceCalc import ace_details
+from adcheck.modules.MSaceCalc import SecurityDescriptorParser
 from adcheck.modules.decor import admin_required, capture_stdout
-from adcheck.modules.constants import WELL_KNOWN_SIDS, DELEGATIONS_ACE, SUPPORTED_ENCRYPTION
+from adcheck.modules.constants import WELL_KNOWN_SIDS, SUPPORTED_ENCRYPTION
 from termcolor import colored
 from datetime import datetime, timezone
 from pathlib import Path
@@ -512,27 +512,9 @@ class ADcheck:
         domains_object = self.ad_client.get_ADobjects(custom_filter='(objectClass=Domain)', custom_attributes=['distinguishedName', 'nTSecurityDescriptor'])
 
         containers =  ous_object + containers_object + domains_object
-        for container in containers:
-            security_info = ace_details(self.NEW_WELL_KNOWN_SIDS, self.schema_objects, self.schema_attributes, self.extended_rights, self.all_entries, container)
-            user_permissions = {}
-            for dacl in security_info['Dacl']:
-                user = dacl.get('User')
-                if user not in self.NEW_WELL_KNOWN_SIDS.values():
-                    user_permissions.setdefault(user, [])
-                    user_permissions[user].append(
-                        {
-                            'PermissionsValue': dacl['Permissions']['PermissionsValue'],
-                            'PermissionsObjects': dacl['Permissions']['PermissionsObjects'],
-                            'InheritedObjectType': dacl['Permissions']['InheritedObjectType']
-                        }
-                    )
-            
-            result = {}
-            result.setdefault(container['distinguishedName'], [])
-            for user, permissions in user_permissions.items():
-                permissions_translation = [{'user': user, 'permissions': DELEGATIONS_ACE.get(str(permissions), [str(permission) for permission in permissions])}]
-                result[container['distinguishedName']] = permissions_translation
-            self.pprint('INFO', f'{json.dumps(result, indent=4)}\n')
+        parser = SecurityDescriptorParser(self.NEW_WELL_KNOWN_SIDS, self.schema_objects, self.schema_attributes, self.extended_rights, self.all_entries, 'container')
+        result = parser.process_containers(containers)
+        self.pprint('INFO', f'{json.dumps(result, indent=4)}\n')
 
     def krbtgt_encryption(self):
         result = SUPPORTED_ENCRYPTION.get(int(self.ad_client.get_ADobject('krbtgt')['msDS-SupportedEncryptionTypes']))
@@ -683,13 +665,17 @@ class ADcheck:
                 result.append(user['sAMAccountName'])
         self.pprint('INFO', f'Users with description : {result}')
 
-    # def reg_ace(self):
-    #     from adcheck.modules.RegReader import RegReader
-    #     from adcheck.modules.constants import REGISTRY_ACCESS_RIGHT
+    def reg_ace(self):
+        from adcheck.modules.RegReader import RegReader
 
-    #     reg_client = RegReader(dc_ip, username, password, domain, 'HKLM\\SYSTEM')
-    #     security_descriptor = reg_client.print_security_descriptor()
-    #     security_descriptor.dump()
+        parser = SecurityDescriptorParser(self.NEW_WELL_KNOWN_SIDS, self.schema_objects, self.schema_attributes, self.extended_rights, self.all_entries, 'reg_key')
+        reg_keys = ['HKLM\\SYSTEM', 'HKLM\\SECURITY', 'HKLM\\SAM']
+        for reg_key in reg_keys:
+            reg_client = RegReader(self.dc_ip, self.username, self.password, self.domain, self.nthash, reg_key)
+            security_descriptor = reg_client.get_security_descriptor()
+            result = parser.process_regKeys(security_descriptor)
+            self.pprint('INFO', f'{reg_key} permissions :')
+            self.pprint('INFO', f'{json.dumps(result, indent=4)}\n')
 
     def bloodhound_file(self):
         from bloodhound import BloodHound, ADAuthentication

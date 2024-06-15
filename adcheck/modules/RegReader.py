@@ -1,10 +1,12 @@
 from impacket.dcerpc.v5 import transport, rrp
+from impacket.dcerpc.v5 import scmr
 from impacket.examples.secretsdump import RemoteOperations
 from impacket.smbconnection import SMBConnection
 from impacket.system_errors import ERROR_NO_MORE_ITEMS
-from impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
+from adcheck.modules.MSaceCalc import SecurityDescriptorParser
 from struct import unpack
 import binascii
+import json
 
 
 class CustomRemoteOperations(RemoteOperations):
@@ -130,16 +132,16 @@ class RegReader:
         except Exception as e:
             return e
 
-    def print_security_descriptor(self):
+    def get_security_descriptor(self):
         self.connect()
         try:
             dce = self.__remoteOps.getRRP()
             hRootKey, subKey, Key = self.__strip_root_key(dce, self.__keyName)
             ans2 = rrp.hBaseRegOpenKey(dce, hRootKey, subKey)
-            key_info = rrp.hBaseRegGetKeySecurity(dce, ans2['phkResult'])
-            security_descriptor_data = b''.join(key_info['pRpcSecurityDescriptorOut']['lpSecurityDescriptor'])
-            security_descriptor = SR_SECURITY_DESCRIPTOR()
-            security_descriptor.fromString(security_descriptor_data)
+            key_handle = ans2['phkResult']
+
+            resp = rrp.hBaseRegGetKeySecurity(dce, key_handle, scmr.DACL_SECURITY_INFORMATION)
+            security_descriptor = b''.join(resp['pRpcSecurityDescriptorOut']['lpSecurityDescriptor'])
             return security_descriptor
         except Exception as e:
-            print(e)
+            return e

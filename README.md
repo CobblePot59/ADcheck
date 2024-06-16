@@ -10,9 +10,7 @@ Although textual, a simple color scheme is used to navigate through the returned
 
 The collected information includes :
 
-<details>
-<summary>- [x] **Accounts**</summary>
-<br>
+- [x] **Accounts**
   - [x] Admin accounts that can be delegated
   - [x] Admin accounts not in "_Protected Users_" group
   - [x] Accounts which can use DES authentication
@@ -33,7 +31,6 @@ The collected information includes :
   - [x] Accounts vulnerable to timeroasting attack
   - [x] Accounts that had admin rights in the past
   - [x] Get Users with description
-</details>
 
 - [x] **Configuration**
   - [x] Get Audit Policy

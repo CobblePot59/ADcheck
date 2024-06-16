@@ -98,24 +98,24 @@ The collected information includes :
 > [!WARNING]  
 > Currently, this tool is more geared towards penetration testers than auditors. If you intend to use it on Windows, it's necessary to exclude the project from the antivirus or Endpoint Detection and Response solution, as it utilizes Impacket, which is detected by these systems.
 
-1. Clone the ADcheck repository from GitHub :
+1. Install the python pipx package manager :
 ```
-git clone https://github.com/CobblePot59/ADcheck.git
-```
-
-2. Navigate to the ADcheck directory :
-```
-cd ADcheck
+python -m pip install pipx
 ```
 
-3. Install the project locally :
+2. Add it to the PATH :
 ```
-python -m pip install .
+pipx ensurepath
+```
+
+3. Install ADcheck project :
+```
+pipx install git+https://github.com/CobblePot59/ADcheck.git
 ```
 
 4. Run ADcheck, specifying the necessary parameters :
 ```
-python -m ADcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
+ADcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```
 ![ADcheck.gif](.github/pictures/ADcheck.gif)
 

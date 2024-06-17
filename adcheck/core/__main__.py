@@ -77,7 +77,7 @@ class ADcheck:
         if _return:
             return result 
         else:
-            self.pprint(result, f'Domain Controllers: {result2}')
+            self.pprint('INFO', f'Domain Controllers: {result2}')
 
     def can_add_computer(self):
         result = self.root_entry['ms-DS-MachineAccountQuota']

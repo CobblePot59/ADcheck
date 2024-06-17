@@ -10,7 +10,7 @@ Although textual, a simple color scheme is used to navigate through the returned
 
 The collected information includes :
 
-- [x] **Accounts**
+- [x] **User Account Management**
   - [x] Admin accounts that can be delegated
   - [x] Admin accounts not in "_Protected Users_" group
   - [x] Accounts which can use DES authentication
@@ -30,43 +30,25 @@ The collected information includes :
   - [x] Accounts which have reversible passwords
   - [x] Accounts vulnerable to timeroasting attack
   - [x] Accounts that had admin rights in the past
+  - [x] Accounts with password not required
+  - [x] Name of Pre-Windows 2000 Compatible Access group members
+  - [x] Get List of users in Privesc group
   - [x] Get Users with description
-
-- [x] **Configuration**
-  - [x] Get Audit Policy
-  - [x] Computers with bitlocker keys
-  - [x] Verify if Non-admin users can add up to 10 computer(s) to a domain
-  - [x] Verify if User can create dns record
-  - [x] Computers with constrained delegation
-  - [x] Get Control delegations by container
-  - [x] Get Domain Controllers
-  - [x] Verify if Force logoff when logon hours expire
-  - [x] Get Functional level of domain
+  - [x] Verify if The native administrator account has been used recently
   - [x] Get Group Managed Service Accounts
+
+- [x] **Audit and Policy Management**
+  - [x] Get Audit Policy
+  - [x] Get Default password policy
   - [x] Get Group Policy Object by Organizational Unit
   - [x] Name of Group Policy containing a password
-  - [x] Get Kerberos config
-  - [x] Get Supported Kerberos encryption algorithms
-  - [x] Verify if Kerberos password last changed < 40 days
-  - [x] Verify if LAPS is installed
-  - [x] Verify if LDAP signature was required on target
-  - [x] Verify if The native administrator account has been used recently
-  - [x] Accounts with password not required
-  - [x] Get Default password policy
-  - [x] Get Group policy folder/file rights
-  - [x] Name of Pre-Windows 2000 Compatible Access group members
-  - [x] Get Privilege Rights (`SeDebugPrivilege`, `SeBackupPrivilege`, ...)
-  - [x] Get List of users in Privesc group
-  - [x] Get Password Settings Object
-  - [x] Name of Computers with rbac
-  - [x] Verify if Recycle Bin is enabled
+  - [x] Verify if Force logoff when logon hours expire
   - [x] Verify if MSI packages are always installed with elevated privileges
   - [x] Verify if CredentialGuard is enabled
   - [x] Verify if LM hash storage disabled
   - [x] Verify if Authentication limited to NTLMv2 mechanism only
   - [x] Verify if AppLocker rules defined
   - [x] Verify if gpp_autologon is enabled
-  - [x] Get Name of AMSI installed
   - [x] Verify if Bitlocker is enabled
   - [x] Verify if Firewall is disabled
   - [x] Verify if IPv4 preferred over IPv6
@@ -84,14 +66,36 @@ The collected information includes :
   - [x] Verify if WPAD is disabled
   - [x] Verify if Windows Script Host is disabled
   - [x] Verify if WSUS server is not used
-  - [x] Get Authentication policy silos
-  - [x] Verify if SMB signing is required
-  - [x] Verify if Spooler service is enabled on remote target
-  - [x] Get Supported encryption by Domain Controllers
-  - [x] Name of Trust accounts for the delegation
+  - [x] Get Name of AMSI installed
+
+- [x] **Computer and Domain Management**
+  - [x] Computers with bitlocker keys
+  - [x] Get Domain Controllers
+  - [x] Get Functional level of domain
+  - [x] Get Kerberos config
+  - [x] Verify if Non-admin users can add up to 10 computer(s) to a domain
+  - [x] Get Supported Kerberos encryption algorithms
+  - [x] Verify if Kerberos password last changed < 40 days
+  - [x] Verify if LAPS is installed
+  - [x] Get Password Settings Object
+  - [x] Verify if Recycle Bin is enabled
   - [x] Verify if The computer was recently backed up
   - [x] Verify if The computer is up to date
+  - [x] Get Supported encryption by Domain Controllers
+  - [x] Verify if SMB signing is required
+  - [x] Verify if Spooler service is enabled on remote target
+  - [x] Verify if LDAP signature was required on target
+
+- [x] **Privilege and Trust Management**
   - [x] Registry access rights
+  - [x] Get Control delegations by container
+  - [x] Get Privilege Rights (SeDebugPrivilege, SeBackupPrivilege, ...)
+  - [x] Get Authentication policy silos
+  - [x] Name of Trust accounts for the delegation
+  - [x] Name of Computers with rbac
+  - [x] Verify if User can create dns record
+  - [x] Computers with constrained delegation
+  - [x] Get Group policy folder/file rights
 
 ## Usage
 

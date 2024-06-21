@@ -668,6 +668,7 @@ class ADcheck:
                 result.append(user['sAMAccountName'])
         self.pprint('INFO', f'Users with description : {result}')
 
+    @admin_required
     def reg_ace(self):
         from adcheck.modules.RegReader import RegReader
 

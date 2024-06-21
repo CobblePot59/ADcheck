@@ -211,6 +211,9 @@ class ADcheck:
     def inactive_accounts(self):
         result = []
         for user in self.user_entries:
+            if 'lastLogon' not in user:
+                continue
+                
             user_lastLogon = str(user['lastLogon'])
             if user_lastLogon == '1601-01-01 00:00:00+00:00':
                 continue

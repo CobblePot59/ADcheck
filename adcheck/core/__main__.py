@@ -119,7 +119,6 @@ class ADcheck:
 
     def admin_not_protected(self):
         result = []
-        is_member_of_protected_users = False
         for user in self.user_entries:
             if 'adminCount' in user and 'memberOf' in user and user['cn'] != 'krbtgt':
                 is_protected_user = False
@@ -681,18 +680,72 @@ class ADcheck:
             self.pprint('INFO', f'{reg_key} permissions :')
             self.pprint('INFO', f'{json.dumps(result, indent=4)}\n')
 
+    @admin_required
+    def reg_ca(self):
+        import requests
+        from io import StringIO
+        from csv import DictReader
+        import OpenSSL.crypto
+        import binascii
+        
+
+        key_types = {6: 'TYPE_RSA', 10: 'TYPE_DSA', 16: 'TYPE_DH', 408: 'TYPE_EC', 480: 'TYPE_SM2'}
+        
+        # Get the list of trusted CAs
+        response = requests.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
+        trusted_ca = {row['SHA-256 Fingerprint']: row for row in DictReader(StringIO(response.text))}
+
+        untrusted_ca = []
+        disabled_certificates = []
+        
+        # Get local certificates
+        ca_paths = ['AuthRoot', 'ROOT']
+        for ca_path in ca_paths:
+            subkeys = self.reg_client(f'HKLM\\SOFTWARE\\Microsoft\\SystemCertificates\\{ca_path}\\Certificates\\', subKey=True)
+            for subkey in subkeys:
+                for value in subkey.values():
+                    blob = binascii.unhexlify(value[0]['Blob'])
+                    der_start = blob.find(b'\x30\x82') # Start of ASN.1 sequence
+                    try:
+                        cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, blob[der_start:])
+                    except OpenSSL.crypto.Error as e:
+                        print(f"Error loading certificate: {e}")
+                        continue
+
+                    cert_info = {
+                        'Issuer': ', '.join([f'{key.decode('utf-8')}:{value.decode('utf-8')}' for key, value in cert.get_issuer().get_components()]),
+                        'Subject': ', '.join([f'{key.decode('utf-8')}:{value.decode('utf-8')}' for key, value in cert.get_issuer().get_components()]),
+                        'Version': cert.get_version(),
+                        'Not Before': cert.get_notBefore().decode('utf-8'),
+                        'Not After': cert.get_notAfter().decode('utf-8'),
+                        'Serial Number': cert.get_serial_number(),
+                        'Signature Algorithm': cert.get_signature_algorithm().decode('utf-8'),
+                        'Public Key': f'type: {key_types[cert.get_pubkey().type()]}, bits: {cert.get_pubkey().bits()}',
+                        'Digest': cert.digest("sha256").decode('utf-8').replace(':', ''),
+                        'Extensions': [cert.get_extension(i).get_short_name().decode('utf-8') for i in range(cert.get_extension_count())]
+                    }
+
+                    # Check CA status
+                    if cert_info['Digest'] not in trusted_ca:
+                        untrusted_ca.append({ca_path : cert_info})
+                    elif trusted_ca[cert_info['Digest']]['Microsoft Status'] == 'Disabled':
+                        disabled_certificates.append({ca_path : cert_info})
+
+        self.pprint(untrusted_ca, f'Untrusted Certificates : {json.dumps(untrusted_ca, indent=4)}')
+        self.pprint(disabled_certificates, f'\nDisabled Certificates : {json.dumps(disabled_certificates, indent=4)}')
+
     def bloodhound_file(self):
         from bloodhound import BloodHound, ADAuthentication
         from bloodhound.ad.domain import AD
         from time import time
 
-        auth = ADAuthentication(username=username, password=password, domain=domain, auth_method='auto')
-        if hashes:
-            lm, nt = hashes.split(":")
-            auth = ADAuthentication(lm_hash=lm, nt_hash=nt, username=username, domain=domain, auth_method='auto')
+        auth = ADAuthentication(username=self.username, password=self.password, domain=self.domain, auth_method='auto')
+        if self.hashes:
+            lm, nt = self.hashes.split(":")
+            auth = ADAuthentication(lm_hash=lm, nt_hash=nt, username=self.username, domain=self.domain, auth_method='auto')
         try:
-            ad = AD(auth=auth, domain=domain, nameserver=dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=secure)
-            ad.dns_resolve(domain=domain)
+            ad = AD(auth=auth, domain=self.domain, nameserver=self.dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=self.secure)
+            ad.dns_resolve(domain=self.domain)
         except dns.resolver.NoResolverConfiguration:
             print("Error: No DNS resolver is configured.")
             return

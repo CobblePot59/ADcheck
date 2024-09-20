@@ -80,7 +80,8 @@ CHECKLIST = {
         ("reg_wdigest", "Verify if WDigest authentication enabled"),
         ("reg_wpad", "Verify if WPAD is disabled"),
         ("reg_wsh", "Verify if Windows Script Host is disabled"),
-        ("reg_wsus_config", "Verify if WSUS server is not used")
+        ("reg_wsus_config", "Verify if WSUS server is not used"),
+        ("reg_ca", "Verify status of Trusted Root Certification Authorities")
     ]
 }
 

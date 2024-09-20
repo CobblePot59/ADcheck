@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from impacket.smbconnection import SMBConnection
 from impacket.examples.secretsdump import RemoteOperations, SAMHashes, LSASecrets, NTDSHashes
 

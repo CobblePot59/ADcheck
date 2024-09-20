@@ -3,10 +3,8 @@ from impacket.dcerpc.v5 import scmr
 from impacket.examples.secretsdump import RemoteOperations
 from impacket.smbconnection import SMBConnection
 from impacket.system_errors import ERROR_NO_MORE_ITEMS
-from adcheck.modules.MSaceCalc import SecurityDescriptorParser
 from struct import unpack
 import binascii
-import json
 
 
 class CustomRemoteOperations(RemoteOperations):

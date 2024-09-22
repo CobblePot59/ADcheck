@@ -1,7 +1,7 @@
-from impacket.dcerpc.v5 import transport, rrp, scmr
-from impacket.examples.secretsdump import RemoteOperations
-from impacket.smbconnection import SMBConnection
-from impacket.system_errors import ERROR_NO_MORE_ITEMS
+from adcheck.libs.impacket.dcerpc.v5 import transport, rrp, scmr
+from adcheck.libs.impacket.examples.secretsdump import RemoteOperations
+from adcheck.libs.impacket.smbconnection import SMBConnection
+from adcheck.libs.impacket.system_errors import ERROR_NO_MORE_ITEMS
 from struct import unpack
 import binascii
 

@@ -1,7 +1,8 @@
-from impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
+from adcheck.libs.impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
 from adcheck.modules.constants import ENTRANCE_ACCESS_CONTROL, REGISTRY_ACCESS_RIGHT, LAPS_PROPERTIES_UUID, REGISTRY_ACCESS_INHERITED, DELEGATIONS_ACE
 import json
 import base64
+
 
 class SecurityDescriptorParser:
     def __init__(self, new_well_known_sids, schema_objects, schema_attributes, extended_rights, all_entries, object_type):

@@ -1,7 +1,5 @@
 ADmanage
 termcolor
 aiowmi
-bloodhound
-impacket
 requests
 pyopenssl

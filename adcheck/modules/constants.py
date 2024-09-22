@@ -47,9 +47,11 @@ CHECKLIST = {
         ("spooler", "Verify if Spooler service is enabled on remote target"),
         ("supported_encryption", "Get Supported encryption by Domain Controllers"),
         ("trusted_for_delegation", "Name of Trust accounts for the delegation"),
-        ("bloodhound_file", "Generate json data to import in BloodHound\n"),
+        ("bloodhound_file", "Generate json data to import in BloodHound"),
+        ("namedpipes", "Get List of named pipes"),
+        ("ldap_anonymous", "Verify LDAP anonymous binding")
     ],
-    "HIGH PRIVILEGE MODULES (requires admin privs)": [
+    "\nHIGH PRIVILEGE MODULES (requires admin privs)": [
         ("identical_password", "Number of accounts with identical passwords"),
         ("blank_password", "Accounts with blank password"),
         ("laps", "Verify if LAPS is installed"),

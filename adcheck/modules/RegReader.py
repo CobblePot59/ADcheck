@@ -1,5 +1,4 @@
-from impacket.dcerpc.v5 import transport, rrp
-from impacket.dcerpc.v5 import scmr
+from impacket.dcerpc.v5 import transport, rrp, scmr
 from impacket.examples.secretsdump import RemoteOperations
 from impacket.smbconnection import SMBConnection
 from impacket.system_errors import ERROR_NO_MORE_ITEMS

@@ -128,3 +128,7 @@ ADcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 - [ ] Azure (Entra ID)
 - [x] Trusted Root Certification Authorities status
 - [ ] Persistent attack trace (mimikatz, pywhisker, ticket, dsrm, acl)
+- [x] Ldap anonymous bind
+- [x] List of Named pipes
+- [] DFSR SYSVOL
+- [] WinRM authorization

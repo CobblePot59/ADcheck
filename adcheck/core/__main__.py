@@ -33,7 +33,7 @@ class ADcheck:
         import asyncio
 
 
-        self.ad_client = ADclient(self.domain, self.username, self.password, self.hashes, self.dc_ip, self.base_dn, self.secure)
+        self.ad_client = ADclient(domain=self.domain, username=self.username, password=self.password, hashes=self.hashes, dc_ip=self.dc_ip, base_dn=self.base_dn, secure=self.secure, anonymous=False)
         self.smb_client = SMBConnection(self.dc_ip, self.dc_ip)
         self.smb_client.login(self.username, self.password, self.domain, nthash=self.nthash)
         self.reg_client = lambda key, subKey=False: RegReader(self.dc_ip, self.username, self.password, self.domain, self.nthash, key, subKey).run()
@@ -134,7 +134,7 @@ class ADcheck:
         from ldap3.core.exceptions import LDAPBindError
 
         try:
-            ADclient(domain=self.domain, username=self.username, password=self.password, hashes=self.hashes, dc_ip=self.dc_ip, base_dn=self.base_dn, secure=False)
+            ADclient(domain=self.domain, username=self.username, password=self.password, hashes=self.hashes, dc_ip=self.dc_ip, base_dn=self.base_dn, secure=False, anonymous=False)
             self.pprint(True, f'LDAP signature was required on target : False')
         except LDAPBindError as e:
             if 'strongerAuthRequired:' in str(e):
@@ -562,28 +562,6 @@ class ADcheck:
         self.pprint('INFO', f'Kerberos config :\n{json.dumps(result, indent=4)}')
 
     @admin_required
-    def wmi_last_update(self):
-        # https://github.com/netinvent/windows_tools/blob/master/windows_tools/updates/__init__.py#L144
-        hotfix_list = self.wmi_client('SELECT Description, HotFixID, InstalledOn FROM Win32_QuickFixEngineering')
-        last_update = max(hotfix_list, key=lambda x: x['InstalledOn'])['InstalledOn']
-        last_update_date = datetime.strptime(last_update, "%m/%d/%Y")
-        ndays = (datetime.now() - last_update_date).days
-
-        result = ndays < 30
-        self.pprint(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
-
-    @admin_required
-    def wmi_last_backup(self):
-        events = self.wmi_client("SELECT * FROM Win32_NTLogEvent WHERE LogFile='Directory Service' AND EventCode=1917")
-        if events:
-            last_backup = max(events, key=lambda x: x['TimeWritten'])['TimeWritten']
-            ndays = (datetime.now(timezone.utc) - last_backup).days
-            result = ndays < 1
-            self.pprint(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
-        else:
-            self.pprint(True, 'The computer was never backed up')
-
-    @admin_required
     def audit_policy(self):
         from csv import DictReader
 
@@ -667,6 +645,60 @@ class ADcheck:
                 result.append(user['sAMAccountName'])
         self.pprint('INFO', f'Users with description : {result}')
 
+    def bloodhound_file(self):
+        from bloodhound import BloodHound, ADAuthentication
+        from bloodhound.ad.domain import AD
+        from time import time
+
+        auth = ADAuthentication(username=self.username, password=self.password, domain=self.domain, auth_method='auto')
+        if self.hashes:
+            lm, nt = self.hashes.split(":")
+            auth = ADAuthentication(lm_hash=lm, nt_hash=nt, username=self.username, domain=self.domain, auth_method='auto')
+        try:
+            ad = AD(auth=auth, domain=self.domain, nameserver=self.dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=self.secure)
+            ad.dns_resolve(domain=self.domain)
+        except dns.resolver.NoResolverConfiguration:
+            print("Error: No DNS resolver is configured.")
+            return
+
+        bloodhound = BloodHound(ad)
+        bloodhound.connect()
+
+        collect = ['group', 'localadmin', 'session', 'trusts', 'objectprops', 'acl', 'dcom', 'rdp', 'psremote', 'container']
+        timestamp = datetime.fromtimestamp(time()).strftime('%Y%m%d%H%M%S') + '_'
+        bloodhound.run(collect=collect, num_workers=10, disable_pooling=True, timestamp=timestamp, computerfile='', cachefile=None, exclude_dcs=False, fileNamePrefix='')
+
+    def namedpipes(self):
+        result = [pipe.get_longname() for pipe in self.smb_client.listPath('IPC$', r'\\*')]
+        self.pprint('INFO', f'Named Pipes :\n{json.dumps(result, indent=4)}')
+    
+    def ldap_anonymous(self):
+        ad_client = ADclient(domain=self.domain, dc_ip=self.dc_ip, anonymous=True)
+        result = ad_client.conn.bind()
+        self.pprint(result, f'Ldap anonymous bind : {result}')
+
+    @admin_required
+    def wmi_last_update(self):
+        # https://github.com/netinvent/windows_tools/blob/master/windows_tools/updates/__init__.py#L144
+        hotfix_list = self.wmi_client('SELECT Description, HotFixID, InstalledOn FROM Win32_QuickFixEngineering')
+        last_update = max(hotfix_list, key=lambda x: x['InstalledOn'])['InstalledOn']
+        last_update_date = datetime.strptime(last_update, "%m/%d/%Y")
+        ndays = (datetime.now() - last_update_date).days
+
+        result = ndays < 30
+        self.pprint(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
+
+    @admin_required
+    def wmi_last_backup(self):
+        events = self.wmi_client("SELECT * FROM Win32_NTLogEvent WHERE LogFile='Directory Service' AND EventCode=1917")
+        if events:
+            last_backup = max(events, key=lambda x: x['TimeWritten'])['TimeWritten']
+            ndays = (datetime.now(timezone.utc) - last_backup).days
+            result = ndays < 1
+            self.pprint(result, f'The computer was recently backed up (Last : {last_backup}) : {result}', reverse=True)
+        else:
+            self.pprint(True, 'The computer was never backed up')
+
     @admin_required
     def reg_ace(self):
         from adcheck.modules.RegReader import RegReader
@@ -733,29 +765,6 @@ class ADcheck:
 
         self.pprint(untrusted_ca, f'Untrusted Certificates : {json.dumps(untrusted_ca, indent=4)}')
         self.pprint(disabled_certificates, f'\nDisabled Certificates : {json.dumps(disabled_certificates, indent=4)}')
-
-    def bloodhound_file(self):
-        from bloodhound import BloodHound, ADAuthentication
-        from bloodhound.ad.domain import AD
-        from time import time
-
-        auth = ADAuthentication(username=self.username, password=self.password, domain=self.domain, auth_method='auto')
-        if self.hashes:
-            lm, nt = self.hashes.split(":")
-            auth = ADAuthentication(lm_hash=lm, nt_hash=nt, username=self.username, domain=self.domain, auth_method='auto')
-        try:
-            ad = AD(auth=auth, domain=self.domain, nameserver=self.dc_ip, dns_tcp=False, dns_timeout=3, use_ldaps=self.secure)
-            ad.dns_resolve(domain=self.domain)
-        except dns.resolver.NoResolverConfiguration:
-            print("Error: No DNS resolver is configured.")
-            return
-
-        bloodhound = BloodHound(ad)
-        bloodhound.connect()
-
-        collect = ['group', 'localadmin', 'session', 'trusts', 'objectprops', 'acl', 'dcom', 'rdp', 'psremote', 'container']
-        timestamp = datetime.fromtimestamp(time()).strftime('%Y%m%d%H%M%S') + '_'
-        bloodhound.run(collect=collect, num_workers=10, disable_pooling=True, timestamp=timestamp, computerfile='', cachefile=None, exclude_dcs=False, fileNamePrefix='')
 
     @admin_required
     def reg_uac(self):

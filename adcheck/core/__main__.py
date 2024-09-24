@@ -745,8 +745,8 @@ class ADcheck:
                         continue
 
                     cert_info = {
-                        'Issuer': ', '.join([f'{key.decode('utf-8')}:{value.decode('utf-8')}' for key, value in cert.get_issuer().get_components()]),
-                        'Subject': ', '.join([f'{key.decode('utf-8')}:{value.decode('utf-8')}' for key, value in cert.get_issuer().get_components()]),
+                        'Issuer': ', '.join([f"{key.decode('utf-8')}:{value.decode('utf-8')}" for key, value in cert.get_issuer().get_components()]),
+                        'Subject': ', '.join([f"{key.decode('utf-8')}:{value.decode('utf-8')}" for key, value in cert.get_issuer().get_components()]),
                         'Version': cert.get_version(),
                         'Not Before': cert.get_notBefore().decode('utf-8'),
                         'Not After': cert.get_notAfter().decode('utf-8'),

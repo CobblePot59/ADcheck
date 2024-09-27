@@ -1,5 +1,5 @@
-from impacket.smbconnection import SMBConnection
-from impacket.examples.secretsdump import RemoteOperations, SAMHashes, LSASecrets, NTDSHashes
+from adcheck.libs.impacket.smbconnection import SMBConnection
+from adcheck.libs.impacket.examples.secretsdump import RemoteOperations, SAMHashes, LSASecrets, NTDSHashes
 
 class DumpSecrets:
     def __init__(self, remoteHost, username, password, domain, nthash, options=None):

@@ -1,5 +1,5 @@
 from ADmanage import ADclient
-from impacket.smbconnection import SMBConnection, SessionError
+from adcheck.libs.impacket.smbconnection import SMBConnection, SessionError
 from adcheck.modules.MSuacCalc import uac_details
 from adcheck.modules.MSaceCalc import SecurityDescriptorParser
 from adcheck.modules.decor import admin_required, capture_stdout
@@ -181,7 +181,7 @@ class ADcheck:
         self.pprint(result, f'Kerberos password last changed : {ndays} day(s) ago')
 
     def spooler(self):
-        from impacket.dcerpc.v5 import transport, rprn
+        from adcheck.libs.impacket.dcerpc.v5 import transport, rprn
 
         rpctransport = transport.DCERPCTransportFactory(rf'ncacn_np:{self.dc_ip}[\pipe\spoolss]')
         rpctransport.set_credentials(self.username, self.password, self.domain, nthash=self.nthash)
@@ -646,8 +646,8 @@ class ADcheck:
         self.pprint('INFO', f'Users with description : {result}')
 
     def bloodhound_file(self):
-        from bloodhound import BloodHound, ADAuthentication
-        from bloodhound.ad.domain import AD
+        from adcheck.libs.bloodhound import BloodHound, ADAuthentication
+        from adcheck.libs.bloodhound.ad.domain import AD
         from time import time
 
         auth = ADAuthentication(username=self.username, password=self.password, domain=self.domain, auth_method='auto')

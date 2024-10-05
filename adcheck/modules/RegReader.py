@@ -1,12 +1,11 @@
-from adcheck.libs.impacket.dcerpc.v5 import transport, rrp, scmr
-from adcheck.libs.impacket.examples.secretsdump import RemoteOperations
-from adcheck.libs.impacket.smbconnection import SMBConnection
-from adcheck.libs.impacket.system_errors import ERROR_NO_MORE_ITEMS
+from libs.impacket.dcerpc.v5 import transport, rrp, scmr
+from libs.impacket.smbconnection import SMBConnection
+from libs.impacket.system_errors import ERROR_NO_MORE_ITEMS
 from struct import unpack
 import binascii
 
 
-class CustomRemoteOperations(RemoteOperations):
+class RemoteOperations:
     def __init__(self, smbConnection, doKerberos):
         self.__smbConnection = smbConnection
         self.__doKerberos = doKerberos
@@ -101,13 +100,7 @@ class RegReader:
         self.__smbConnection = SMBConnection(self.__remoteHost, self.__remoteHost)
         self.__smbConnection.login(self.__username, self.__password, self.__domain, nthash=self.__nthash)
         self.__remoteOps  = RemoteOperations(self.__smbConnection, self.__doKerberos)
-
-        try:
-            self.__remoteOps.enableRegistry()
-        except Exception as e:
-            # Cannot check RemoteRegistry status. Triggering start trough named pipe...
-            self.__remoteOps  = CustomRemoteOperations(self.__smbConnection, self.__doKerberos)
-            self.__remoteOps.connectWinReg()
+        self.__remoteOps.connectWinReg()
 
     def run(self):
         self.connect()

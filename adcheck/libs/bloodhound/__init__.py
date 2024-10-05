@@ -22,6 +22,11 @@
 #
 ####################
 
+import sys
+
+sys.path.append('libs')
+
+
 import os, sys, logging, argparse, getpass, time, re, datetime
 from zipfile import ZipFile
 from bloodhound.ad.domain import AD, ADDC

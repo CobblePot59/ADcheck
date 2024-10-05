@@ -1,9 +1,9 @@
 from ADmanage import ADclient
-from adcheck.libs.impacket.smbconnection import SMBConnection, SessionError
-from adcheck.modules.MSuacCalc import uac_details
-from adcheck.modules.MSaceCalc import SecurityDescriptorParser
-from adcheck.modules.decor import admin_required, capture_stdout
-from adcheck.modules.constants import WELL_KNOWN_SIDS, SUPPORTED_ENCRYPTION
+from libs.impacket.smbconnection import SMBConnection, SessionError
+from modules.MSuacCalc import uac_details
+from modules.MSaceCalc import SecurityDescriptorParser
+from modules.decor import admin_required, capture_stdout
+from modules.constants import WELL_KNOWN_SIDS, SUPPORTED_ENCRYPTION
 from termcolor import colored
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,8 +28,8 @@ class ADcheck:
         self.connect()
 
     def connect(self):
-        from adcheck.modules.RegReader import RegReader
-        from adcheck.modules.WMIquery import WMIquery
+        from modules.RegReader import RegReader
+        from modules.WMIquery import WMIquery
         import asyncio
 
 
@@ -156,7 +156,7 @@ class ADcheck:
         self.pprint(result, f'Pre-Windows 2000 Compatible Access group members contain "Authenticated Users : {result}')
 
     def privesc_group(self):
-        from adcheck.modules.constants import PRIVESC_GROUP
+        from modules.constants import PRIVESC_GROUP
 
         result = {}
         for group in PRIVESC_GROUP:
@@ -181,7 +181,7 @@ class ADcheck:
         self.pprint(result, f'Kerberos password last changed : {ndays} day(s) ago')
 
     def spooler(self):
-        from adcheck.libs.impacket.dcerpc.v5 import transport, rprn
+        from libs.impacket.dcerpc.v5 import transport, rprn
 
         rpctransport = transport.DCERPCTransportFactory(rf'ncacn_np:{self.dc_ip}[\pipe\spoolss]')
         rpctransport.set_credentials(self.username, self.password, self.domain, nthash=self.nthash)
@@ -280,12 +280,9 @@ class ADcheck:
     def ntds_dump(self):
         @capture_stdout
         def ntlm_hashes(dc_ip, username, password, domain, nthash):
-            from adcheck.modules.SmallSecretsDump import DumpSecrets, Options
+            from modules.SmallSecretsDump import DumpSecrets
 
-            options = Options()
-            options.just_dc = True
-            options.just_dc_ntlm = True
-            DumpSecrets(dc_ip, username, password, domain, nthash, options).dump()
+            DumpSecrets(dc_ip, username, password, domain, nthash).dump()
         return ntlm_hashes(self.dc_ip, self.username, self.password, self.domain, self.nthash).strip().split('\n')
     
     @admin_required
@@ -337,7 +334,7 @@ class ADcheck:
         self.pprint('INFO', f'Group Policy Object by Organizational Unit :\n{json.dumps(result, indent=4)}')
 
     def get_policies(self):
-        from adcheck.modules.GPOBrowser import smb_download
+        from modules.GPOBrowser import smb_download
 
         smb_download(self.smb_client, f'{self.domain}/Policies', 'GPOS')
 
@@ -348,7 +345,7 @@ class ADcheck:
         self.pprint(result, f'SMB signing is required : {result}', reverse=True)
 
     def password_policy(self):
-        from adcheck.modules.constants import PWD_PROPERTIES
+        from modules.constants import PWD_PROPERTIES
         
         result = {
                     'lockoutDuration': str(self.root_entry['lockoutDuration']),
@@ -362,7 +359,7 @@ class ADcheck:
         self.pprint('INFO', f'Default password policy :\n{json.dumps(result, indent=4)}')
 
     def functional_level(self):
-        from adcheck.modules.constants import FOREST_LEVELS
+        from modules.constants import FOREST_LEVELS
 
         result = FOREST_LEVELS.get(int(self.root_entry['msDS-Behavior-Version']))
         self.pprint('INFO', f'Functional level of domain is : {result}')
@@ -603,8 +600,8 @@ class ADcheck:
         self.pprint('INFO', f'Privilege Rights :\n{json.dumps(result, indent=4)}')
 
     def policies_ace(self):
-        from adcheck.modules.GPOBrowser import smb_get_attributes
-        from adcheck.modules.constants import FILE_ACCESS_RIGHT, DIRECTORY_ACCESS_RIGHT
+        from modules.GPOBrowser import smb_get_attributes
+        from modules.constants import FILE_ACCESS_RIGHT, DIRECTORY_ACCESS_RIGHT
 
         gpo_path_rights = smb_get_attributes(self.smb_client, f'{self.domain}/Policies')
         policies = [{'name': policy['name'], 'displayName': policy['displayName']} for policy in self.policies_entries]
@@ -646,8 +643,8 @@ class ADcheck:
         self.pprint('INFO', f'Users with description : {result}')
 
     def bloodhound_file(self):
-        from adcheck.libs.bloodhound import BloodHound, ADAuthentication
-        from adcheck.libs.bloodhound.ad.domain import AD
+        from libs.bloodhound import BloodHound, ADAuthentication
+        from libs.bloodhound.ad.domain import AD
         from time import time
 
         auth = ADAuthentication(username=self.username, password=self.password, domain=self.domain, auth_method='auto')
@@ -701,7 +698,7 @@ class ADcheck:
 
     @admin_required
     def reg_ace(self):
-        from adcheck.modules.RegReader import RegReader
+        from modules.RegReader import RegReader
 
         parser = SecurityDescriptorParser(self.NEW_WELL_KNOWN_SIDS, self.schema_objects, self.schema_attributes, self.extended_rights, self.all_entries, 'reg_key')
         reg_keys = ['HKLM\\SYSTEM', 'HKLM\\SECURITY', 'HKLM\\SAM']

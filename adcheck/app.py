@@ -1,8 +1,8 @@
-from adcheck.core.__main__ import ADcheck, Options
-from adcheck.modules.constants import CHECKLIST
+from core.__main__ import ADcheck, Options
+from modules.constants import CHECKLIST
 from argparse import ArgumentParser
-import sys
 import re
+import sys
 
 
 def launch_all_methods(obj, is_admin=False, module=None, hashes=None, debug=False):

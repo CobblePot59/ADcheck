@@ -1,5 +1,6 @@
 ADmanage
+pycryptodomex
 termcolor
 aiowmi
-requests
 pyopenssl
+requests

@@ -1,7 +1,6 @@
 from libs.impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
 from modules.constants import ENTRANCE_ACCESS_CONTROL, REGISTRY_ACCESS_RIGHT, LAPS_PROPERTIES_UUID, REGISTRY_ACCESS_INHERITED, DELEGATIONS_ACE
-import json
-import base64
+import uuid
 
 
 class SecurityDescriptorParser:
@@ -13,15 +12,10 @@ class SecurityDescriptorParser:
         self.all_entries = all_entries
         self.object_type = object_type
 
-    @staticmethod
-    def get_encoded_attr(encoded_attr):
-        decoded_attr = base64.b64decode(json.loads(encoded_attr.replace('\'', '"'))['encoded'])
-        return decoded_attr
-
     def ace_details(self, _object):
         if self.object_type == 'container':
             security_descriptor = SR_SECURITY_DESCRIPTOR()
-            security_descriptor.fromString(self.get_encoded_attr(_object['nTSecurityDescriptor']))
+            security_descriptor.fromString(_object.get('nTSecurityDescriptor'))
         elif self.object_type == 'reg_key':
             security_descriptor = SR_SECURITY_DESCRIPTOR(_object)
 
@@ -29,7 +23,7 @@ class SecurityDescriptorParser:
             sid = ace['Ace']['Sid'].formatCanonical()
             formatted_sid = self.new_well_known_sids.get(sid) \
                 or (self.new_well_known_sids.get('S-1-5-5') if sid.startswith('S-1-5-5') else None) \
-                or next((entry['sAMAccountName'] for entry in self.all_entries if 'objectSid' in entry and sid == entry['objectSid']), None) \
+                or next((entry.get('sAMAccountName') for entry in self.all_entries if 'objectSid' in entry and sid == entry.get('objectSid')), None) \
                 or sid
             return formatted_sid
 
@@ -41,9 +35,9 @@ class SecurityDescriptorParser:
             else:
                 return []
 
-            if mask == ACCESS_CONTROL['Full Control']:
+            if mask == ACCESS_CONTROL.get('Full Control'):
                 permissions = 'Full Control'
-            elif self.object_type == 'reg_key' and mask == ACCESS_CONTROL['Read']:
+            elif self.object_type == 'reg_key' and mask == ACCESS_CONTROL.get('Read'):
                 permissions = 'Read'
             else:
                 permissions = []
@@ -55,16 +49,11 @@ class SecurityDescriptorParser:
         def get_advanced_properties(ace):
             if ace['TypeName'] == 'ACCESS_ALLOWED_OBJECT_ACE' or ace['TypeName'] == 'ACCESS_DENIED_OBJECT_ACE':
                 _uuid = ace['Ace']['ObjectType']
-                _uuid_hex = str(_uuid.hex())
-                _uuid_hex = '-'.join([_uuid_hex[:8], _uuid_hex[8:12], _uuid_hex[12:16], _uuid_hex[16:20], _uuid_hex[20:]])
-                rights_guid = '{}{}{}{}-{}{}-{}{}-{}-{}'.format(
-                    _uuid_hex[6:8], _uuid_hex[4:6], _uuid_hex[2:4], _uuid_hex[0:2],
-                    _uuid_hex[11:13], _uuid_hex[9:11], _uuid_hex[16:18], _uuid_hex[14:16],
-                    _uuid_hex[19:23], _uuid_hex[24:]
-                )
-                advanced_properties = [schema_object['name'] for schema_object in self.schema_objects if str(self.get_encoded_attr(schema_object['schemaIDGUID'])) == str(_uuid)] \
-                    or [schema_attribute['name'] for schema_attribute in self.schema_attributes if str(self.get_encoded_attr(schema_attribute['schemaIDGUID'])) == str(_uuid)] \
-                    or [extended_right['displayName'] for extended_right in self.extended_rights if extended_right['rightsGuid'] == rights_guid] \
+                _uuid.hex()
+                _guid = str(uuid.UUID(bytes_le=_uuid)) if _uuid else None
+                advanced_properties = [schema_object.get('name') for schema_object in self.schema_objects if schema_object.get('schemaIDGUID') == _guid] \
+                    or [schema_attribute.get('name') for schema_attribute in self.schema_attributes if schema_attribute.get('schemaIDGUID') == _guid] \
+                    or [extended_right.get('displayName') for extended_right in self.extended_rights if extended_right.get('rightsGuid') == _guid] \
                     or [key for key, value in LAPS_PROPERTIES_UUID.items() if str(value) == str(_uuid)]
                 return advanced_properties
 
@@ -72,7 +61,9 @@ class SecurityDescriptorParser:
             if self.object_type == 'container':
                 if ace['TypeName'] == 'ACCESS_ALLOWED_OBJECT_ACE' or ace['TypeName'] == 'ACCESS_DENIED_OBJECT_ACE':
                     if len(ace['Ace']['InheritedObjectType']) > 0:
-                        descendant = [schema_object['name'] for schema_object in self.schema_objects if str(self.get_encoded_attr(schema_object['schemaIDGUID'])) == str(ace['Ace']['InheritedObjectType'])]
+                        _uuid = ace['Ace']['InheritedObjectType']
+                        _guid = str(uuid.UUID(bytes_le=_uuid)) if _uuid else None
+                        descendant = [schema_object.get('name') for schema_object in self.schema_objects if schema_object.get('schemaIDGUID') == _guid]
                         return descendant
             elif self.object_type == 'reg_key':
                 return REGISTRY_ACCESS_INHERITED.get(ace['AceFlags'])
@@ -125,23 +116,29 @@ class SecurityDescriptorParser:
         for container in containers:
             security_info = self.ace_details(container)
             user_permissions = {}
-            for dacl in security_info['Dacl']:
+            for dacl in security_info.get('Dacl'):
                 user = dacl.get('User')
                 if user not in self.new_well_known_sids.values():
                     user_permissions.setdefault(user, [])
                     user_permissions[user].append(
                         {
-                            'PermissionsValue': dacl['Permissions']['PermissionsValue'],
-                            'PermissionsObjects': dacl['Permissions']['PermissionsObjects'],
-                            'InheritedObjectType': dacl['Permissions']['InheritedObjectType']
+                            'PermissionsValue': dacl.get('Permissions').get('PermissionsValue'),
+                            'PermissionsObjects': dacl.get('Permissions').get('PermissionsObjects'),
+                            'InheritedObjectType': dacl.get('Permissions').get('InheritedObjectType')
                         }
                     )
             
             container_permissions = []
             for user, permissions in user_permissions.items():
-                permissions_translation = [{'user': user, 'permissions': DELEGATIONS_ACE.get(str(permissions), [str(permission) for permission in permissions])}]
+                delegations_ace = list({description for delegation, description in DELEGATIONS_ACE
+                                    for np in permissions
+                                    for nd in delegation
+                                    if (np.get('PermissionsValue') == nd.get('PermissionsValue') and
+                                        np.get('PermissionsObjects') == nd.get('PermissionsObjects') and
+                                        np.get('InheritedObjectType') == nd.get('InheritedObjectType'))})
+                permissions_translation = [{'user': user, 'permissions': delegations_ace}]
                 container_permissions.extend(permissions_translation)
-            result[container['distinguishedName']] = container_permissions
+            result[container.get('distinguishedName')] = container_permissions
         return result
 
     def process_regKeys(self, reg_key):

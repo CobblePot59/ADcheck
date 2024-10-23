@@ -1,6 +1,10 @@
-ADmanage
-pycryptodomex
-termcolor
-aiowmi
+six
+winacl
+asysocks
+asyauth
+unicrypto
 pyopenssl
-requests
+ldap3
+dnspython
+aiowmi
+niquests

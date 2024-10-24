@@ -1,7 +1,10 @@
-ADmanage
-termcolor
-aiowmi
-bloodhound
-impacket
-requests
+six==1.16.0
+winacl==0.1.9
+asysocks==0.2.13
+asyauth==0.0.21
+unicrypto==0.0.10
 pyopenssl
+ldap3==2.9.1
+dnspython==2.7.0
+aiowmi==0.2.3
+niquests==3.10.0

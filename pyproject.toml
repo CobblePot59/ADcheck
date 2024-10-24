@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "ADcheck"
+version = "1.5"
+description = "ADcheck, Assess the security of your Active Directory with few or all privileges."
+authors = ["CobblePot59"]
+
+packages = [
+    { include = "adcheck" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+
+six = "^1.16.0"
+winacl = "^0.1.9"
+asysocks = "^0.2.13"
+asyauth = "^0.0.21"
+unicrypto = "^0.0.10"
+pyopenssl = "*"
+ldap3 = "^2.9.1"
+dnspython = "^2.7.0"
+aiowmi = "^0.2.3"
+niquests = "^3.10.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+adcheck = "adcheck.app:run_main"

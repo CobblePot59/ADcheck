@@ -1,5 +1,6 @@
 # System files
 .DS_Store
+.DS_Store
 Thumbs.db
 # Editor
 .vscode/
@@ -16,6 +17,6 @@ venv/
 *.env
 # App
 GPOS
-report.html
+/report.html
 # Cache
 __pycache__

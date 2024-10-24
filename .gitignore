@@ -1,0 +1,21 @@
+# System files
+.DS_Store
+Thumbs.db
+# Editor
+.vscode/
+# Distribution / Packaging
+poetry.lock
+build/
+dist/
+*.egg-info/
+.eggs/
+# Virtual environments
+venv/
+.env/
+# Docker
+*.env
+# App
+GPOS
+report.html
+# Cache
+__pycache__

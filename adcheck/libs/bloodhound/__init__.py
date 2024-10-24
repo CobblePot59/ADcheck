@@ -24,8 +24,7 @@
 
 import sys
 
-sys.path.append('libs')
-
+sys.path.append('adcheck/libs')
 
 import os, sys, logging, argparse, getpass, time, re, datetime
 from zipfile import ZipFile

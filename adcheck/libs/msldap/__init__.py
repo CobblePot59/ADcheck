@@ -6,7 +6,7 @@
 
 import sys
 
-sys.path.append('libs')
+sys.path.append('adcheck/libs')
 
 import logging
 

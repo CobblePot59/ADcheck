@@ -1,8 +1,11 @@
+import sys
+
+sys.path.append('adcheck')
+
 from libs.msldap.commons.factory import LDAPConnectionFactory
 from core.__main__ import ADcheck, Options
 from modules.constants import CHECKLIST
 from argparse import ArgumentParser
-import sys
 import asyncio
 
 
@@ -121,5 +124,8 @@ async def main():
     else:
         await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
 
-if __name__ == '__main__':
+def run_main():
     asyncio.run(main())
+
+if __name__ == '__main__':
+    run_main()

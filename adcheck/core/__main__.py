@@ -1,10 +1,10 @@
-from libs.impacket.smbconnection import SMBConnection, SessionError
 from modules.ADmanage import ADClient
 from modules.MSuacCalc import uac_details
 from modules.MSaceCalc import SecurityDescriptorParser
 from modules.decor import admin_required, capture_stdout
 from modules.constants import WELL_KNOWN_SIDS, SUPPORTED_ENCRYPTION
 from modules.WMIquery import WMIquery
+from libs.impacket.smbconnection import SMBConnection, SessionError
 from datetime import datetime, timezone
 from pathlib import Path
 import json

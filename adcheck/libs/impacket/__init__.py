@@ -14,7 +14,7 @@
 
 import sys
 
-sys.path.append('libs')
+sys.path.append('adcheck/libs')
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging

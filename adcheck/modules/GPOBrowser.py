@@ -1,5 +1,5 @@
-import re
 from os import makedirs
+import re
 
 
 def smb_download(connection, path, dst):

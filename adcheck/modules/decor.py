@@ -1,6 +1,6 @@
+from io import StringIO
 import functools
 import sys
-from io import StringIO
 
 
 def admin_required(func):

@@ -1,4 +1,4 @@
-from adcheck.modules.constants import USER_ACCOUNT_CONTROL
+from modules.constants import USER_ACCOUNT_CONTROL
 
 
 def uac_details(input_value):

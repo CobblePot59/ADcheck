@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as f:
 
 setup(
     name="ADcheck",
-    version=0.1,
+    version=1.5,
     description="ADcheck, Assess the security of your Active Directory with few or all privileges.",
     url="https://github.com/CobblePot59/ADcheck",
     author="CobblePot59",
@@ -21,11 +21,11 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.9',
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'ADcheck=adcheck.app:main',
+            'ADcheck=adcheck.app:run_main',
         ]
     }
 )

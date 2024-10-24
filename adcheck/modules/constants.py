@@ -187,7 +187,7 @@ PRIVESC_GROUP = [
     "Account Operators",
     "Remote Desktop Users",
     "Certificate Operators",
-    "Cert Publishers"
+    "Cert Publishers",
 ]
 
 # https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers#well-known-sids
@@ -361,22 +361,70 @@ LAPS_PROPERTIES_UUID = {
     "msLAPS-PasswordExpirationTime" : b"t\xdehF\x88\xa48K\xaf\xf8\xcf\x9fB\x8e\x89\xaa",
 }
 
-DELEGATIONS_ACE = {
-    "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['User'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['User']}]": "Create, delete and manage user accounts",
-    "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['User']}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['User']}]": "Reset user passwords and force password change at next logon",
-    "[{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['User']}]": "Read all user information",
-    "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['Group'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['Group']}]": "Create, delete and manage groups",
-    "[{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}]": "Modify the membership of a group",
-    "[{'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Link'], 'InheritedObjectType': None}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Options'], 'InheritedObjectType': None}]": "Manage Group Policy links",
-    "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Planning)'], 'InheritedObjectType': None}]": "Generate Resultant Set of Policy (Planning)",
-    "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Logging)'], 'InheritedObjectType': None}]": "Generate Resultant Set of Policy (Logging)",
-    "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['inetOrgPerson'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}]": "Create. delete, and manage inetOrgPerson accounts",
-    "[{'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['inetOrgPerson']}, {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['inetOrgPerson']}]": "Reset inetOrgPerson passwords and force password change at next logon",
-    "[{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}]": "Read all inetOrgPerson information",
-    "[{'PermissionsValue': ['Create all child objects'], 'PermissionsObjects': ['Computer'], 'InheritedObjectType': None}]": "Join a computer to the domain",
-    "[{'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['ms-WMI-Som'], 'InheritedObjectType': None}, {'PermissionsValue': 'Full control', 'PermissionsObjects': [], 'InheritedObjectType': ['ms-WMI-Som']}]": "Create, Delete and Manage WMI Filters",
-    "[{'PermissionsValue': ['Read all properties'], 'PermissionsObjects': ['msLAPS-Password'], 'InheritedObjectType': ['Computer']}]": "Read LAPS password",
-}
+DELEGATIONS_ACE = [
+    ([
+        {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['User'], 'InheritedObjectType': None},
+        {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['User']}
+    ], "Create, delete and manage user accounts"),
+    
+    ([
+        {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['User']},
+        {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['User']}
+    ], "Reset user passwords and force password change at next logon"),
+    
+    ([
+        {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['User']}
+    ], "Read all user information"),
+    
+    ([
+        {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['Group'], 'InheritedObjectType': None},
+        {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['Group']}
+    ], "Create, delete and manage groups"),
+    
+    ([
+        {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}
+    ], "Modify the membership of a group"),
+    
+    ([
+        {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Link'], 'InheritedObjectType': None},
+        {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Options'], 'InheritedObjectType': None}
+    ], "Manage Group Policy links"),
+    
+    ([
+        {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Planning)'], 'InheritedObjectType': None}
+    ], "Generate Resultant Set of Policy (Planning)"),
+    
+    ([
+        {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Logging)'], 'InheritedObjectType': None}
+    ], "Generate Resultant Set of Policy (Logging)"),
+    
+    ([
+        {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['inetOrgPerson'], 'InheritedObjectType': None},
+        {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}
+    ], "Create, delete, and manage inetOrgPerson accounts"),
+    
+    ([
+        {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['inetOrgPerson']},
+        {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['inetOrgPerson']}
+    ], "Reset inetOrgPerson passwords and force password change at next logon"),
+    
+    ([
+        {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}
+    ], "Read all inetOrgPerson information"),
+    
+    ([
+        {'PermissionsValue': ['Create all child objects'], 'PermissionsObjects': ['Computer'], 'InheritedObjectType': None}
+    ], "Join a computer to the domain"),
+    
+    ([
+        {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['ms-WMI-Som'], 'InheritedObjectType': None},
+        {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['ms-WMI-Som']}
+    ], "Create, Delete and Manage WMI Filters"),
+    
+    ([
+        {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': ['msLAPS-Password'], 'InheritedObjectType': ['Computer']}
+    ], "Read LAPS password"),
+]
 
 # https://learn.microsoft.com/fr-fr/windows/win32/sysinfo/registry-key-security-and-access-rights
 # REGISTRY_ACCESS_RIGHT = {

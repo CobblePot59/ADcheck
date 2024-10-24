@@ -1,19 +1,23 @@
-from adcheck.core.__main__ import ADcheck, Options
-from adcheck.modules.constants import CHECKLIST
-from argparse import ArgumentParser
 import sys
-import re
+
+sys.path.append('adcheck')
+
+from libs.msldap.commons.factory import LDAPConnectionFactory
+from core.__main__ import ADcheck, Options
+from modules.constants import CHECKLIST
+from argparse import ArgumentParser
+import asyncio
 
 
-def launch_all_methods(obj, is_admin=False, module=None, hashes=None, debug=False):
+async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
     i = 0
-    getattr(obj, 'get_policies')()
+    await getattr(obj, 'get_policies')()
     if module:
-        getattr(obj, f'{module}')()
+        await getattr(obj, f'{module}')()
     else:
-        excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'pprint', 'ntds_dump', 'get_policies', 'bloodhound_file']
-        if hashes:
-            excluded_methods = ['connect', 'update_entries', 'reg_client', 'wmi_client', 'pprint', 'ntds_dump', 'get_policies', 'bloodhound_file', 'wmi_last_backup', 'wmi_last_update']
+        excluded_methods = ['connect', '_smb_client', '_reg_client', '_wmi_client', 'update_entries', 'reg_client', 'wmi_client', 'pprint', 'ntds_dump', 'get_policies', 'bloodhound_file']
+        if hashes or aes_key:
+            excluded_methods += ['wmi_last_backup', 'wmi_last_update']
 
         methods = [method for method in dir(obj) if callable(getattr(obj, method)) and not method.startswith('__')]
         for method_name in methods:
@@ -22,11 +26,11 @@ def launch_all_methods(obj, is_admin=False, module=None, hashes=None, debug=Fals
                 if not is_admin and not hasattr(getattr(ADcheck, method_name), '__wrapped__'):
                     i += 1
                     print(f'{i} - ', end='')
-                    getattr(obj, method_name)()
+                    await getattr(obj, method_name)()
                 elif is_admin:
                     i += 1
                     print(f'{i} - ', end='')
-                    getattr(obj, method_name)()
+                    await getattr(obj, method_name)()
 
 def parse_arguments():
     parser = ArgumentParser(description='Process some arguments')
@@ -34,8 +38,11 @@ def parse_arguments():
     parser.add_argument('-u', '--username', required=True, help='Username for authentication.')
     parser.add_argument('-p', '--password', help='Password for authentication.')
     parser.add_argument('-H', '--hashes', help='Hashes for authentication.')
+    parser.add_argument('--aes', help='AES for authentication.')
+    parser.add_argument('--hostname', help='Name of the Domain Controller.')
     parser.add_argument('--dc-ip', required=True, help='IP address of the Domain Controller.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
+    parser.add_argument('-k', '--kerberos', action='store_true', help='Use kerberos instead of NTLM.')
     parser.add_argument('-L', '--list-modules', action='store_true', help='List available modules.')
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', action='store_true', help='Generate HTML report file.')
@@ -43,17 +50,40 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
-def main():
+def parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options):
+    protocol = 'ldaps' if options.secure else 'ldap'
+    auth = 'kerberos-password' if options.kerberos and not aes_key and not hashes else 'ntlm-password'
+    subdomain = domain.split('.')[0]
+
+    if hashes:
+        password, auth = hashes.split(':')[1], 'kerberos-rc4' if options.kerberos else 'ntlm-nt'
+    if aes_key:
+        password, auth = aes_key, 'kerberos-aes'
+
+    return f"{protocol}+{auth}://{subdomain}\\{username}:{password}@{hostname or dc_ip}/?dc={dc_ip}"
+
+
+async def main():
     from getpass import getpass
 
     args = parse_arguments()
     domain = args.domain
     username = args.username
     hashes = args.hashes
-    password = args.password or hashes or getpass('Password :')
+    aes_key = args.aes
+    password = args.password or hashes or aes_key or getpass('Password :')
+    hostname = args.hostname
     dc_ip = args.dc_ip
+    
     module = args.module
     debug = args.debug
+
+    options = Options()
+    options.secure = args.secure
+    options.kerberos = args.kerberos
+    options.output = args.output
+
+    url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
 
     if args.list_modules:
         for category, modules in CHECKLIST.items():
@@ -65,37 +95,37 @@ def main():
                     print(f'[*] {module_name.ljust(30)} {module_desc}')
         sys.exit(0)
 
-    options = Options()
-    options.secure = args.secure
-    options.output = args.output
-    adcheck = ADcheck(domain, username, password, hashes, dc_ip, options)
+    ad_client = LDAPConnectionFactory.from_url(url).get_client()
+    await ad_client.connect()
 
-    is_admin = False
-    admin_groups = ['S-1-5-32-544', f'{adcheck.domain_sid}512', f'{adcheck.domain_sid}519']
-    user_groups = adcheck.ad_client.get_memberOf(username)
-    if not user_groups:
-        user_groups = [f'{adcheck.domain_sid}513']
-    elif isinstance(user_groups, str):
-        user_groups = [adcheck.ad_client.get_ADobject(re.search(r'CN=([^,]+)', user_groups).group(1))['objectSid']]
-    else:
-        user_groups = [adcheck.ad_client.get_ADobject(re.search(r'CN=([^,]+)', dn).group(1))['objectSid'] for dn in user_groups] 
+    # Check if user is admin
+    try:
+        domain_sid = (await ad_client.get_ad_info())[0].objectSid
+        admin_groups = ['S-1-5-32-544', f'{domain_sid}-512', f'{domain_sid}-519']
+        user_groups = (await ad_client.get_user(username))[0].memberOf
+        if not user_groups:
+            user_groups = [f'{domain_sid}-513']
+        elif isinstance(user_groups, str):
+            user_groups = [(await ad_client.get_group_by_dn(user_groups))[0].objectSid]
+        else:
+            user_groups = [(await ad_client.get_group_by_dn(dn))[0].objectSid for dn in user_groups]
+    finally:
+        await ad_client.disconnect()
 
-    for admin_group in admin_groups:
-        for user_group in user_groups:
-            if user_group in admin_group:
-                is_admin = True
-                break
-
-    if is_admin:
+    if any(user_group in admin_groups for user_group in user_groups):
         options.is_admin = True
-        adcheck = ADcheck(domain, username, password, hashes, dc_ip, options)
+        adcheck = ADcheck(domain, username, password, hashes, aes_key, hostname, dc_ip, url, options)
+        await adcheck.connect()
         with open('report.html', 'w') as report:
             report.write('<html><body><pre>\n')
-        launch_all_methods(adcheck, is_admin=True, module=module, hashes=hashes, debug=debug)
+        await launch_all_methods(adcheck, is_admin=True, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
         with open('report.html', 'a') as report:
             report.write('</pre></body></html>')
     else:
-        launch_all_methods(adcheck, module=module, hashes=hashes, debug=debug)
+        await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
+
+def run_main():
+    asyncio.run(main())
 
 if __name__ == '__main__':
-    main()
+    run_main()

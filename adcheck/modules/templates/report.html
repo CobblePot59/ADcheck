@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADcheck Scoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f6fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        #report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #gauges-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1200px;
+            width: 90%;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .gauge-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .gauge-container svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .gauge-container {
+            flex: 1;
+            text-align: center;
+            margin: 0 10px;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+        .gauge-container:hover {
+            transform: scale(1.03);
+        }
+        .gauge-container.double-width {
+            flex: 2;
+        }
+        .collapse {
+            cursor: pointer;
+            color: #0066cc;
+            margin-top: 10px;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .collapse:hover {
+            color: #004999;
+        }
+        .content {
+            display: none;
+            background: #f1f1f1;
+            margin-top: 10px;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: left;
+        }
+        .content span {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .content span:last-child {
+            margin-bottom: 0;
+        }
+        @media (min-width: 600px) {
+            .gauge-container {
+                flex-basis: 48%;
+            }
+            .gauge-container.double-width {
+                flex-basis: 96%;
+            }
+        }
+    </style>
+    <script>
+        function toggleContent(contentId) {
+            var contentElement = document.getElementById(contentId);
+            
+            if (contentElement.style.display === "none" || contentElement.style.display === "") {
+                contentElement.style.display = "block";
+            } else {
+                contentElement.style.display = "none";
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1 id="report-title">ADcheck Report</h1>
+    <div id="gauges-container">
+        <div class="gauge-container double-width" id="total-container">
+            {{ total_svg|safe }}
+        </div>
+        <div class="gauge-row">
+            <div class="gauge-container" id="privs-container">
+                {{ privs_svg|safe }}
+                <div class="collapse" onclick="toggleContent('privs-messages')">Privilege and Trust Management Messages</div>
+                <div class="content" id="privs-messages">
+                    {% for item in privs_list %}
+                    <span style="color:{{ item.color }};">{{ item.message }}</span><br>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="gauge-container" id="user-container">
+                {{ user_svg|safe }}
+                <div class="collapse" onclick="toggleContent('user-messages')">User Account Management Messages</div>
+                <div class="content" id="user-messages">
+                    {% for item in user_list %}
+                    <span style="color:{{ item.color }};">{{ item.message }}</span><br>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="gauge-row">
+            <div class="gauge-container" id="domain-container">
+                {{ domain_svg|safe }}
+                <div class="collapse" onclick="toggleContent('domain-messages')">Computer and Domain Management Messages</div>
+                <div class="content" id="domain-messages">
+                    {% for item in domain_list %}
+                    <span style="color:{{ item.color }};">{{ item.message }}</span><br>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="gauge-container" id="policy-container">
+                {{ policy_svg|safe }}
+                <div class="collapse" onclick="toggleContent('policy-messages')">Audit and Policy Management Messages</div>
+                <div class="content" id="policy-messages">
+                    {% for item in policy_list %}
+                    <span style="color:{{ item.color }};">{{ item.message }}</span><br>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

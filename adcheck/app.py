@@ -5,6 +5,7 @@ sys.path.append('adcheck')
 from libs.msldap.commons.factory import LDAPConnectionFactory
 from core.__main__ import ADcheck, Options
 from modules.constants import CHECKLIST
+from modules.report import ReportGenerator
 from argparse import ArgumentParser
 import asyncio
 
@@ -86,13 +87,16 @@ async def main():
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
 
     if args.list_modules:
-        for category, modules in CHECKLIST.items():
+        for category, sections in CHECKLIST.items():
             print(category)
-            for module_name, module_desc in modules:
-                if not module_name:
-                    print(f'{module_name.ljust(34)} {module_desc}')
-                else:
-                    print(f'[*] {module_name.ljust(30)} {module_desc}')
+            for section, modules in sections[0].items():
+                print(f'    {section}')
+                for module_name, module_desc in modules:
+                    if not module_name:
+                        print(f'        {module_name.ljust(34)} {module_desc}')
+                    else:
+                        print(f'        [*] {module_name.ljust(30)} {module_desc}')
+            print()
         sys.exit(0)
 
     ad_client = LDAPConnectionFactory.from_url(url).get_client()
@@ -116,13 +120,15 @@ async def main():
         options.is_admin = True
         adcheck = ADcheck(domain, username, password, hashes, aes_key, hostname, dc_ip, url, options)
         await adcheck.connect()
-        with open('report.html', 'w') as report:
-            report.write('<html><body><pre>\n')
         await launch_all_methods(adcheck, is_admin=True, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
-        with open('report.html', 'a') as report:
-            report.write('</pre></body></html>')
     else:
+        adcheck = ADcheck(domain, username, password, hashes, aes_key, hostname, dc_ip, url, options)
+        await adcheck.connect()
         await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
+
+    if args.output:
+        report_generator = ReportGenerator(adcheck.report_results)
+        report_generator.gen_html()
 
 def run_main():
     asyncio.run(main())

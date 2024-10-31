@@ -8,3 +8,5 @@ ldap3==2.9.1
 dnspython==2.7.0
 aiowmi==0.2.3
 niquests==3.10.0
+jinja2==3.1.4
+plotly==5.24.1

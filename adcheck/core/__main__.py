@@ -27,6 +27,7 @@ class ADcheck:
         self.do_kerberos = options.kerberos
         self.output = options.output
         self.is_admin = options.is_admin
+        self.report_results = []
 
     async def connect(self):
         self.ad_client = ADClient(domain=self.domain, url=self.url)
@@ -66,19 +67,21 @@ class ADcheck:
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain-', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
 
     def pprint(self, result, message, reverse=False):
-        color_code = {'black': '\033[30m', 'red': '\033[31m', 'green': '\033[32m', 'default': '\033[0m'}
+        import inspect
+
+        name=inspect.stack()[1].function
+        color_code = {'black': 'black', 'red': 'red', 'green': 'green'}
+        ansi_color_code = {'black': '\033[30m', 'red': '\033[31m', 'green': '\033[32m', 'default': '\033[0m'}
         color = color_code.get('black') if result == 'INFO' else (color_code.get('red') if (result and not reverse) or (not result and reverse) else color_code.get('green'))
-        html = f'<span style="color:{color};">{message}</span>\n'
+        term_color = ansi_color_code.get('black') if result == 'INFO' else (ansi_color_code.get('red') if (result and not reverse) or (not result and reverse) else ansi_color_code.get('green'))
+
         if result == 'INFO':
             print(message)
-            if self.output:
-                with open('report.html', 'a') as report:
-                    report.write(html)
         else:
-            print(f"{color}{message}{color_code.get('default')}")
-            if self.output:
-                with open('report.html', 'a') as report:
-                    report.write(html)
+            print(f"{term_color}{message}{ansi_color_code.get('default')}")
+
+        if self.output:
+            self.report_results.append({"name": name, "color": color, "message": message})
 
     async def domain_controlers(self, _return=False):
         result = []
@@ -433,14 +436,14 @@ class ADcheck:
 
     async def supported_encryption(self):
         result = [f"{dc.get('sAMAccountName')}: [{SUPPORTED_ENCRYPTION.get(int(dc.get('msDS-SupportedEncryptionTypes')))}]" for dc in (await self.domain_controlers(_return=True))]
-        self.pprint('INFO', f'Supported encryption by Domain Controllers :\n{json.dumps(result, indent=4)}')
+        self.pprint('INFO', f'Supported encryption by Domain Controllers : \n{json.dumps(result, indent=4)}')
 
     async def constrained_delegation(self):
         result = []
         for computer in self.computer_entries:
             if 'msDS-AllowedToDelegateTo' in computer:
                 result.append(f"{computer.get('sAMAccountName')}: {computer.get('msDS-AllowedToDelegateTo')}")
-        self.pprint(result, f'Computers with constrained delegation :\n{json.dumps(result, indent=4)}')
+        self.pprint(result, f'Computers with constrained delegation : {json.dumps(result, indent=4)}')
 
     async def rbac(self):
         result = []
@@ -456,7 +459,7 @@ class ADcheck:
         if gMSAs:
              for gMSA in gMSAs:
                 result.append({'dn': gMSA.get('distinguishedName'), 'msDS-HostServiceAccountBL': gMSA.get('msDS-HostServiceAccountBL'), 'msDS-ManagedPasswordInterval': gMSA.get('msDS-ManagedPasswordInterval')})
-        self.pprint('INFO', f'Group Managed Service Accounts :\n{json.dumps(result, indent=4)}')
+        self.pprint('INFO', f'Group Managed Service Accounts : {json.dumps(result, indent=4)}')
 
     async def silos(self):
         authn_container = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=AuthN Policy Configuration,CN=Services,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=*)')
@@ -509,7 +512,6 @@ class ADcheck:
 
     @admin_required
     async def control_delegations(self):
-        self.pprint('INFO', 'Control delegations :')
         ous_object = (await self.ad_client.get_ADobjects(custom_filter='(objectClass=organizationalUnit)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor']))
         containers_name = [f'CN=Computers,{self.base_dn}', f'CN=ForeignSecurityPrincipals,{self.base_dn}', f'CN=Keys,{self.base_dn}', f'CN=Managed Service Accounts,{self.base_dn}', f'CN=Program Data,{self.base_dn}', f'CN=Users,{self.base_dn}']
         containers_object = [(await self.ad_client.get_ADobjects(custom_base_dn=container,custom_filter='(objectClass=container)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor']))[0] for container in containers_name]
@@ -518,7 +520,7 @@ class ADcheck:
         containers =  ous_object + containers_object + domains_object
         parser = SecurityDescriptorParser(self.NEW_WELL_KNOWN_SIDS, self.schema_objects, self.schema_attributes, self.extended_rights, self.all_entries, 'container')
         result = parser.process_containers(containers)
-        self.pprint('INFO', f'{json.dumps(result, indent=4)}\n')
+        self.pprint('INFO', f'Control delegations : \n{json.dumps(result, indent=4)}\n')
 
     async def krbtgt_encryption(self):
         result = SUPPORTED_ENCRYPTION.get(int((await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('msDS-SupportedEncryptionTypes')))
@@ -773,8 +775,8 @@ class ADcheck:
                     elif trusted_ca.get(cert_info.get('Digest')).get('Microsoft Status') == 'Disabled':
                         disabled_certificates.append({ca_path : cert_info})
 
-        self.pprint(untrusted_ca, f'Untrusted Certificates : {json.dumps(untrusted_ca, indent=4)}')
-        self.pprint(disabled_certificates, f'\nDisabled Certificates : {json.dumps(disabled_certificates, indent=4)}')
+        self.pprint(untrusted_ca, f'Untrusted Certificates : \n{json.dumps(untrusted_ca, indent=4)}')
+        self.pprint(disabled_certificates, f'\nDisabled Certificates : \n{json.dumps(disabled_certificates, indent=4)}')
 
     @admin_required
     async def reg_uac(self):

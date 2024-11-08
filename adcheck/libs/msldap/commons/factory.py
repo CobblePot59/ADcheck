@@ -7,9 +7,9 @@
 import enum
 import copy
 
-from msldap.commons.target import MSLDAPTarget
-from msldap.client import MSLDAPClient
-from msldap.connection import MSLDAPClientConnection
+from adcheck.libs.msldap.commons.target import MSLDAPTarget
+from adcheck.libs.msldap.client import MSLDAPClient
+from adcheck.libs.msldap.connection import MSLDAPClientConnection
 from asyauth.common.credentials import UniCredential
 
 class LDAPConnectionFactory:

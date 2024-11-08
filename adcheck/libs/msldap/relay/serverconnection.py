@@ -1,6 +1,6 @@
-from msldap.protocol.utils import calcualte_length
-from msldap.protocol.messages import LDAPMessage, AuthenticationChoice, protocolOp, BindResponse
-from msldap import logger
+from adcheck.libs.msldap.protocol.utils import calcualte_length
+from adcheck.libs.msldap.protocol.messages import LDAPMessage, AuthenticationChoice, protocolOp, BindResponse
+from adcheck.libs.msldap import logger
 import traceback
 import asyncio
 

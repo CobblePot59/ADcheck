@@ -6,8 +6,8 @@
 
 import datetime
 import base64
-from msldap.ldap_objects.common import MSLDAP_UAC, vn
-from msldap.commons.utils import bh_dt_convert
+from adcheck.libs.msldap.ldap_objects.common import MSLDAP_UAC, vn
+from adcheck.libs.msldap.commons.utils import bh_dt_convert
 
 MSADMachine_ATTRS = [
 	'accountExpires', 'badPasswordTime', 'badPwdCount', 'cn', 'description', 'codePage', 

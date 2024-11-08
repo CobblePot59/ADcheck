@@ -1,5 +1,5 @@
 
-from msldap.protocol.messages import resultCode
+from adcheck.libs.msldap.protocol.messages import resultCode
 
 
 LDAPResultCodeLookup ={

@@ -1,4 +1,4 @@
-from libs.impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
+from adcheck.libs.impacket.ldap.ldaptypes import SR_SECURITY_DESCRIPTOR
 from modules.constants import ENTRANCE_ACCESS_CONTROL, REGISTRY_ACCESS_RIGHT, LAPS_PROPERTIES_UUID, REGISTRY_ACCESS_INHERITED, DELEGATIONS_ACE
 import uuid
 

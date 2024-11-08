@@ -2,22 +2,22 @@ import asyncio
 from typing import List, Dict
 import ssl
 
-from msldap import logger
-from msldap.commons.common import MSLDAPClientStatus
-from .commons.target import MSLDAPTarget
-from msldap.protocol.messages import LDAPMessage, BindRequest, \
+from adcheck.libs.msldap import logger
+from adcheck.libs.msldap.commons.common import MSLDAPClientStatus
+from adcheck.libs.msldap.commons.target import MSLDAPTarget
+from adcheck.libs.msldap.protocol.messages import LDAPMessage, BindRequest, \
 	protocolOp, AuthenticationChoice, SaslCredentials, \
 	SearchRequest, AttributeDescription, Filter, Filters, \
 	Controls, Control, SearchControlValue, AddRequest, \
 	ModifyRequest, DelRequest, ExtendedRequest, ExtendedResponse
 
-from msldap.protocol.utils import calcualte_length
-from msldap.protocol.typeconversion import convert_result, convert_attributes, encode_attributes, encode_changes
-from msldap.protocol.query import escape_filter_chars, query_syntax_converter
-from msldap.commons.authbuilder import get_auth_context
-from msldap.network.packetizer import LDAPPacketizer
+from adcheck.libs.msldap.protocol.utils import calcualte_length
+from adcheck.libs.msldap.protocol.typeconversion import convert_result, convert_attributes, encode_attributes, encode_changes
+from adcheck.libs.msldap.protocol.query import escape_filter_chars, query_syntax_converter
+from adcheck.libs.msldap.commons.authbuilder import get_auth_context
+from adcheck.libs.msldap.network.packetizer import LDAPPacketizer
 from asysocks.unicomm.common.target import UniProto
-from msldap.commons.exceptions import LDAPBindException, LDAPAddException, LDAPModifyException, LDAPDeleteException, LDAPSearchException
+from adcheck.libs.msldap.commons.exceptions import LDAPBindException, LDAPAddException, LDAPModifyException, LDAPDeleteException, LDAPSearchException
 from hashlib import sha256
 from asysocks.unicomm.client import UniClient
 from asyauth.common.constants import asyauthProtocol

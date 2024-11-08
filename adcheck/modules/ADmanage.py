@@ -1,5 +1,5 @@
-from libs.msldap.commons.factory import LDAPConnectionFactory
-from libs.impacket.structure import Structure
+from adcheck.libs.msldap.commons.factory import LDAPConnectionFactory
+from adcheck.libs.impacket.structure import Structure
 import socket
 import dns.resolver
 

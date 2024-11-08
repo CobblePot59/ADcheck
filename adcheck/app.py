@@ -2,10 +2,9 @@ import sys
 
 sys.path.append('adcheck')
 
-from libs.msldap.commons.factory import LDAPConnectionFactory
-from core.__main__ import ADcheck, Options
-from modules.constants import CHECKLIST
-from modules.report import ReportGenerator
+from adcheck.libs.msldap.commons.factory import LDAPConnectionFactory
+from adcheck.modules.constants import CHECKLIST
+from adcheck.modules.report import ReportGenerator
 from argparse import ArgumentParser
 import asyncio
 

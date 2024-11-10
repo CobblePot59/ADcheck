@@ -24,14 +24,14 @@
 
 from __future__ import division
 from __future__ import print_function
-from impacket import LOG
+from adcheck.libs.impacket import LOG
 try:
     from Cryptodome.Cipher import DES, AES
 except Exception:
     LOG.error("Warning: You don't have any crypto installed. You need pycryptodomex")
     LOG.error("See https://pypi.org/project/pycryptodomex/")
 from struct import pack, unpack
-from impacket.structure import Structure
+from adcheck.libs.impacket.structure import Structure
 import hmac, hashlib
 from six import b
 

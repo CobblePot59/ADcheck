@@ -1,4 +1,4 @@
-from bloodhound.lib.cstruct import (
+from adcheck.libs.bloodhound.lib.cstruct import (
     cstruct,
     ctypes,
     dumpstruct,

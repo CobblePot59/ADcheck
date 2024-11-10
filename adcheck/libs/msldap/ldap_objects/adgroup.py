@@ -4,10 +4,10 @@
 #  Tamas Jos (@skelsec)
 #
 
-from msldap.wintypes import *
-from msldap.ldap_objects.common import MSLDAP_UAC, vn
+from adcheck.libs.msldap.wintypes import *
+from adcheck.libs.msldap.ldap_objects.common import MSLDAP_UAC, vn
 from winacl.dtyp.sid import SID
-from msldap.commons.utils import bh_dt_convert
+from adcheck.libs.msldap.commons.utils import bh_dt_convert
 
 
 MSADGroup_ATTRS = [ 	

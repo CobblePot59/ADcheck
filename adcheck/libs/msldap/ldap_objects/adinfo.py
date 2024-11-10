@@ -4,8 +4,8 @@
 #  Tamas Jos (@skelsec)
 #
 
-from msldap.commons.utils import bh_dt_convert
-from msldap.commons.utils import FUNCTIONAL_LEVELS
+from adcheck.libs.msldap.commons.utils import bh_dt_convert
+from adcheck.libs.msldap.commons.utils import FUNCTIONAL_LEVELS
 
 MSADInfo_ATTRS = [
 	'auditingPolicy', 'creationTime', 'dc', 'distinguishedName', 

@@ -7,7 +7,7 @@
 import enum
 
 from winacl.dtyp.sid import SID
-from msldap.ldap_objects.common import MSLDAP_UAC, vn
+from adcheck.libs.msldap.ldap_objects.common import MSLDAP_UAC, vn
 
 MSADDomainTrust_ATTRS = [ 
 	'sn', 

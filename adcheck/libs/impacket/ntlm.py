@@ -21,8 +21,8 @@ import string
 import binascii
 from six import b
 
-from impacket.structure import Structure
-from impacket import LOG
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket import LOG
 
 
 # This is important. NTLMv2 is not negotiated by the client or server. 

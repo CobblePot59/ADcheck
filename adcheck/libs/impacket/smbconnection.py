@@ -19,9 +19,9 @@
 import ntpath
 import socket
 
-from impacket import smb, smb3, nmb, nt_errors, LOG
-from impacket.ntlm import compute_lmhash, compute_nthash
-from impacket.smb3structs import SMB2Packet, SMB2_DIALECT_002, SMB2_DIALECT_21, SMB2_DIALECT_30, GENERIC_ALL, FILE_SHARE_READ, \
+from adcheck.libs.impacket import smb, smb3, nmb, nt_errors, LOG
+from adcheck.libs.impacket.ntlm import compute_lmhash, compute_nthash
+from adcheck.libs.impacket.smb3structs import SMB2Packet, SMB2_DIALECT_002, SMB2_DIALECT_21, SMB2_DIALECT_30, GENERIC_ALL, FILE_SHARE_READ, \
     FILE_SHARE_WRITE, FILE_SHARE_DELETE, FILE_NON_DIRECTORY_FILE, FILE_OVERWRITE_IF, FILE_ATTRIBUTE_NORMAL, \
     SMB2_IL_IMPERSONATION, SMB2_OPLOCK_LEVEL_NONE, FILE_READ_DATA , FILE_WRITE_DATA, FILE_OPEN, GENERIC_READ, GENERIC_WRITE, \
     FILE_OPEN_REPARSE_POINT, MOUNT_POINT_REPARSE_DATA_STRUCTURE, FSCTL_SET_REPARSE_POINT, SMB2_0_IOCTL_IS_FSCTL, \
@@ -300,9 +300,9 @@ class SMBConnection:
         :return: None
         :raise SessionError: if error
         """
-        from impacket.krb5.ccache import CCache
-        from impacket.krb5.kerberosv5 import KerberosError
-        from impacket.krb5 import constants
+        from adcheck.libs.impacket.krb5.ccache import CCache
+        from adcheck.libs.impacket.krb5.kerberosv5 import KerberosError
+        from adcheck.libs.impacket.krb5 import constants
 
         self._kdcHost = kdcHost
         self._useCache = useCache
@@ -377,7 +377,7 @@ class SMBConnection:
         :raise SessionError: if error
         """
         # Get the shares through RPC
-        from impacket.dcerpc.v5 import transport, srvs
+        from adcheck.libs.impacket.dcerpc.v5 import transport, srvs
         rpctransport = transport.SMBTransport(self.getRemoteName(), self.getRemoteHost(), filename=r'\srvsvc',
                                               smb_connection=self)
         dce = rpctransport.get_dce_rpc()

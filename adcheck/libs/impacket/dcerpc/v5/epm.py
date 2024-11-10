@@ -27,15 +27,15 @@ import socket
 from struct import unpack
 from six import b
 
-from impacket.uuid import uuidtup_to_bin, bin_to_string
-from impacket.dcerpc.v5 import transport
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantVaryingArray, NDRUniVaryingArray, \
+from adcheck.libs.impacket.uuid import uuidtup_to_bin, bin_to_string
+from adcheck.libs.impacket.dcerpc.v5 import transport
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantVaryingArray, NDRUniVaryingArray, \
     NDRUniConformantArray
-from impacket.dcerpc.v5.dtypes import UUID, LPBYTE, PUUID, ULONG, USHORT
-from impacket.structure import Structure
-from impacket.dcerpc.v5.ndr import NULL
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket import LOG
+from adcheck.libs.impacket.dcerpc.v5.dtypes import UUID, LPBYTE, PUUID, ULONG, USHORT
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.dcerpc.v5.ndr import NULL
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket import LOG
 
 MSRPC_UUID_PORTMAP = uuidtup_to_bin(('E1AF8308-5D1F-11C9-91A4-08002B14A0FA', '3.0'))
 

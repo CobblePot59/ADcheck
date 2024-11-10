@@ -25,9 +25,9 @@ import inspect
 from struct import pack, unpack_from, calcsize
 from six import with_metaclass, PY3
 
-from impacket import LOG
-from impacket.dcerpc.v5.enum import Enum
-from impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
 
 # Something important to have in mind:
 # Diagrams do not depict the specified alignment gaps, which can appear in the octet stream

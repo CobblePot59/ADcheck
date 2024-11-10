@@ -29,8 +29,8 @@ from struct import unpack
 import ntpath
 from six import b
 
-from impacket import LOG
-from impacket.structure import Structure, hexdump
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket.structure import Structure, hexdump
 
 
 # Constants

@@ -27,15 +27,15 @@ from __future__ import division
 from __future__ import print_function
 from binascii import unhexlify
 
-from impacket.dcerpc.v5.ndr import NDRCALL, NDR, NDRSTRUCT, NDRUNION, NDRPOINTER, NDRUniConformantArray, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDR, NDRSTRUCT, NDRUNION, NDRPOINTER, NDRUniConformantArray, \
     NDRUniConformantVaryingArray, NDRENUM
-from impacket.dcerpc.v5.dtypes import NULL, RPC_UNICODE_STRING, ULONG, USHORT, UCHAR, LARGE_INTEGER, RPC_SID, LONG, STR, \
+from adcheck.libs.impacket.dcerpc.v5.dtypes import NULL, RPC_UNICODE_STRING, ULONG, USHORT, UCHAR, LARGE_INTEGER, RPC_SID, LONG, STR, \
     LPBYTE, SECURITY_INFORMATION, PRPC_SID, PRPC_UNICODE_STRING, LPWSTR
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket import nt_errors, LOG
-from impacket.uuid import uuidtup_to_bin
-from impacket.dcerpc.v5.enum import Enum
-from impacket.structure import Structure
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket import nt_errors, LOG
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.structure import Structure
 
 import struct
 import os
@@ -2763,7 +2763,7 @@ def hSamrChangePasswordUser(dce, userHandle, oldPassword, newPassword, oldPwdHas
     request = SamrChangePasswordUser()
     request['UserHandle'] = userHandle
 
-    from impacket import crypto, ntlm
+    from adcheck.libs.impacket import crypto, ntlm
 
     if oldPwdHashNT == '':
         oldPwdHashNT = ntlm.NTOWFv1(oldPassword)
@@ -2815,7 +2815,7 @@ def hSamrUnicodeChangePasswordUser2(dce, serverName='\x00', userName='', oldPass
     except Exception:
         LOG.critical("Warning: You don't have any crypto installed. You need pycryptodomex")
         LOG.critical("See https://pypi.org/project/pycryptodomex/")
-    from impacket import crypto, ntlm
+    from adcheck.libs.impacket import crypto, ntlm
 
     if oldPwdHashLM == '' and oldPwdHashNT == '':
         oldPwdHashLM = ntlm.LMOWFv1(oldPassword)
@@ -2980,7 +2980,7 @@ def hSamrSetNTInternal1(dce, userHandle, password, hashNT=''):
     request['UserInformationClass'] = USER_INFORMATION_CLASS.UserInternal1Information
     request['Buffer']['tag'] = USER_INFORMATION_CLASS.UserInternal1Information
 
-    from impacket import crypto, ntlm
+    from adcheck.libs.impacket import crypto, ntlm
 
     if hashNT == '':
         hashNT = ntlm.NTOWFv1(password)

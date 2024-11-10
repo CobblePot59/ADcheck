@@ -28,8 +28,8 @@ import struct
 from pyasn1.type import namedtype, univ
 from pyasn1.codec.der import decoder, encoder
 
-from impacket import LOG
-from impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
 
 from .kerberosv5 import getKerberosTGT, sendReceive
 from .asn1 import (_sequence_component, _sequence_optional_component, seq_set,

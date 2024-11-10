@@ -22,17 +22,14 @@
 #
 ####################
 
-import sys
-
-sys.path.append('adcheck/libs')
 
 import os, sys, logging, argparse, getpass, time, re, datetime
 from zipfile import ZipFile
-from bloodhound.ad.domain import AD, ADDC
-from bloodhound.ad.authentication import ADAuthentication
-from bloodhound.enumeration.computers import ComputerEnumerator
-from bloodhound.enumeration.memberships import MembershipEnumerator
-from bloodhound.enumeration.domains import DomainEnumerator
+from adcheck.libs.bloodhound.ad.domain import AD, ADDC
+from adcheck.libs.bloodhound.ad.authentication import ADAuthentication
+from adcheck.libs.bloodhound.enumeration.computers import ComputerEnumerator
+from adcheck.libs.bloodhound.enumeration.memberships import MembershipEnumerator
+from adcheck.libs.bloodhound.enumeration.domains import DomainEnumerator
 
 """
 BloodHound.py is a Python port of BloodHound, designed to run on Linux and Windows.

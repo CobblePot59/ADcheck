@@ -27,19 +27,19 @@ import traceback
 import calendar
 import time
 import re
-from impacket.dcerpc.v5 import transport, samr, srvs, lsat, lsad, nrpc, wkst, scmr, tsch, rrp
-from impacket.dcerpc.v5.rpcrt import DCERPCException, RPC_C_AUTHN_LEVEL_PKT_INTEGRITY
-from impacket.dcerpc.v5.ndr import NULL
-from impacket.dcerpc.v5.dtypes import RPC_SID, MAXIMUM_ALLOWED
-from impacket.nmb import NetBIOSTimeout, NetBIOSError
-from bloodhound.ad.utils import ADUtils, AceResolver
-from bloodhound.enumeration.acls import parse_binary_acl
-from bloodhound.ad.structures import LDAP_SID
-from impacket.smb3 import SMB3
-from impacket.smb import SMB
-from impacket.smbconnection import SessionError
-from impacket import smb
-from impacket.smb3structs import SMB2_DIALECT_21
+from adcheck.libs.impacket.dcerpc.v5 import transport, samr, srvs, lsat, lsad, nrpc, wkst, scmr, tsch, rrp
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException, RPC_C_AUTHN_LEVEL_PKT_INTEGRITY
+from adcheck.libs.impacket.dcerpc.v5.ndr import NULL
+from adcheck.libs.impacket.dcerpc.v5.dtypes import RPC_SID, MAXIMUM_ALLOWED
+from adcheck.libs.impacket.nmb import NetBIOSTimeout, NetBIOSError
+from adcheck.libs.bloodhound.ad.utils import ADUtils, AceResolver
+from adcheck.libs.bloodhound.enumeration.acls import parse_binary_acl
+from adcheck.libs.bloodhound.ad.structures import LDAP_SID
+from adcheck.libs.impacket.smb3 import SMB3
+from adcheck.libs.impacket.smb import SMB
+from adcheck.libs.impacket.smbconnection import SessionError
+from adcheck.libs.impacket import smb
+from adcheck.libs.impacket.smb3structs import SMB2_DIALECT_21
 # Try to import exceptions here, if this does not succeed, then impacket version is too old
 try:
     HostnameValidationExceptions = (SMB3.HostnameValidationException, SMB.HostnameValidationException)
@@ -699,7 +699,7 @@ class ADComputer(object):
 
 
     """
-    This magic is mostly borrowed from impacket/examples/netview.py
+    This magic is mostly borrowed from adcheck.libs.impacket/examples/netview.py
     """
     def rpc_get_group_members(self, group_rid, resultlist):
         binding = r'ncacn_np:%s[\PIPE\samr]' % self.addr

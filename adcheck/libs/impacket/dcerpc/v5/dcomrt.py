@@ -36,14 +36,14 @@ import socket
 from struct import pack
 from threading import Timer, current_thread
 
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantArray, NDRTLSTRUCT, UNKNOWNDATA
-from impacket.dcerpc.v5.dtypes import LPWSTR, ULONGLONG, HRESULT, GUID, USHORT, WSTR, DWORD, LPLONG, LONG, PGUID, ULONG, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantArray, NDRTLSTRUCT, UNKNOWNDATA
+from adcheck.libs.impacket.dcerpc.v5.dtypes import LPWSTR, ULONGLONG, HRESULT, GUID, USHORT, WSTR, DWORD, LPLONG, LONG, PGUID, ULONG, \
     UUID, WIDESTR, NULL
-from impacket import hresult_errors, LOG
-from impacket.uuid import string_to_bin, uuidtup_to_bin, generate
-from impacket.dcerpc.v5.rpcrt import TypeSerialization1, RPC_C_AUTHN_LEVEL_PKT_INTEGRITY, RPC_C_AUTHN_LEVEL_NONE, \
+from adcheck.libs.impacket import hresult_errors, LOG
+from adcheck.libs.impacket.uuid import string_to_bin, uuidtup_to_bin, generate
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import TypeSerialization1, RPC_C_AUTHN_LEVEL_PKT_INTEGRITY, RPC_C_AUTHN_LEVEL_NONE, \
     RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_AUTHN_GSS_NEGOTIATE, RPC_C_AUTHN_WINNT, DCERPCException
-from impacket.dcerpc.v5 import transport
+from adcheck.libs.impacket.dcerpc.v5 import transport
 
 CLSID_ActivationContextInfo   = string_to_bin('000001a5-0000-0000-c000-000000000046')
 CLSID_ActivationPropertiesIn  = string_to_bin('00000338-0000-0000-c000-000000000046')

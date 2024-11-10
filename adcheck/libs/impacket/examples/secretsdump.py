@@ -62,33 +62,33 @@ from datetime import datetime, timedelta
 from struct import unpack, pack
 from six import b, PY2
 
-from impacket import LOG
-from impacket import system_errors
-from impacket import winregistry, ntlm
-from impacket.ldap.ldap import SimplePagedResultsControl, LDAPSearchError
-from impacket.ldap.ldapasn1 import SearchResultEntry
-from impacket.dcerpc.v5 import transport, rrp, scmr, wkst, samr, epm, drsuapi
-from impacket.dcerpc.v5.dtypes import NULL, SID
-from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_LEVEL_PKT_PRIVACY, DCERPCException, RPC_C_AUTHN_GSS_NEGOTIATE
-from impacket.dcerpc.v5.dcom import wmi
-from impacket.dcerpc.v5.dcom.oaut import IID_IDispatch, IDispatch, DISPPARAMS, DISPATCH_PROPERTYGET, \
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket import system_errors
+from adcheck.libs.impacket import winregistry, ntlm
+from adcheck.libs.impacket.ldap.ldap import SimplePagedResultsControl, LDAPSearchError
+from adcheck.libs.impacket.ldap.ldapasn1 import SearchResultEntry
+from adcheck.libs.impacket.dcerpc.v5 import transport, rrp, scmr, wkst, samr, epm, drsuapi
+from adcheck.libs.impacket.dcerpc.v5.dtypes import NULL, SID
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_LEVEL_PKT_PRIVACY, DCERPCException, RPC_C_AUTHN_GSS_NEGOTIATE
+from adcheck.libs.impacket.dcerpc.v5.dcom import wmi
+from adcheck.libs.impacket.dcerpc.v5.dcom.oaut import IID_IDispatch, IDispatch, DISPPARAMS, DISPATCH_PROPERTYGET, \
     VARIANT, VARENUM, DISPATCH_METHOD
-from impacket.dcerpc.v5.dcomrt import DCOMConnection, OBJREF, FLAGS_OBJREF_CUSTOM, OBJREF_CUSTOM, OBJREF_HANDLER, \
+from adcheck.libs.impacket.dcerpc.v5.dcomrt import DCOMConnection, OBJREF, FLAGS_OBJREF_CUSTOM, OBJREF_CUSTOM, OBJREF_HANDLER, \
     OBJREF_EXTENDED, OBJREF_STANDARD, FLAGS_OBJREF_HANDLER, FLAGS_OBJREF_STANDARD, FLAGS_OBJREF_EXTENDED, \
     IRemUnknown2, INTERFACE
-from impacket.ese import ESENT_DB, getUnixTime
-from impacket.smb3structs import FILE_READ_DATA, FILE_SHARE_READ
-from impacket.nt_errors import STATUS_MORE_ENTRIES
-from impacket.structure import Structure
-from impacket.uuid import string_to_bin
-from impacket.crypto import transformKey
-from impacket.krb5 import constants
-from impacket.krb5.asn1 import Ticket as TicketAsn1, EncTicketPart, AP_REQ, seq_set, Authenticator, TGS_REQ, \
+from adcheck.libs.impacket.ese import ESENT_DB, getUnixTime
+from adcheck.libs.impacket.smb3structs import FILE_READ_DATA, FILE_SHARE_READ
+from adcheck.libs.impacket.nt_errors import STATUS_MORE_ENTRIES
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.uuid import string_to_bin
+from adcheck.libs.impacket.crypto import transformKey
+from adcheck.libs.impacket.krb5 import constants
+from adcheck.libs.impacket.krb5.asn1 import Ticket as TicketAsn1, EncTicketPart, AP_REQ, seq_set, Authenticator, TGS_REQ, \
     seq_set_iter, TGS_REP, EncTGSRepPart, KERB_KEY_LIST_REP
-from impacket.krb5.constants import ProtocolVersionNumber, TicketFlags, PrincipalNameType, encodeFlags, EncryptionTypes
-from impacket.krb5.crypto import Key, _enctype_table
-from impacket.krb5.kerberosv5 import sendReceive
-from impacket.krb5.types import KerberosTime, Principal, Ticket
+from adcheck.libs.impacket.krb5.constants import ProtocolVersionNumber, TicketFlags, PrincipalNameType, encodeFlags, EncryptionTypes
+from adcheck.libs.impacket.krb5.crypto import Key, _enctype_table
+from adcheck.libs.impacket.krb5.kerberosv5 import sendReceive
+from adcheck.libs.impacket.krb5.types import KerberosTime, Principal, Ticket
 try:
     from Cryptodome.Cipher import DES, ARC4, AES
 except ImportError:

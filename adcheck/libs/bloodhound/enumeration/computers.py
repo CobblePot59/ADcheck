@@ -27,11 +27,11 @@ import threading
 import logging
 import traceback
 import codecs
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from bloodhound.enumeration.outputworker import OutputWorker
-from bloodhound.enumeration.memberships import MembershipEnumerator
-from bloodhound.ad.computer import ADComputer
-from bloodhound.ad.utils import ADUtils
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.bloodhound.enumeration.outputworker import OutputWorker
+from adcheck.libs.bloodhound.enumeration.memberships import MembershipEnumerator
+from adcheck.libs.bloodhound.ad.computer import ADComputer
+from adcheck.libs.bloodhound.ad.utils import ADUtils
 from future.utils import itervalues, iteritems, native_str
 
 class ComputerEnumerator(MembershipEnumerator):

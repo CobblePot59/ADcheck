@@ -1,13 +1,10 @@
-import sys
-
-sys.path.append('adcheck')
-
-from libs.msldap.commons.factory import LDAPConnectionFactory
-from core.__main__ import ADcheck, Options
-from modules.constants import CHECKLIST
-from modules.report import ReportGenerator
+from adcheck.libs.msldap.commons.factory import LDAPConnectionFactory
+from adcheck.core.__main__ import ADcheck, Options
+from adcheck.modules.constants import CHECKLIST
+from adcheck.modules.report import ReportGenerator
 from argparse import ArgumentParser
 import asyncio
+import sys
 
 
 async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
@@ -91,7 +88,8 @@ async def main():
             print(category)
             for section, modules in sections[0].items():
                 print(f'    {section}')
-                for module_name, module_desc in modules:
+                for module in modules:
+                    module_name, module_desc = module[0], module[1]
                     if not module_name:
                         print(f'        {module_name.ljust(34)} {module_desc}')
                     else:

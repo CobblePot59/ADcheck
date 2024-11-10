@@ -26,9 +26,9 @@ import logging
 import codecs
 import json
 import calendar
-from bloodhound.ad.utils import ADUtils, AceResolver
-from bloodhound.ad.trusts import ADDomainTrust
-from bloodhound.enumeration.acls import parse_binary_acl
+from adcheck.libs.bloodhound.ad.utils import ADUtils, AceResolver
+from adcheck.libs.bloodhound.ad.trusts import ADDomainTrust
+from adcheck.libs.bloodhound.enumeration.acls import parse_binary_acl
 
 class DomainEnumerator(object):
     """

@@ -31,17 +31,17 @@ import collections.abc
 import logging
 import six
 
-from impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER, NDRUniConformantVaryingArray, NDRUNION, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER, NDRUniConformantVaryingArray, NDRUNION, \
     NDRENUM
-from impacket.dcerpc.v5.dcomrt import DCOMCALL, DCOMANSWER, IRemUnknown, PMInterfacePointer, INTERFACE, \
+from adcheck.libs.impacket.dcerpc.v5.dcomrt import DCOMCALL, DCOMANSWER, IRemUnknown, PMInterfacePointer, INTERFACE, \
     PMInterfacePointer_ARRAY, BYTE_ARRAY, PPMInterfacePointer, OBJREF_CUSTOM
-from impacket.dcerpc.v5.dcom.oaut import BSTR
-from impacket.dcerpc.v5.dtypes import ULONG, DWORD, NULL, LPWSTR, LONG, HRESULT, PGUID, LPCSTR, GUID
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket import hresult_errors, LOG
-from impacket.uuid import string_to_bin, uuidtup_to_bin
-from impacket.structure import Structure, hexdump
+from adcheck.libs.impacket.dcerpc.v5.dcom.oaut import BSTR
+from adcheck.libs.impacket.dcerpc.v5.dtypes import ULONG, DWORD, NULL, LPWSTR, LONG, HRESULT, PGUID, LPCSTR, GUID
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket import hresult_errors, LOG
+from adcheck.libs.impacket.uuid import string_to_bin, uuidtup_to_bin
+from adcheck.libs.impacket.structure import Structure, hexdump
 
 
 def format_structure(d, level=0):

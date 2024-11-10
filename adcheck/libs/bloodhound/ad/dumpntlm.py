@@ -38,17 +38,17 @@ import os
 import socket
 import string, random
 
-from impacket import nmb, ntlm
-from impacket.smb import SMB, NewSMBPacket, SMBCommand, SMBNTLMDialect_Parameters,\
+from adcheck.libs.impacket import nmb, ntlm
+from adcheck.libs.impacket.smb import SMB, NewSMBPacket, SMBCommand, SMBNTLMDialect_Parameters,\
     SMBNTLMDialect_Data, SMBExtended_Security_Parameters, SMBExtended_Security_Data, UnsupportedFeature,\
     SMBSessionSetupAndX_Extended_Data, SMBSessionSetupAndX_Extended_Parameters, SMBSessionSetupAndX_Extended_Response_Parameters,\
     SMBSessionSetupAndX_Extended_Response_Data, SMB_DIALECT
-from impacket.smb3structs import *
-from impacket.spnego import SPNEGO_NegTokenInit, SPNEGO_NegTokenResp, TypesMech
-from impacket.nt_errors import STATUS_SUCCESS
-from impacket.uuid import uuidtup_to_bin
-from impacket.dcerpc.v5 import transport, epm
-from impacket.dcerpc.v5.rpcrt import *
+from adcheck.libs.impacket.smb3structs import *
+from adcheck.libs.impacket.spnego import SPNEGO_NegTokenInit, SPNEGO_NegTokenResp, TypesMech
+from adcheck.libs.impacket.nt_errors import STATUS_SUCCESS
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket.dcerpc.v5 import transport, epm
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import *
 
 
 

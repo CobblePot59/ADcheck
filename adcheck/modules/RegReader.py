@@ -1,6 +1,6 @@
-from libs.impacket.dcerpc.v5 import transport, rrp, scmr
-from libs.impacket.smbconnection import SMBConnection
-from libs.impacket.system_errors import ERROR_NO_MORE_ITEMS
+from adcheck.libs.impacket.dcerpc.v5 import transport, rrp, scmr
+from adcheck.libs.impacket.smbconnection import SMBConnection
+from adcheck.libs.impacket.system_errors import ERROR_NO_MORE_ITEMS
 from struct import unpack
 import binascii
 

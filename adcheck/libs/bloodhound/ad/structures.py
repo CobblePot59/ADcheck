@@ -22,11 +22,11 @@
 #
 ####################
 
-from impacket.structure import Structure
+from adcheck.libs.impacket.structure import Structure
 from struct import unpack
 
 
-# LDAP SID structure - from impackets SAMR_RPC_SID, except the SubAuthority is LE here
+# LDAP SID structure - from adcheck.libs.impackets SAMR_RPC_SID, except the SubAuthority is LE here
 class LDAP_SID_IDENTIFIER_AUTHORITY(Structure):
     structure = (
         ('Value', '6s'),

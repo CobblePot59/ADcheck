@@ -27,13 +27,13 @@ import sys
 from binascii import unhexlify
 from Cryptodome.Cipher import ARC4
 
-from impacket import ntlm, LOG
-from impacket.structure import Structure,pack,unpack
-from impacket.krb5 import kerberosv5, gssapi
-from impacket.uuid import uuidtup_to_bin, generate, stringver_to_bin, bin_to_uuidtup
-from impacket.dcerpc.v5.dtypes import UCHAR, ULONG, USHORT
-from impacket.dcerpc.v5.ndr import NDRSTRUCT
-from impacket import hresult_errors
+from adcheck.libs.impacket import ntlm, LOG
+from adcheck.libs.impacket.structure import Structure,pack,unpack
+from adcheck.libs.impacket.krb5 import kerberosv5, gssapi
+from adcheck.libs.impacket.uuid import uuidtup_to_bin, generate, stringver_to_bin, bin_to_uuidtup
+from adcheck.libs.impacket.dcerpc.v5.dtypes import UCHAR, ULONG, USHORT
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRSTRUCT
+from adcheck.libs.impacket import hresult_errors
 from threading import Thread
 
 # MS/RPC Constants
@@ -1005,7 +1005,7 @@ class DCERPC_v5(DCERPC):
                 auth = ntlm.getNTLMSSPType1('', '', signingRequired=True,
                                             use_ntlmv2=self._transport.doesSupportNTLMv2())
             elif self.__auth_type == RPC_C_AUTHN_NETLOGON:
-                from impacket.dcerpc.v5 import nrpc
+                from adcheck.libs.impacket.dcerpc.v5 import nrpc
                 auth = nrpc.getSSPType1(self.__username[:-1], self.__domain, signingRequired=True)
             elif self.__auth_type == RPC_C_AUTHN_GSS_NEGOTIATE:
                 self.__cipher, self.__sessionKey, auth = kerberosv5.getKerberosType1(self.__username, self.__password,
@@ -1199,7 +1199,7 @@ class DCERPC_v5(DCERPC):
                                self.__sequence, 
                                self.__clientSealingHandle)
                 elif self.__auth_type == RPC_C_AUTHN_NETLOGON:
-                    from impacket.dcerpc.v5 import nrpc
+                    from adcheck.libs.impacket.dcerpc.v5 import nrpc
                     sealedMessage, signature = nrpc.SEAL(plain_data, self.__confounder, self.__sequence, self.__sessionKey, False)
                 elif self.__auth_type == RPC_C_AUTHN_GSS_NEGOTIATE:
                     sealedMessage, signature = self.__gss.GSS_Wrap(self.__sessionKey, plain_data, self.__sequence)
@@ -1222,7 +1222,7 @@ class DCERPC_v5(DCERPC):
                                self.__sequence, 
                                self.__clientSealingHandle)
                 elif self.__auth_type == RPC_C_AUTHN_NETLOGON:
-                    from impacket.dcerpc.v5 import nrpc
+                    from adcheck.libs.impacket.dcerpc.v5 import nrpc
                     signature = nrpc.SIGN(plain_data, 
                            self.__confounder, 
                            self.__sequence, 
@@ -1370,7 +1370,7 @@ class DCERPC_v5(DCERPC):
                                     self.__serverSealingHandle)
                             self.__sequence += 1
                     elif self.__auth_type == RPC_C_AUTHN_NETLOGON:
-                        from impacket.dcerpc.v5 import nrpc
+                        from adcheck.libs.impacket.dcerpc.v5 import nrpc
                         answer, cfounder = nrpc.UNSEAL(answer, 
                                auth_data[len(sec_trailer):],
                                self.__sessionKey, 
@@ -1400,7 +1400,7 @@ class DCERPC_v5(DCERPC):
                             # the packet :P
                             self.__sequence += 1
                     elif self.__auth_type == RPC_C_AUTHN_NETLOGON:
-                        from impacket.dcerpc.v5 import nrpc
+                        from adcheck.libs.impacket.dcerpc.v5 import nrpc
                         ntlmssp = auth_data[12:]
                         signature = nrpc.SIGN(ntlmssp, 
                                self.__confounder, 

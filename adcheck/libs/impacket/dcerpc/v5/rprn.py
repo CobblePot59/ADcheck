@@ -23,11 +23,11 @@
 # Author:
 #   Alberto Solino (@agsolino)
 #
-from impacket import system_errors
-from impacket.dcerpc.v5.dtypes import ULONGLONG, UINT, USHORT, LPWSTR, DWORD, ULONG, NULL
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRUNION, NDRPOINTER, NDRUniConformantArray
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket import system_errors
+from adcheck.libs.impacket.dcerpc.v5.dtypes import ULONGLONG, UINT, USHORT, LPWSTR, DWORD, ULONG, NULL
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRUNION, NDRPOINTER, NDRUniConformantArray
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
 
 MSRPC_UUID_RPRN = uuidtup_to_bin(('12345678-1234-ABCD-EF00-0123456789AB', '1.0'))
 

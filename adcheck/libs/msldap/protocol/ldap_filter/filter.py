@@ -1,8 +1,8 @@
 import re
 import platform
 
-from msldap.protocol.ldap_filter import parser
-from msldap.protocol.ldap_filter.soundex import soundex_compare
+from adcheck.libs.msldap.protocol.ldap_filter import parser
+from adcheck.libs.msldap.protocol.ldap_filter.soundex import soundex_compare
 
 
 class LDAPBase:

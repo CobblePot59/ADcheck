@@ -25,8 +25,8 @@ from six import b
 from Cryptodome.Hash import HMAC, MD5
 from Cryptodome.Cipher import ARC4
 
-from impacket.structure import Structure
-from impacket.krb5 import constants, crypto
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.krb5 import constants, crypto
 
 # Our random number generator
 try:
@@ -170,7 +170,7 @@ class GSSAPI_RC4:
         token['SND_SEQ'] = ARC4.new(Kseq).encrypt(token['SND_SEQ'])
 
         if authData is not None:
-            from impacket.dcerpc.v5.rpcrt import SEC_TRAILER
+            from adcheck.libs.impacket.dcerpc.v5.rpcrt import SEC_TRAILER
             wrap = self.WRAP(authData[len(SEC_TRAILER()) + len(GSS_WRAP_HEADER):])
             snd_seq = wrap['SND_SEQ']
 
@@ -279,7 +279,7 @@ class GSSAPI_AES():
         return ret1, ret2
 
     def GSS_Unwrap(self, sessionKey, data, sequenceNumber, direction = 'init', encrypt=True, authData=None):
-        from impacket.dcerpc.v5.rpcrt import SEC_TRAILER
+        from adcheck.libs.impacket.dcerpc.v5.rpcrt import SEC_TRAILER
 
         cipher = self.cipherType()
         token = self.WRAP(authData[len(SEC_TRAILER()):])

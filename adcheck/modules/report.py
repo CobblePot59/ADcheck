@@ -1,4 +1,4 @@
-from modules.constants import CHECKLIST
+from adcheck.modules.constants import CHECKLIST
 from jinja2 import Environment, FileSystemLoader
 from os import path
 import plotly.graph_objects as go

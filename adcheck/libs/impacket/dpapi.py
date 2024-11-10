@@ -40,11 +40,11 @@ from Cryptodome.PublicKey import RSA
 from Cryptodome.Util.number import bytes_to_long
 from six import PY3
 
-from impacket.ese import getUnixTime
-from impacket.structure import Structure, hexdump
-from impacket.uuid import bin_to_string
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.dtypes import RPC_SID
+from adcheck.libs.impacket.ese import getUnixTime
+from adcheck.libs.impacket.structure import Structure, hexdump
+from adcheck.libs.impacket.uuid import bin_to_string
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.dtypes import RPC_SID
 
 # Algorithm classes
 ALG_CLASS_ANY                   = (0)

@@ -29,12 +29,12 @@ from pyasn1.codec.der import decoder, encoder
 from pyasn1.type.univ import noValue
 from binascii import hexlify
 
-from impacket.structure import Structure
-from impacket.krb5 import crypto, constants, types
-from impacket.krb5.asn1 import AS_REP, seq_set, TGS_REP, EncTGSRepPart, EncASRepPart, Ticket, KRB_CRED, \
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.krb5 import crypto, constants, types
+from adcheck.libs.impacket.krb5.asn1 import AS_REP, seq_set, TGS_REP, EncTGSRepPart, EncASRepPart, Ticket, KRB_CRED, \
     EncKrbCredPart, KrbCredInfo, seq_set_iter
-from impacket.krb5.types import KerberosTime
-from impacket import LOG
+from adcheck.libs.impacket.krb5.types import KerberosTime
+from adcheck.libs.impacket import LOG
 
 try:
     FileNotFoundError

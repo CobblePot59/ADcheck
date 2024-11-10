@@ -1,6 +1,6 @@
 
 
-from msldap.commons.utils import print_cert
+from adcheck.libs.msldap.commons.utils import print_cert
 from asn1crypto.x509 import Certificate
 
 MSADEnrollmentService_ATTRS = ['cACertificate', 'msPKI-Enrollment-Servers', 'dNSHostName', 'cn', 'sn', 'distinguishedName', 'whenChanged', 'whenCreated', 'name', 'displayName', 'cACertificateDN', 'certificateTemplates']

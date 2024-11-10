@@ -26,18 +26,18 @@
 import time
 from struct import pack, unpack
 from six import b
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRENUM, NDRUNION, NDRPOINTER, NDRUniConformantArray, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRENUM, NDRUNION, NDRPOINTER, NDRUniConformantArray, \
     NDRUniFixedArray, NDRUniConformantVaryingArray
-from impacket.dcerpc.v5.dtypes import WSTR, LPWSTR, DWORD, ULONG, USHORT, PGUID, NTSTATUS, NULL, LONG, UCHAR, PRPC_SID, \
+from adcheck.libs.impacket.dcerpc.v5.dtypes import WSTR, LPWSTR, DWORD, ULONG, USHORT, PGUID, NTSTATUS, NULL, LONG, UCHAR, PRPC_SID, \
     GUID, RPC_UNICODE_STRING, SECURITY_INFORMATION, LPULONG, ULONGLONG
-from impacket import system_errors, nt_errors
-from impacket.uuid import uuidtup_to_bin
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.samr import OLD_LARGE_INTEGER
-from impacket.dcerpc.v5.lsad import PLSA_FOREST_TRUST_INFORMATION
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket.structure import Structure
-from impacket import ntlm, crypto, LOG
+from adcheck.libs.impacket import system_errors, nt_errors
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.samr import OLD_LARGE_INTEGER
+from adcheck.libs.impacket.dcerpc.v5.lsad import PLSA_FOREST_TRUST_INFORMATION
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket import ntlm, crypto, LOG
 import hmac
 import hashlib
 try:
@@ -152,7 +152,7 @@ class CYPHER_BLOCK(NDRSTRUCT):
 NET_API_STATUS = DWORD
 
 # 2.2.1.1.2 STRING
-from impacket.dcerpc.v5.lsad import STRING
+from adcheck.libs.impacket.dcerpc.v5.lsad import STRING
 
 # 2.2.1.1.3 LM_OWF_PASSWORD
 class CYPHER_BLOCK_ARRAY(NDRUniFixedArray):
@@ -1023,7 +1023,7 @@ class PNETLOGON_DELTA_RENAME_GROUP(NDRPOINTER):
     )
 
 # 2.2.1.5.14 NLPR_LOGON_HOURS
-from impacket.dcerpc.v5.samr import SAMPR_LOGON_HOURS
+from adcheck.libs.impacket.dcerpc.v5.samr import SAMPR_LOGON_HOURS
 NLPR_LOGON_HOURS = SAMPR_LOGON_HOURS
 
 # 2.2.1.5.15 NLPR_USER_PRIVATE_INFO

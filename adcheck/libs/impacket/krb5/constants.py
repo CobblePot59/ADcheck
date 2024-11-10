@@ -15,7 +15,7 @@
 # Author:
 #   Alberto Solino (@agsolino)
 #
-from impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
 
 def encodeFlags(flags):
     finalFlags = list()

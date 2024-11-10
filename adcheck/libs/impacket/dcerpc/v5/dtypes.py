@@ -20,10 +20,10 @@ from __future__ import print_function
 from struct import pack, unpack
 from six import binary_type
 
-from impacket.dcerpc.v5.ndr import NDRULONG, NDRUHYPER, NDRSHORT, NDRLONG, NDRPOINTER, NDRUniConformantArray, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRULONG, NDRUHYPER, NDRSHORT, NDRLONG, NDRPOINTER, NDRUniConformantArray, \
     NDRUniFixedArray, NDR, NDRHYPER, NDRSMALL, NDRPOINTERNULL, NDRSTRUCT, \
     NDRUSMALL, NDRBOOLEAN, NDRUSHORT, NDRFLOAT, NDRDOUBLEFLOAT, NULL
-from impacket.structure import Structure
+from adcheck.libs.impacket.structure import Structure
 
 DWORD = NDRULONG
 BOOL = NDRULONG

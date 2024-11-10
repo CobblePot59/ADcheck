@@ -25,8 +25,8 @@ from six import b
 from struct import pack, unpack, calcsize
 from binascii import hexlify
 
-from impacket.structure import Structure
-from impacket import LOG
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket import LOG
 
 
 class Enctype(Enum):

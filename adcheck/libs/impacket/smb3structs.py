@@ -18,7 +18,7 @@
 from __future__ import division
 from __future__ import print_function
 
-from impacket.structure import Structure
+from adcheck.libs.impacket.structure import Structure
 
 # Constants
 

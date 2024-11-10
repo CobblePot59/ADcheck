@@ -28,9 +28,9 @@ import threading
 import re
 import dns
 from dns import resolver, reversename
-from bloodhound.ad.structures import LDAP_SID
-from bloodhound.ad.dumpntlm import DumpNtlm
-from impacket.dcerpc.v5 import transport, wkst
+from adcheck.libs.bloodhound.ad.structures import LDAP_SID
+from adcheck.libs.bloodhound.ad.dumpntlm import DumpNtlm
+from adcheck.libs.impacket.dcerpc.v5 import transport, wkst
 
 """
 """

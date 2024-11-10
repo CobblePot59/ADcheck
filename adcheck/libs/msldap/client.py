@@ -10,19 +10,19 @@ import string
 import random
 from typing import List, Dict, Tuple
 
-from msldap import logger
-from msldap.commons.common import MSLDAPClientStatus
-from msldap.wintypes.asn1.sdflagsrequest import SDFlagsRequest, SDFlagsRequestValue
-from msldap.protocol.constants import BASE, ALL_ATTRIBUTES, LEVEL
+from adcheck.libs.msldap import logger
+from adcheck.libs.msldap.commons.common import MSLDAPClientStatus
+from adcheck.libs.msldap.wintypes.asn1.sdflagsrequest import SDFlagsRequest, SDFlagsRequestValue
+from adcheck.libs.msldap.protocol.constants import BASE, ALL_ATTRIBUTES, LEVEL
 
-from msldap.protocol.query import escape_filter_chars
-from msldap.connection import MSLDAPClientConnection
-from msldap.protocol.messages import Control
-from msldap.ldap_objects import *
-from msldap.commons.utils import KNOWN_SIDS
-from msldap.commons.target import MSLDAPTarget
-from msldap.wintypes.dnsp.strcutures import DNS_RECORD
-from msldap.commons.exceptions import LDAPSearchException
+from adcheck.libs.msldap.protocol.query import escape_filter_chars
+from adcheck.libs.msldap.connection import MSLDAPClientConnection
+from adcheck.libs.msldap.protocol.messages import Control
+from adcheck.libs.msldap.ldap_objects import *
+from adcheck.libs.msldap.commons.utils import KNOWN_SIDS
+from adcheck.libs.msldap.commons.target import MSLDAPTarget
+from adcheck.libs.msldap.wintypes.dnsp.strcutures import DNS_RECORD
+from adcheck.libs.msldap.commons.exceptions import LDAPSearchException
 from asyauth.common.credentials import UniCredential
 
 from winacl.dtyp.security_descriptor import SECURITY_DESCRIPTOR

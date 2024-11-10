@@ -27,7 +27,7 @@ try:
 except ImportError:
     from httplib import HTTPConnection, HTTPSConnection
 
-from impacket import ntlm, LOG
+from adcheck.libs.impacket import ntlm, LOG
 
 # Auth types
 AUTH_AUTO      = 'Auto'

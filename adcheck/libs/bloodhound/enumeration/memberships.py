@@ -26,11 +26,11 @@ import logging
 import queue
 import threading
 import calendar
-from bloodhound.ad.utils import ADUtils, AceResolver
-from bloodhound.ad.computer import ADComputer
-from bloodhound.ad.structures import LDAP_SID
-from bloodhound.enumeration.acls import AclEnumerator, parse_binary_acl
-from bloodhound.enumeration.outputworker import OutputWorker
+from adcheck.libs.bloodhound.ad.utils import ADUtils, AceResolver
+from adcheck.libs.bloodhound.ad.computer import ADComputer
+from adcheck.libs.bloodhound.ad.structures import LDAP_SID
+from adcheck.libs.bloodhound.enumeration.acls import AclEnumerator, parse_binary_acl
+from adcheck.libs.bloodhound.enumeration.outputworker import OutputWorker
 
 class MembershipEnumerator(object):
     """

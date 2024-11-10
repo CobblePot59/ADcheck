@@ -1,7 +1,7 @@
 import asyncio
 
-from msldap import logger
-from msldap.protocol.utils import calcualte_length
+from adcheck.libs.msldap import logger
+from adcheck.libs.msldap.protocol.utils import calcualte_length
 from asysocks.unicomm.common.packetizers import Packetizer
 
 class LDAPPacketizer(Packetizer):

@@ -4,9 +4,6 @@
 #  Tamas Jos (@skelsec)
 #
 
-import sys
-
-sys.path.append('adcheck/libs')
 
 import logging
 

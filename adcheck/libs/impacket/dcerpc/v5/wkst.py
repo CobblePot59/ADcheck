@@ -23,14 +23,14 @@
 # Author:
 #   Alberto Solino (@agsolino)
 #
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRENUM, NDRUNION, NDRUniConformantArray, NDRUniFixedArray, \
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRENUM, NDRUNION, NDRUniConformantArray, NDRUniFixedArray, \
     NDRPOINTER
-from impacket.dcerpc.v5.dtypes import NULL, WSTR, ULONG, LPWSTR, LONG, LARGE_INTEGER, WIDESTR, RPC_UNICODE_STRING, \
+from adcheck.libs.impacket.dcerpc.v5.dtypes import NULL, WSTR, ULONG, LPWSTR, LONG, LARGE_INTEGER, WIDESTR, RPC_UNICODE_STRING, \
     LPULONG, LPLONG
-from impacket import system_errors
-from impacket.uuid import uuidtup_to_bin
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket import system_errors
+from adcheck.libs.impacket.uuid import uuidtup_to_bin
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
 
 MSRPC_UUID_WKST   = uuidtup_to_bin(('6BFFD098-A112-3610-9833-46C3F87E345A', '1.0'))
 

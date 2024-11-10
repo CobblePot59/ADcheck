@@ -1,5 +1,5 @@
-from libs.impacket.smbconnection import SMBConnection
-from libs.impacket.examples.secretsdump import RemoteOperations, NTDSHashes
+from adcheck.libs.impacket.smbconnection import SMBConnection
+from adcheck.libs.impacket.examples.secretsdump import RemoteOperations, NTDSHashes
 
 
 class DumpSecrets:

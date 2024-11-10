@@ -29,18 +29,18 @@ from __future__ import print_function
 import random
 from struct import pack, unpack
 
-from impacket import LOG
-from impacket import hresult_errors
-from impacket.dcerpc.v5.dcomrt import DCOMCALL, DCOMANSWER, IRemUnknown2, PMInterfacePointer, INTERFACE, \
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket import hresult_errors
+from adcheck.libs.impacket.dcerpc.v5.dcomrt import DCOMCALL, DCOMANSWER, IRemUnknown2, PMInterfacePointer, INTERFACE, \
     MInterfacePointer, MInterfacePointer_ARRAY, BYTE_ARRAY, PPMInterfacePointer
-from impacket.dcerpc.v5.dtypes import LPWSTR, ULONG, DWORD, SHORT, GUID, USHORT, LONG, WSTR, BYTE, LONGLONG, FLOAT, \
+from adcheck.libs.impacket.dcerpc.v5.dtypes import LPWSTR, ULONG, DWORD, SHORT, GUID, USHORT, LONG, WSTR, BYTE, LONGLONG, FLOAT, \
     DOUBLE, HRESULT, PSHORT, PLONG, PLONGLONG, PFLOAT, PDOUBLE, PHRESULT, CHAR, ULONGLONG, INT, UINT, PCHAR, PUSHORT, \
     PULONG, PULONGLONG, PINT, PUINT, NULL
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER, NDRENUM, NDRUSHORT, NDRUNION, \
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER, NDRENUM, NDRUSHORT, NDRUNION, \
     NDRUniConformantVaryingArray, NDR
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket.uuid import string_to_bin
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket.uuid import string_to_bin
 
 class DCERPCSessionError(DCERPCException):
     def __init__(self, error_string=None, error_code=None, packet=None):

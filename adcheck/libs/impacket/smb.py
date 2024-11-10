@@ -56,10 +56,10 @@ from struct import pack, unpack
 from contextlib import contextmanager
 from pyasn1.type.univ import noValue
 
-from impacket import nmb, ntlm, nt_errors, LOG
-from impacket.structure import Structure
-from impacket.spnego import SPNEGO_NegTokenInit, TypesMech, SPNEGO_NegTokenResp, ASN1_OID, asn1encode, ASN1_AID
-from impacket.krb5.gssapi import KRB5_AP_REQ
+from adcheck.libs.impacket import nmb, ntlm, nt_errors, LOG
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.spnego import SPNEGO_NegTokenInit, TypesMech, SPNEGO_NegTokenResp, ASN1_OID, asn1encode, ASN1_AID
+from adcheck.libs.impacket.krb5.gssapi import KRB5_AP_REQ
 import six
 
 # For signing
@@ -3147,10 +3147,10 @@ class SMB(object):
 
     def kerberos_login(self, user, password, domain = '', lmhash = '', nthash = '', aesKey = '', kdcHost = '', TGT=None, TGS=None):
         # Importing down here so pyasn1 is not required if kerberos is not used.
-        from impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
-        from impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
-        from impacket.krb5 import constants
-        from impacket.krb5.types import Principal, KerberosTime, Ticket
+        from adcheck.libs.impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
+        from adcheck.libs.impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
+        from adcheck.libs.impacket.krb5 import constants
+        from adcheck.libs.impacket.krb5.types import Principal, KerberosTime, Ticket
         from pyasn1.codec.der import decoder, encoder
         import datetime
 

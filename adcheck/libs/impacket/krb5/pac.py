@@ -14,12 +14,12 @@
 # Author:
 #   Alberto Solino (@agsolino)
 #
-from impacket.dcerpc.v5.dtypes import ULONG, RPC_UNICODE_STRING, FILETIME, PRPC_SID, USHORT, RPC_SID, SID
-from impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER
-from impacket.dcerpc.v5.nrpc import USER_SESSION_KEY, CHAR_FIXED_8_ARRAY, PUCHAR_ARRAY, PRPC_UNICODE_STRING_ARRAY
-from impacket.dcerpc.v5.rpcrt import TypeSerialization1
-from impacket.ldap.ldaptypes import LDAP_SID
-from impacket.structure import Structure
+from adcheck.libs.impacket.dcerpc.v5.dtypes import ULONG, RPC_UNICODE_STRING, FILETIME, PRPC_SID, USHORT, RPC_SID, SID
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRSTRUCT, NDRUniConformantArray, NDRPOINTER
+from adcheck.libs.impacket.dcerpc.v5.nrpc import USER_SESSION_KEY, CHAR_FIXED_8_ARRAY, PUCHAR_ARRAY, PRPC_UNICODE_STRING_ARRAY
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import TypeSerialization1
+from adcheck.libs.impacket.ldap.ldaptypes import LDAP_SID
+from adcheck.libs.impacket.structure import Structure
 
 ################################################################################
 # CONSTANTS
@@ -58,7 +58,7 @@ class PKERB_SID_AND_ATTRIBUTES_ARRAY(NDRPOINTER):
     )
 
 # 2.2.2 GROUP_MEMBERSHIP
-from impacket.dcerpc.v5.nrpc import PGROUP_MEMBERSHIP_ARRAY
+from adcheck.libs.impacket.dcerpc.v5.nrpc import PGROUP_MEMBERSHIP_ARRAY
 
 # 2.2.3 DOMAIN_GROUP_MEMBERSHIP
 class DOMAIN_GROUP_MEMBERSHIP(NDRSTRUCT):

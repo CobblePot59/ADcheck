@@ -5,7 +5,7 @@
 #
 
 import datetime #, timedelta, timezone
-from msldap.ldap_objects.common import MSLDAP_UAC, vn
+from adcheck.libs.msldap.ldap_objects.common import MSLDAP_UAC, vn
 
 MSADGMSAUser_ATTRS = [ 	
 	'accountExpires', 'badPasswordTime', 'badPwdCount', 'cn', 'codePage', 

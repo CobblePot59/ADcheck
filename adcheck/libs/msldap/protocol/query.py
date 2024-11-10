@@ -1,7 +1,7 @@
 from .ldap_filter import Filter as LF
 from .ldap_filter.filter import LDAPBase
 from asn1crypto.core import ObjectIdentifier
-from msldap.protocol.messages import Filter, Filters, \
+from adcheck.libs.msldap.protocol.messages import Filter, Filters, \
 	AttributeDescription, SubstringFilter, MatchingRuleAssertion, \
 	Substrings, Substring
 

@@ -47,7 +47,7 @@ import random
 from struct import pack, unpack
 from six import byte2int, indexbytes, b
 
-from impacket.structure import Structure
+from adcheck.libs.impacket.structure import Structure
 
 # Our random number generator
 try:

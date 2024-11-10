@@ -14,12 +14,12 @@ import calendar
 from datetime import datetime
 from typing import Dict, List
 
-from msldap import logger
-from msldap.ldap_objects import MSADSchemaEntry, MSADInfo_ATTRS, MSADInfo, MSADContainer, MSADContainer_ATTRS, \
+from adcheck.libs.msldap import logger
+from adcheck.libs.msldap.ldap_objects import MSADSchemaEntry, MSADInfo_ATTRS, MSADInfo, MSADContainer, MSADContainer_ATTRS, \
     MSADDomainTrust_ATTRS, MSADDomainTrust, MSADOU, MSADOU_ATTRS, MSADUser, MSADUser_ATTRS, MSADGroup, MSADGroup_ATTRS,\
     MSADMachine_ATTRS, MSADMachine, MSADGPO_ATTRS, MSADGPO
 
-from msldap.protocol.typeconversion import MSLDAP_BUILTIN_ATTRIBUTE_TYPES, LDAP_WELL_KNOWN_ATTRS
+from adcheck.libs.msldap.protocol.typeconversion import MSLDAP_BUILTIN_ATTRIBUTE_TYPES, LDAP_WELL_KNOWN_ATTRS
 
 ENCODER_SPEFIFIC_FULCTIONS = [
     'single_bool', 'single_str', 'multi_str'

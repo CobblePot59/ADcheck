@@ -32,18 +32,18 @@ from struct import pack
 import six
 from six import PY2
 
-from impacket import LOG
-from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantArray, NDRUNION, NDR, NDRENUM
-from impacket.dcerpc.v5.dtypes import PUUID, DWORD, NULL, GUID, LPWSTR, BOOL, ULONG, UUID, LONGLONG, ULARGE_INTEGER, LARGE_INTEGER
-from impacket import hresult_errors, system_errors
-from impacket.structure import Structure
-from impacket.uuid import uuidtup_to_bin, string_to_bin
-from impacket.dcerpc.v5.enum import Enum
-from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket.krb5 import crypto
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRPOINTER, NDRUniConformantArray, NDRUNION, NDR, NDRENUM
+from adcheck.libs.impacket.dcerpc.v5.dtypes import PUUID, DWORD, NULL, GUID, LPWSTR, BOOL, ULONG, UUID, LONGLONG, ULARGE_INTEGER, LARGE_INTEGER
+from adcheck.libs.impacket import hresult_errors, system_errors
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.uuid import uuidtup_to_bin, string_to_bin
+from adcheck.libs.impacket.dcerpc.v5.enum import Enum
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket.krb5 import crypto
 from pyasn1.type import univ
 from pyasn1.codec.ber import decoder
-from impacket.crypto import transformKey
+from adcheck.libs.impacket.crypto import transformKey
 
 try:
     from Cryptodome.Cipher import ARC4, DES

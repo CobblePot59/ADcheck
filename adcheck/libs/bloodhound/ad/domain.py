@@ -32,9 +32,9 @@ from dns import resolver
 from ldap3 import ALL_ATTRIBUTES, BASE, SUBTREE, LEVEL
 from ldap3.core.exceptions import LDAPKeyError, LDAPAttributeError, LDAPCursorError, LDAPNoSuchObjectResult, LDAPSocketReceiveError, LDAPSocketSendError, LDAPCommunicationError
 from ldap3.protocol.microsoft import security_descriptor_control
-from bloodhound.ad.utils import ADUtils, DNSCache, SidCache, SamCache, CollectionException
-from bloodhound.ad.computer import ADComputer
-from bloodhound.enumeration.objectresolver import ObjectResolver
+from adcheck.libs.bloodhound.ad.utils import ADUtils, DNSCache, SidCache, SamCache, CollectionException
+from adcheck.libs.bloodhound.ad.computer import ADComputer
+from adcheck.libs.bloodhound.enumeration.objectresolver import ObjectResolver
 from future.utils import itervalues, iteritems, native_str
 
 """

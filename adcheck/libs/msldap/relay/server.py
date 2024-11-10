@@ -1,7 +1,7 @@
 from asysocks.unicomm.common.target import UniTarget, UniProto
 from asysocks.unicomm.server import UniServer
-from msldap.network.packetizer import LDAPPacketizer
-from msldap.relay.serverconnection import LDAPRelayServerConnection
+from adcheck.libs.msldap.network.packetizer import LDAPPacketizer
+from adcheck.libs.msldap.relay.serverconnection import LDAPRelayServerConnection
 from asyauth.protocols.spnego.relay.native import spnegorelay_ntlm_factory
 from asyauth.protocols.ntlm.relay.native import NTLMRelaySettings, ntlmrelay_factory
 import traceback

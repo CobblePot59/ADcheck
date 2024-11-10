@@ -24,8 +24,8 @@
 from __future__ import unicode_literals
 import logging
 from multiprocessing import Pool
-from impacket.uuid import string_to_bin, bin_to_string
-from bloodhound.lib import cstruct
+from adcheck.libs.impacket.uuid import string_to_bin, bin_to_string
+from adcheck.libs.bloodhound.lib import cstruct
 from io import BytesIO
 from future.utils import iteritems, native_str
 

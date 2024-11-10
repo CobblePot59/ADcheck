@@ -32,12 +32,12 @@ from pyasn1.codec.ber import encoder, decoder
 from pyasn1.error import SubstrateUnderrunError
 from pyasn1.type.univ import noValue
 
-from impacket import LOG
-from impacket.ldap.ldapasn1 import Filter, Control, SimplePagedResultsControl, ResultCode, Scope, DerefAliases, Operation, \
+from adcheck.libs.impacket import LOG
+from adcheck.libs.impacket.ldap.ldapasn1 import Filter, Control, SimplePagedResultsControl, ResultCode, Scope, DerefAliases, Operation, \
     KNOWN_CONTROLS, CONTROL_PAGEDRESULTS, NOTIFICATION_DISCONNECT, KNOWN_NOTIFICATIONS, BindRequest, SearchRequest, \
     SearchResultDone, LDAPMessage
-from impacket.ntlm import getNTLMSSPType1, getNTLMSSPType3
-from impacket.spnego import SPNEGO_NegTokenInit, SPNEGO_NegTokenResp, TypesMech
+from adcheck.libs.impacket.ntlm import getNTLMSSPType1, getNTLMSSPType3
+from adcheck.libs.impacket.spnego import SPNEGO_NegTokenInit, SPNEGO_NegTokenResp, TypesMech
 
 try:
     import OpenSSL
@@ -156,11 +156,11 @@ class LDAPConnection:
                 pass
 
         # Importing down here so pyasn1 is not required if kerberos is not used.
-        from impacket.krb5.ccache import CCache
-        from impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
-        from impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
-        from impacket.krb5 import constants
-        from impacket.krb5.types import Principal, KerberosTime, Ticket
+        from adcheck.libs.impacket.krb5.ccache import CCache
+        from adcheck.libs.impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
+        from adcheck.libs.impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
+        from adcheck.libs.impacket.krb5 import constants
+        from adcheck.libs.impacket.krb5.types import Principal, KerberosTime, Ticket
         import datetime
 
         if TGT is not None or TGS is not None:

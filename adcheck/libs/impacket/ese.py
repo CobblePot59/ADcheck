@@ -28,7 +28,7 @@
 
 from __future__ import division
 from __future__ import print_function
-from impacket import LOG
+from adcheck.libs.impacket import LOG
 try:
     from collections import OrderedDict
 except:
@@ -36,7 +36,7 @@ except:
         from ordereddict.ordereddict import OrderedDict
     except:
         from ordereddict import OrderedDict
-from impacket.structure import Structure, hexdump
+from adcheck.libs.impacket.structure import Structure, hexdump
 from struct import unpack
 from binascii import hexlify
 from six import b

@@ -4,9 +4,9 @@ import re
 from winacl.dtyp.sid import SID
 from winacl.dtyp.guid import GUID
 from winacl.dtyp.security_descriptor import SECURITY_DESCRIPTOR
-from msldap import logger
-from msldap.protocol.messages import Attribute, Change, PartialAttribute
-from msldap.wintypes.managedpassword import MSDS_MANAGEDPASSWORD_BLOB
+from adcheck.libs.msldap import logger
+from adcheck.libs.msldap.protocol.messages import Attribute, Change, PartialAttribute
+from adcheck.libs.msldap.wintypes.managedpassword import MSDS_MANAGEDPASSWORD_BLOB
 
 MSLDAP_DT_WIN_EPOCH = datetime.datetime(1601, 1, 1)
 

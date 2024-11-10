@@ -44,12 +44,12 @@ from contextlib import contextmanager
 from pyasn1.type.univ import noValue
 from Cryptodome.Cipher import AES
 
-from impacket import nmb, ntlm, uuid, crypto
-from impacket.smb3structs import *
-from impacket.nt_errors import STATUS_SUCCESS, STATUS_MORE_PROCESSING_REQUIRED, STATUS_INVALID_PARAMETER, \
+from adcheck.libs.impacket import nmb, ntlm, uuid, crypto
+from adcheck.libs.impacket.smb3structs import *
+from adcheck.libs.impacket.nt_errors import STATUS_SUCCESS, STATUS_MORE_PROCESSING_REQUIRED, STATUS_INVALID_PARAMETER, \
     STATUS_NO_MORE_FILES, STATUS_PENDING, STATUS_NOT_IMPLEMENTED, ERROR_MESSAGES
-from impacket.spnego import SPNEGO_NegTokenInit, TypesMech, SPNEGO_NegTokenResp, ASN1_OID, asn1encode, ASN1_AID
-from impacket.krb5.gssapi import KRB5_AP_REQ
+from adcheck.libs.impacket.spnego import SPNEGO_NegTokenInit, TypesMech, SPNEGO_NegTokenResp, ASN1_OID, asn1encode, ASN1_AID
+from adcheck.libs.impacket.krb5.gssapi import KRB5_AP_REQ
 
 
 # For signing
@@ -725,10 +725,10 @@ class SMB3:
         #sessionSetup['Capabilities'] = SMB2_GLOBAL_CAP_LARGE_MTU | SMB2_GLOBAL_CAP_LEASING | SMB2_GLOBAL_CAP_DFS
 
         # Importing down here so pyasn1 is not required if kerberos is not used.
-        from impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
-        from impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
-        from impacket.krb5 import constants
-        from impacket.krb5.types import Principal, KerberosTime, Ticket
+        from adcheck.libs.impacket.krb5.asn1 import AP_REQ, Authenticator, TGS_REP, seq_set
+        from adcheck.libs.impacket.krb5.kerberosv5 import getKerberosTGT, getKerberosTGS
+        from adcheck.libs.impacket.krb5 import constants
+        from adcheck.libs.impacket.krb5.types import Principal, KerberosTime, Ticket
         from pyasn1.codec.der import decoder, encoder
         import datetime
 
@@ -744,7 +744,7 @@ class SMB3:
 
         # Save the ticket
         # If you want, for debugging purposes
-#        from impacket.krb5.ccache import CCache
+#        from adcheck.libs.impacket.krb5.ccache import CCache
 #        ccache = CCache()
 #        try:
 #            if TGS is None:
@@ -787,7 +787,7 @@ class SMB3:
         opts = list()
 
         if mutualAuth == True:
-            from impacket.krb5.constants import APOptions
+            from adcheck.libs.impacket.krb5.constants import APOptions
             opts.append(constants.APOptions.mutual_required.value)
 
         apReq['ap-options'] = constants.encodeFlags(opts)
@@ -838,8 +838,8 @@ class SMB3:
 
             if mutualAuth == True:
                 #Lets get the session key in the AP_REP
-                from impacket.krb5.asn1 import AP_REP, EncAPRepPart
-                from impacket.krb5.crypto import Key, _enctype_table
+                from adcheck.libs.impacket.krb5.asn1 import AP_REP, EncAPRepPart
+                from adcheck.libs.impacket.krb5.crypto import Key, _enctype_table
                 smbSessSetupResp = SMB2SessionSetup_Response(ans['Data'])
 
                 #in [KILE] 3.1.1.2:
@@ -1796,7 +1796,7 @@ class SMB3:
                                  createContexts=createContexts)
             res = ''
             files = []
-            from impacket import smb
+            from adcheck.libs.impacket import smb
             while True:
                 try:
                     res = self.queryDirectory(treeId, fileId, ntpath.basename(path), maxBufferSize=65535,
@@ -1861,7 +1861,7 @@ class SMB3:
                                  shareMode=FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
                                  creationOptions=FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT,
                                  creationDisposition=FILE_OPEN, fileAttributes=0)
-            from impacket import smb
+            from adcheck.libs.impacket import smb
             delete_req = smb.SMBSetFileDispositionInfo()
             delete_req['DeletePending'] = True
             self.setInfo(treeId, fileId, inputBlob=delete_req, fileInfoClass=SMB2_FILE_DISPOSITION_INFO)
@@ -1907,7 +1907,7 @@ class SMB3:
 
         treeId = self.connectTree(shareName)
         fileId = None
-        from impacket import smb
+        from adcheck.libs.impacket import smb
         try:
             fileId = self.create(treeId, path, FILE_READ_DATA, shareAccessMode, FILE_NON_DIRECTORY_FILE, mode, 0, createContexts=createContexts)
             res = self.queryInfo(treeId, fileId)
@@ -2025,7 +2025,7 @@ class SMB3:
             fileName = fileName[1:]
 
         if cmd is not None:
-            from impacket import smb
+            from adcheck.libs.impacket import smb
             ntCreate = smb.SMBCommand(data = cmd.getData())
             params = smb.SMBNtCreateAndX_Parameters(ntCreate['Parameters'])
             return self.create(treeId, fileName, params['AccessMask'], params['ShareAccess'],

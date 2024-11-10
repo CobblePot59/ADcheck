@@ -27,10 +27,10 @@ try:
 except ImportError:
     from urlparse import urlparse, urlunparse
 
-from impacket import ntlm
-from impacket.dcerpc.v5.rpcrt import DCERPCException, DCERPC_v5, DCERPC_v4
-from impacket.dcerpc.v5.rpch import RPCProxyClient, RPCProxyClientException, RPC_OVER_HTTP_v1, RPC_OVER_HTTP_v2
-from impacket.smbconnection import SMBConnection
+from adcheck.libs.impacket import ntlm
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException, DCERPC_v5, DCERPC_v4
+from adcheck.libs.impacket.dcerpc.v5.rpch import RPCProxyClient, RPCProxyClientException, RPC_OVER_HTTP_v1, RPC_OVER_HTTP_v2
+from adcheck.libs.impacket.smbconnection import SMBConnection
 
 
 class DCERPCStringBinding:

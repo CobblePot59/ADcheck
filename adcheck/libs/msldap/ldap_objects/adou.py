@@ -4,7 +4,7 @@
 #  Tamas Jos (@skelsec)
 #
 import base64
-from msldap.commons.utils import bh_dt_convert
+from adcheck.libs.msldap.commons.utils import bh_dt_convert
 
 
 

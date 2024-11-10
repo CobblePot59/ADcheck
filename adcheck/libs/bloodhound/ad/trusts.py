@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 ####################
-from bloodhound.ad.structures import LDAP_SID
+from adcheck.libs.bloodhound.ad.structures import LDAP_SID
 import logging
 """
 Domain trust

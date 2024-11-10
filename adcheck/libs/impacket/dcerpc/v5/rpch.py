@@ -19,13 +19,13 @@ import re
 import binascii
 from struct import unpack
 
-from impacket import uuid, ntlm, system_errors, nt_errors, LOG
-from impacket.dcerpc.v5.rpcrt import DCERPCException
+from adcheck.libs.impacket import uuid, ntlm, system_errors, nt_errors, LOG
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import DCERPCException
 
-from impacket.uuid import EMPTY_UUID
-from impacket.http import HTTPClientSecurityProvider, AUTH_BASIC
-from impacket.structure import Structure
-from impacket.dcerpc.v5.rpcrt import MSRPCHeader, \
+from adcheck.libs.impacket.uuid import EMPTY_UUID
+from adcheck.libs.impacket.http import HTTPClientSecurityProvider, AUTH_BASIC
+from adcheck.libs.impacket.structure import Structure
+from adcheck.libs.impacket.dcerpc.v5.rpcrt import MSRPCHeader, \
     MSRPC_RTS, PFC_FIRST_FRAG, PFC_LAST_FRAG
 
 class RPCProxyClientException(DCERPCException):

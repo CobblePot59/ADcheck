@@ -7,6 +7,8 @@ import asyncio
 import sys
 
 
+__version__ = "1.5.1"
+
 async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
     i = 0
     await getattr(obj, 'get_policies')()
@@ -45,6 +47,7 @@ def parse_arguments():
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', action='store_true', help='Generate HTML report file.')
     parser.add_argument('--debug', action='store_true', help='Print method name.')
+    parser.add_argument('--version', action='version', version=f'ADcheck v{__version__}')
     args = parser.parse_args()
     return args
 

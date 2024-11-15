@@ -375,9 +375,7 @@ class ADcheck:
         self.pprint('INFO', f'Functional level of domain is : {result}')
 
     async def force_logoff(self):
-        result = False
-        if self.root_entry.get('forceLogoff') == 0:
-            result = True
+        result = (self.root_entry.get('forceLogoff') == 0)
         self.pprint(result, f'Force logoff when logon hours expire : {result}', reverse=True)
 
     async def can_update_dns(self):
@@ -682,6 +680,11 @@ class ADcheck:
         result = conn.bind() and conn.search(self.base_dn, '(objectClass=*)', attributes=['*']) and bool(conn.entries)
         self.pprint(result, f'Ldap anonymous bind : {result}')
 
+    async def dfsr(self):
+        msDFSR_flags = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=DFSR-GlobalSettings,CN=System,{self.base_dn}', custom_filter='(objectClass=msDFSR-GlobalSettings)'))[0].get('msDFSR-Flags')
+        result = (msDFSR_flags == 48)
+        self.pprint(result, f'DFSR SYSVOL is enabled : {result}', reverse=True)
+
     @admin_required
     async def wmi_last_update(self):
         # https://github.com/netinvent/windows_tools/blob/master/windows_tools/updates/__init__.py#L144
@@ -749,7 +752,8 @@ class ADcheck:
                         blob = binascii.unhexlify(value[0].get('Blob'))
 
                         # Start of ASN.1 sequence
-                        der_start = blob.find(b'\x30\x82')
+                        search_range = blob[:512]
+                        der_start = search_range.find(b'\x30\x82')
                         if not der_start:
                             continue
 

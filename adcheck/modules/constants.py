@@ -49,6 +49,7 @@ CHECKLIST = {
                 ("functional_level", "Get Functional level of domain", "INFO"),
                 ("domain_controlers", "Get Domain Controllers", "INFO"),
                 ("bitlocker", "Computers with bitlocker keys", "INFO")
+                ("dfsr", "Verify if DFSR SYSVOL is enabled")
             ],
             "Privilege and Trust Management": [
                 ("trusted_for_delegation", "Name of Trust accounts for the delegation"),

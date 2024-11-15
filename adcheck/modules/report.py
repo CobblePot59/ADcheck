@@ -91,7 +91,6 @@ class ReportGenerator():
               'modeBarButtonsToRemove': ['toImage'],
               'displaylogo': False
             }
-            # fig.update_layout(width=400, height=400, margin=dict(t=0, b=0, l=0, r=0))
             return fig.to_html(full_html=False, config=config)
 
         # Render the template with generated SVGs and result

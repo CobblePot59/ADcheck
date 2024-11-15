@@ -48,7 +48,7 @@ CHECKLIST = {
                 ("kerberos_hardened", "Get Kerberos config", "INFO"),
                 ("functional_level", "Get Functional level of domain", "INFO"),
                 ("domain_controlers", "Get Domain Controllers", "INFO"),
-                ("bitlocker", "Computers with bitlocker keys", "INFO")
+                ("bitlocker", "Computers with bitlocker keys", "INFO"),
                 ("dfsr", "Verify if DFSR SYSVOL is enabled")
             ],
             "Privilege and Trust Management": [

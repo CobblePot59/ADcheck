@@ -194,23 +194,23 @@ SUPPORTED_ENCRYPTION = {
     31: "DES_CBC_CRC, DES_CBC_MD5, RC4-HMAC, AES128-CTS-HMAC-SHA1-96, AES256-CTS-HMAC-SHA1-96"
 }
 
-PRIVESC_GROUP = [
-    "Administrators",
-    "Domain Admins",
-    "Enterprise Admins",
-    "Enterprise Key Admins",
-    "Key Admins",
-    "Schema Admins",
-    "Replicator",
-    "Server Operators",
-    "Backup Operators",
-    "Print Operators",
-    "DnsAdmins",
-    "Account Operators",
-    "Remote Desktop Users",
-    "Certificate Operators",
-    "Cert Publishers",
-]
+PRIVESC_GROUP = {
+    "S-1-5-32-544": "Administrators",
+    "domain-512": "Domain Admins",
+    "domain-519": "Enterprise Admins",
+    "domain-527": "Enterprise Key Admins",
+    "domain-526": "Key Admins",
+    "domain-518": "Schema Admins",
+    "S-1-5-32-552": "Replicator",
+    "S-1-5-32-549": "Server Operators",
+    "S-1-5-32-551": "Backup Operators",
+    "S-1-5-32-550": "Print Operators",
+    "domain-1101": "DnsAdmins",
+    "S-1-5-32-548": "Account Operators",
+    "S-1-5-32-555": "Remote Desktop Users",
+    "S-1-5-32-574": "Certificate Operators",
+    "domain-517": "Cert Publishers",
+}
 
 # https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-identifiers#well-known-sids
 WELL_KNOWN_SIDS = {

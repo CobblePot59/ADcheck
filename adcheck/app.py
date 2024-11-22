@@ -60,9 +60,7 @@ def parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, opti
         password, auth = hashes.split(':')[1], 'kerberos-rc4' if options.kerberos else 'ntlm-nt'
     if aes_key:
         password, auth = aes_key, 'kerberos-aes'
-
     return f"{protocol}+{auth}://{subdomain}\\{username}:{password}@{hostname or dc_ip}/?dc={dc_ip}"
-
 
 async def main():
     from getpass import getpass
@@ -84,8 +82,6 @@ async def main():
     options.kerberos = args.kerberos
     options.output = args.output
 
-    url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
-
     if args.list_modules:
         for category, sections in CHECKLIST.items():
             print(category)
@@ -100,6 +96,7 @@ async def main():
             print()
         sys.exit(0)
 
+    url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
     ad_client = LDAPConnectionFactory.from_url(url).get_client()
     await ad_client.connect()
 

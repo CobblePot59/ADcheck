@@ -2,7 +2,7 @@ from adcheck.modules.ADmanage import ADClient
 from adcheck.modules.MSuacCalc import uac_details
 from adcheck.modules.MSaceCalc import SecurityDescriptorParser
 from adcheck.modules.decor import admin_required, capture_stdout
-from adcheck.modules.constants import WELL_KNOWN_SIDS, SUPPORTED_ENCRYPTION
+from adcheck.modules.constants import WELL_KNOWN_SIDS, PRIVESC_GROUP, SUPPORTED_ENCRYPTION
 from adcheck.modules.WMIquery import WMIquery
 from adcheck.libs.impacket.smbconnection import SMBConnection, SessionError
 from datetime import datetime, timezone
@@ -65,6 +65,7 @@ class ADcheck:
         self.extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)')
         self.domain_sid = (await self.domain_controlers(_return=True))[0].get('objectSid')[:41]
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain-', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
+        self.PRIVESC_GROUP = {key.replace('domain-', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
 
     def pprint(self, result, message, reverse=False):
         import inspect
@@ -130,7 +131,8 @@ class ADcheck:
         self.pprint(result, f'Admin accounts that can be delegated : {result}')
 
     async def admins_schema(self):
-        result = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(f'CN=Schema Admins,CN=Users,{self.base_dn}')]
+        group = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-518'))[0]
+        result = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(group)]
         self.pprint(result, f'Accounts in Schema Admins group : {result}')
 
     async def admin_not_protected(self):
@@ -165,16 +167,10 @@ class ADcheck:
         self.pprint(result, f'Pre-Windows 2000 Compatible Access group members contain "Authenticated Users : {result}')
 
     async def privesc_group(self):
-        from adcheck.modules.constants import PRIVESC_GROUP
-
         result = {}
-        for group in PRIVESC_GROUP:
-            members = []
-            for container in ['Users', 'Builtin']:
-                async for member, e in self.ad_client.msldap_client.get_group_members(f'CN={group},CN={container},{self.base_dn}'):
-                    if member:
-                        members.append(member.sAMAccountName)
-            result[group] = members
+        groups = [(await self.ad_client.msldap_client.get_dn_for_objectsid(key))[0] for key, value in self.PRIVESC_GROUP.items()]
+        for group in groups:
+            result[group] = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(group)]
         self.pprint('INFO', f'Privesc group :\n{json.dumps(result, indent=4)}')
 
     async def krbtgt_password_age(self):
@@ -279,10 +275,13 @@ class ADcheck:
         self.pprint(result, f'Trust accounts for the delegation : {result}')
 
     async def password_not_required(self):
+        guest_dn = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-501'))[0]
+        guest = (await self.ad_client.msldap_client.get_user_by_dn(guest_dn))[0].cn
+    
         result = []
         for user in self.user_entries:
             if 'PASSWD_NOTREQD' in uac_details(user.get('userAccountControl')):
-                if user.get('sAMAccountName') != 'Guest':
+                if user.get('sAMAccountName') != guest:
                     result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts with password not required : {result}')
 
@@ -308,13 +307,16 @@ class ADcheck:
 
     @admin_required
     async def blank_password(self):
-        ntds = self.ntds_dump()
+        guest_dn = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-501'))[0]
+        guest = (await self.ad_client.msldap_client.get_user_by_dn(guest_dn))[0].cn
+
         result = []
+        ntds = self.ntds_dump()
         for line in ntds:
             parts = line.split(':')
             user, _hash = parts[0], parts[3] 
 
-            if  _hash == '31d6cfe0d16ae931b73c59d7e0c089c0' and  user != 'Guest':
+            if  _hash == '31d6cfe0d16ae931b73c59d7e0c089c0' and  user != guest:
                 result.append(user)
         self.pprint(result, f'Accounts with blank password : {result}')
 

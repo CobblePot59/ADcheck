@@ -163,7 +163,7 @@ class ADcheck:
     async def pre2000_group(self):
         group_entries = await self.ad_client.get_ADobjects(custom_filter='(objectClass=group)')
         members = [group.get('member') for group in group_entries if group.get('objectSid') == 'S-1-5-32-554'][0]
-        result = any('S-1-5-11' in user for user in members)
+        result = any('S-1-5-11' in user for user in (members or []))
         self.pprint(result, f'Pre-Windows 2000 Compatible Access group members contain "Authenticated Users : {result}')
 
     async def privesc_group(self):

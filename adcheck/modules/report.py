@@ -107,5 +107,5 @@ class ReportGenerator():
         )
 
         # Write to an output HTML file
-        with open('report.html', 'w') as output_file:
+        with open('report.html', 'w', encoding='utf-8') as output_file:
             output_file.write(output_html)

@@ -19,7 +19,7 @@ class RemoteOperations:
         self.rrp.bind(rrp.MSRPC_UUID_RRP)
 
 class RegReader:
-    def __init__(self, domain, username, password, nthash, aes_key, hostname, dc_ip, do_kerberos, keyName, subKey=False):
+    def __init__(self, domain, username, password, nthash, aes_key, hostname, dc_ip, do_kerberos, keyName, subKey=False, default_value='Error'):
         self.domain = domain
         self.username = username
         self.password = password
@@ -32,6 +32,7 @@ class RegReader:
         self.remoteOps = None
         self.keyName = keyName
         self.subKey = subKey
+        self.default_value = default_value
     
     def __strip_root_key(self, rpc, keyName, subKey_flag=False):
         try:
@@ -121,9 +122,11 @@ class RegReader:
                 return new_value
             else:
                 value = rrp.hBaseRegQueryValue(rpc, ans2['phkResult'], Key)
+                if value is None:
+                    return self.default_value
                 return value[1]
         except Exception as e:
-            return e
+            return self.default_value
 
     def get_security_descriptor(self):
         self.connect()

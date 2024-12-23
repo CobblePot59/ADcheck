@@ -46,10 +46,10 @@ class ADcheck:
             self.smb_client.login(domain=self.domain, user=self.username, password=self.password, nthash=self.nthash)
         return self.smb_client
     
-    def _reg_client(self, keyName, subKey=False):
+    def _reg_client(self, keyName, subKey=False, default_value='Error'):
         from adcheck.modules.RegReader import RegReader
 
-        return RegReader(domain=self.domain, username=self.username, password=self.password, nthash=self.nthash, aes_key=self.aes_key, hostname=self.hostname, dc_ip=self.dc_ip, do_kerberos=self.do_kerberos, keyName=keyName, subKey=subKey).run()
+        return RegReader(domain=self.domain, username=self.username, password=self.password, nthash=self.nthash, aes_key=self.aes_key, hostname=self.hostname, dc_ip=self.dc_ip, do_kerberos=self.do_kerberos, keyName=keyName, subKey=subKey, default_value=default_value).run()
 
     async def _wmi_client(self, query, namespace='root/cimv2'):
         return await WMIquery(self.dc_ip, self.username, self.password, self.domain, query, namespace).run()
@@ -1002,6 +1002,40 @@ class ADcheck:
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
         self.pprint(result, f'Powershell events are logged : {result}', reverse=True)
+
+    @admin_required
+    async def reg_winrm(self):
+        result = {
+            'Client':{
+                'AllowUnencrypted': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\allow_unencrypted', default_value=0),
+                'Auth': {
+                    'Basic': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_basic', default_value=1),
+                    'Digest': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_digest', default_value=1),
+                    'Kerberos': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_kerberos', default_value=1),
+                    'Negotiate': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_negotiate', default_value=1),
+                    'Certificate': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_certificate', default_value=1),
+                    'CredSSP': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\auth_credssp', default_value=0),
+                },
+                'TrustedHosts': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Client\\trusted_hosts', default_value=' ').replace('\x00', '')
+            },
+            'Service':{
+                'AllowUnencrypted': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\allow_unencrypted', default_value=0),
+                'Auth': {
+                    'Basic': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\auth_basic', default_value=0),
+                    'Kerberos': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\auth_kerberos', default_value=1),
+                    'Negotiate': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\auth_negotiate', default_value=1),
+                    'Certificate': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\auth_certificate', default_value=0),
+                    'CredSSP': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\auth_credssp', default_value=0),
+                    'CbtHardeningLevel': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\cbt_hardening_level', default_value='Relaxed').replace('\x00', '')
+                },
+                'IPv4Filter': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\IPv4Filter', default_value='*').replace('\x00', ''),
+                'IPv6Filter': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\IPv6Filter', default_value='*').replace('\x00', ''),
+                'EnableCompatibilityHttpListener': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\http_compat_listener', default_value=0),
+                'EnableCompatibilityHttpsListener': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\https_compat_listener', default_value=0),
+                'AllowRemoteAccess': self.reg_client('HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WSMAN\\Service\\allow_remote_requests', default_value=1)
+            }
+        }
+        self.pprint('INFO', f"WSManConfig :\n{json.dumps(result, indent=4)}")
 
 class Options:
     def __init__(self):

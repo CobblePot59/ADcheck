@@ -59,18 +59,18 @@ class ADcheck:
         self.user_entries = await self.ad_client.get_ADobjects(custom_filter='(&(objectClass=user)(!(objectClass=computer)))')
         self.computer_entries = await self.ad_client.get_ADobjects(custom_filter='(objectClass=computer)')
         self.policies_entries = [entry for entry in (await self.ad_client.get_ADobjects(custom_filter='(objectClass=groupPolicyContainer)')) if 'displayName' in entry]
-        self.root_entry = [domain for domain in (await self.ad_client.get_ADobjects(custom_filter='(objectClass=domain)')) if domain.get('distinguishedName') == self.base_dn][0]
+        self.root_entry = next(iter(await self.ad_client.get_ADobjects(custom_filter=f"(&(objectClass=domain)(distinguishedName={self.base_dn}))")), None)
         self.schema_objects = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=classSchema)')
         self.schema_attributes = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=attributeSchema)')
         self.extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)')
         self.domain_sid = (await self.domain_controlers(_return=True))[0].get('objectSid')[:41]
-        self.NEW_WELL_KNOWN_SIDS = {key.replace('domain-', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
-        self.PRIVESC_GROUP = {key.replace('domain-', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
+        self.NEW_WELL_KNOWN_SIDS = {key.replace('domain', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
+        self.PRIVESC_GROUP = {key.replace('domain', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
 
     def pprint(self, result, message, reverse=False):
         import inspect
 
-        name=inspect.stack()[1].function
+        name = inspect.stack()[1].function
         color_code = {'black': 'black', 'red': 'red', 'green': 'green'}
         ansi_color_code = {'black': '\033[30m', 'red': '\033[31m', 'green': '\033[32m', 'default': '\033[0m'}
         color = color_code.get('black') if result == 'INFO' else (color_code.get('red') if (result and not reverse) or (not result and reverse) else color_code.get('green'))

@@ -12,25 +12,30 @@ __version__ = "1.5.1"
 async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
     i = 0
     await getattr(obj, 'get_policies')()
-    if module:
-        await getattr(obj, f'{module}')()
-    else:
-        excluded_methods = ['connect', '_smb_client', '_reg_client', '_wmi_client', 'update_entries', 'reg_client', 'wmi_client', 'pprint', 'ntds_dump', 'get_policies', 'bloodhound_file']
-        if hashes or aes_key:
-            excluded_methods += ['wmi_last_backup', 'wmi_last_update']
 
-        methods = [method for method in dir(obj) if callable(getattr(obj, method)) and not method.startswith('__')]
-        for method_name in methods:
-            print(method_name) if debug else None
-            if method_name not in excluded_methods:
-                if not is_admin and not hasattr(getattr(ADcheck, method_name), '__wrapped__'):
-                    i += 1
-                    print(f'{i} - ', end='')
-                    await getattr(obj, method_name)()
-                elif is_admin:
-                    i += 1
-                    print(f'{i} - ', end='')
-                    await getattr(obj, method_name)()
+    excluded_methods = ['bloodhound_file']
+    if hashes or aes_key:
+        excluded_methods += ['wmi_last_backup', 'wmi_last_update']
+
+    CHECKLIST_EXEC = {}
+    for categories in CHECKLIST.values():
+        for category in categories:
+            for section, modules in category.items():
+                CHECKLIST_EXEC.setdefault(section, []).extend(modules)
+
+    if module:
+        await getattr(obj, module)()
+    else:
+        for section, modules in CHECKLIST_EXEC.items():
+            print(f"\n\033[33m{'=' * 20} {section} {'=' * 20}\033[0m\n")
+            for module in modules:
+                method_name = module[0]
+                if method_name and method_name not in excluded_methods:
+                    if not is_admin and not hasattr(getattr(ADcheck, method_name), '__wrapped__') or is_admin:
+                        i += 1
+                        print(method_name) if debug else None
+                        print(f'{i} - ', end='')
+                        await getattr(obj, method_name)()
 
 def parse_arguments():
     parser = ArgumentParser(description='Process some arguments')

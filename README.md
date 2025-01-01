@@ -161,4 +161,4 @@ poetry run adcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '1
 - [x] List of Named pipes
 - [x] DFSR SYSVOL
 - [x] WinRM authorization
-- [] Share accessible in read/write by everyone
+- [ ] Share accessible in read/write by everyone

@@ -986,12 +986,15 @@ class ADcheck:
         hives = {
             'HKLM\\SOFTWARE\\Microsoft\\AMSI\\Providers\\': 0
         }
-        reg_items = [self.reg_client(key, subKey=True) for key in hives][0][0].items()
+        try:
+            reg_items = [self.reg_client(key, subKey=True) for key in hives][0][0].items()
+        except IndexError:
+            reg_items = []
         
         result = []
         for key, value in reg_items:
             if len(value) > 0:
-                result.append(value[0].get('(Default)'))
+                result.append(value[0].get('(Default)', 'Not Found'))
         self.pprint('INFO', f"AMSI installed is : {result or 'Windows Defender'}")
 
     @admin_required

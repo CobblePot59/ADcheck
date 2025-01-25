@@ -122,6 +122,7 @@ PWD_PROPERTIES = {
 
 # https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-adts/564dc969-6db3-49b3-891a-f2f8d0a68a7f
 FOREST_LEVELS = {
+    10: "Windows Server 2025",
     7: "Windows Server 2016",
     6: "Windows Server 2012 R2",
     5: "Windows Server 2012",

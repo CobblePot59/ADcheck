@@ -435,8 +435,11 @@ class ADcheck:
         self.pprint('INFO', f'Password Settings Object :\n{json.dumps(result, indent=4)}')
 
     async def supported_encryption(self):
-        result = [f"{dc.get('sAMAccountName')}: [{SUPPORTED_ENCRYPTION.get(int(dc.get('msDS-SupportedEncryptionTypes')))}]" for dc in (await self.domain_controlers(_return=True))]
-        self.pprint('INFO', f'Supported encryption by Domain Controllers : \n{json.dumps(result, indent=4)}')
+        dcs = await self.domain_controlers(_return=True)
+        encryption_values = [int(dc.get('msDS-SupportedEncryptionTypes')) for dc in dcs]
+        dcs_encryption = [f"{dc.get('sAMAccountName')}: [{SUPPORTED_ENCRYPTION.get(value)}]" for dc, value in zip(dcs, encryption_values)]
+        result = not all(value in {8, 16, 24} for value in encryption_values)
+        self.pprint(result, f'Supported encryption by Domain Controllers : \n{json.dumps(dcs_encryption, indent=4)}')
 
     async def constrained_delegation(self):
         result = []
@@ -523,8 +526,9 @@ class ADcheck:
         self.pprint('INFO', f'Control delegations : \n{json.dumps(result, indent=4)}\n')
 
     async def krbtgt_encryption(self):
-        result = SUPPORTED_ENCRYPTION.get(int((await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('msDS-SupportedEncryptionTypes')))
-        self.pprint('INFO', f'Supported Kerberos encryption algorithms : {result}')
+        encryption_type = int((await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('msDS-SupportedEncryptionTypes'))
+        result = encryption_type not in {8, 16, 24}
+        self.pprint(result, f'Supported Kerberos encryption algorithms : {SUPPORTED_ENCRYPTION.get(encryption_type)}')
 
     async def bitlocker(self):
         recovery_information = await self.ad_client.get_ADobjects(custom_filter='(objectClass=msFVE-RecoveryInformation)')

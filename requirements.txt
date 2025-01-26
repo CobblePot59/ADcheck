@@ -1,12 +1,11 @@
-six==1.16.0
+six==1.17.0
 winacl==0.1.9
 asysocks==0.2.13
 asyauth==0.0.21
-unicrypto==0.0.10
-pyopenssl
+pyopenssl==25.0.0
 ldap3==2.9.1
 dnspython==2.7.0
 aiowmi==0.2.3
-niquests==3.10.0
-jinja2==3.1.4
+niquests==3.12.2
+jinja2==3.1.5
 plotly==5.24.1

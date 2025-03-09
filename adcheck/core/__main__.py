@@ -65,7 +65,7 @@ class ADcheck:
         self.extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)')
         self.domain_sid = (await self.domain_controlers(_return=True))[0].get('objectSid')[:41]
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
-        self.PRIVESC_GROUP = {key.replace('domain', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
+        self.PRIVESC_GROUP = {key.replace('domain-', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
 
     def pprint(self, result, message, reverse=False):
         import inspect
@@ -170,6 +170,7 @@ class ADcheck:
         result = {}
         groups = [(await self.ad_client.msldap_client.get_dn_for_objectsid(key))[0] for key, value in self.PRIVESC_GROUP.items()]
         for group in groups:
+            print(group)
             result[group] = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(group)]
         self.pprint('INFO', f'Privesc group :\n{json.dumps(result, indent=4)}')
 
@@ -685,12 +686,19 @@ class ADcheck:
         conn = Connection(Server(f'ldap://{self.dc_ip}', get_info=ALL), authentication=ANONYMOUS)
         result = conn.bind() and conn.search(self.base_dn, '(objectClass=*)', attributes=['*']) and bool(conn.entries)
         self.pprint(result, f'Ldap anonymous bind : {result}')
-
+  
     async def dfsr(self):
         msDFSR_flags = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=DFSR-GlobalSettings,CN=System,{self.base_dn}', custom_filter='(objectClass=msDFSR-GlobalSettings)'))[0].get('msDFSR-Flags')
         result = (msDFSR_flags == 48)
         self.pprint(result, f'DFSR SYSVOL is enabled : {result}', reverse=True)
 
+    @admin_required  
+    async def share_ace(self):
+        smb_url = re.sub(r'^[^+]+', 'smb', self.url)
+        from adcheck.modules.SMBShareInspector import handle_share
+
+        await handle_share(smb_url)
+ 
     @admin_required
     async def wmi_last_update(self):
         # https://github.com/netinvent/windows_tools/blob/master/windows_tools/updates/__init__.py#L144
@@ -728,17 +736,18 @@ class ADcheck:
 
     @admin_required
     async def reg_ca(self):
-        import niquests
         from io import StringIO
         from csv import DictReader
         import OpenSSL.crypto
         import binascii
+        import httpx
 
         key_types = {6: 'TYPE_RSA', 10: 'TYPE_DSA', 16: 'TYPE_DH', 408: 'TYPE_EC', 480: 'TYPE_SM2'}
         
         # Get the list of trusted CAs
-        async with niquests.AsyncSession() as s:
-            response = await s.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
+        async with httpx.AsyncClient() as client:
+            response = await client.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
+
         trusted_ca = {row.get('SHA-256 Fingerprint'): row for row in DictReader(StringIO(response.text))}
 
         untrusted_ca = []

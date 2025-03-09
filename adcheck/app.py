@@ -1,13 +1,13 @@
-from adcheck.libs.msldap.commons.factory import LDAPConnectionFactory
 from adcheck.core.__main__ import ADcheck, Options
 from adcheck.modules.constants import CHECKLIST
 from adcheck.modules.report import ReportGenerator
+from msldap.commons.factory import LDAPConnectionFactory
 from argparse import ArgumentParser
 import asyncio
 import sys
 
 
-__version__ = "1.5.1"
+__version__ = "1.5.2"
 
 async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
     i = 0

@@ -104,7 +104,8 @@ CHECKLIST = {
             "Privilege and Trust Management": [
                 ("reg_ace", "Registry access rights", "INFO"),
                 ("control_delegations", "Get Control delegations by container", "INFO"),
-                ("reg_winrm", "Get WSManConfig", "INFO")
+                ("reg_winrm", "Get WSManConfig", "INFO"),
+                ("share_ace", "List SMB shares and their ACL ")
             ]
         },
     ]

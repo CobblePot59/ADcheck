@@ -65,7 +65,7 @@ class ADcheck:
         self.extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)')
         self.domain_sid = (await self.domain_controlers(_return=True))[0].get('objectSid')[:41]
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
-        self.PRIVESC_GROUP = {key.replace('domain-', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
+        self.PRIVESC_GROUP = {key.replace('domain', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
 
     def pprint(self, result, message, reverse=False):
         import inspect

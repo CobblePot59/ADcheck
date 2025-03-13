@@ -53,7 +53,7 @@ def parse_arguments():
     parser.add_argument('-k', '--kerberos', action='store_true', help='Use kerberos instead of NTLM.')
     parser.add_argument('-L', '--list-modules', action='store_true', help='List available modules.')
     parser.add_argument('-M', '--module', help='Module to use.')
-    parser.add_argument('-o', '--output', action='store_true', help='Generate HTML report file.')
+    parser.add_argument('-o', '--output', choices=['html', 'md'], help='Generate report file in HTML or Markdown format.')
     parser.add_argument('--debug', action='store_true', help='Print method name.')
     parser.add_argument('--version', action='version', version=f'ADcheck v{__version__}')
     args = parser.parse_args()
@@ -133,8 +133,11 @@ async def main():
         await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
 
     if args.output:
-        report_generator = ReportGenerator(adcheck.report_results)
-        report_generator.gen_html()
+        report_generator = ReportGenerator(adcheck.report_results, domain)
+        if args.output == 'html':
+            report_generator.gen_html()
+        elif args.output == 'md':
+            report_generator.gen_markdown()
 
 def run_main():
     asyncio.run(main())

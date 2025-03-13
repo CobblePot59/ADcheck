@@ -35,7 +35,10 @@ async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_
                         i += 1
                         print(method_name) if debug else None
                         print(f'{i} - ', end='')
-                        await getattr(obj, method_name)()
+                        try:
+                            await getattr(obj, method_name)()
+                        except Exception as e:
+                            print(f"\033[33m{method_name}: error\033[0m")
 
 def parse_arguments():
     parser = ArgumentParser(description='Process some arguments')

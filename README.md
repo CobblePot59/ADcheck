@@ -147,7 +147,7 @@ poetry install
 
 5. Run ADcheck, specifying the necessary parameters :
 ```
-poetry run adcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
+poetry run adcheck -d 'mydomain.local' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```
 
 ![ADcheck.gif](.github/pictures/ADcheck.gif)

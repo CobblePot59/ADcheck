@@ -45,7 +45,7 @@ class ADcheck:
             self.smb_client = SMBConnection(self.dc_ip, self.dc_ip)
             self.smb_client.login(domain=self.domain, user=self.username, password=self.password, nthash=self.nthash)
         return self.smb_client
-    
+
     def _reg_client(self, keyName, subKey=False, default_value='Error'):
         from adcheck.modules.RegReader import RegReader
 
@@ -92,7 +92,7 @@ class ADcheck:
 
         result2 = [dc.get('sAMAccountName') for dc in result]
         if _return:
-            return result 
+            return result
         else:
             self.pprint('INFO', f'Domain Controllers: {result2}')
 
@@ -105,7 +105,7 @@ class ADcheck:
         for user in self.user_entries:
             if 'DONT_EXPIRE_PASSWORD' in uac_details(user.get('userAccountControl')):
                 password_unexpire.append(user.get('sAMAccountName'))
-        
+
         result = False
         if len(password_unexpire) > 50:
             result = True
@@ -159,6 +159,20 @@ class ADcheck:
         except LDAPBindError as e:
             if 'strongerAuthRequired:' in str(e):
                 self.pprint(False, f'LDAP signature was required on target : True')
+
+    async def channel_binding(self):
+        try:
+            ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldaps'))
+            await ad_client.connect(cb_data=b'\x00' * 73)
+            result = False
+        except Exception as e:
+            if 'data 80090346' in str(e):
+                result = True
+            elif 'data 52e' in str(e):
+                result = False
+            else:
+                result = f"Unexpected error: {e}"
+        self.pprint(result, f'Channel binding enforced : {result}', reverse=True)
 
     async def pre2000_group(self):
         group_entries = await self.ad_client.get_ADobjects(custom_filter='(objectClass=group)')
@@ -219,7 +233,7 @@ class ADcheck:
         for user in self.user_entries:
             if 'lastLogon' not in user:
                 continue
-                
+
             user_lastLogon = str(user.get('lastLogon'))
             if user_lastLogon == '1601-01-01 00:00:00+00:00':
                 continue
@@ -278,7 +292,7 @@ class ADcheck:
     async def password_not_required(self):
         guest_dn = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-501'))[0]
         guest = (await self.ad_client.msldap_client.get_user_by_dn(guest_dn))[0].cn
-    
+
         result = []
         for user in self.user_entries:
             if 'PASSWD_NOTREQD' in uac_details(user.get('userAccountControl')):
@@ -302,7 +316,7 @@ class ADcheck:
 
         for line in ntds:
             hash_counts[line.split(':')[3]] = hash_counts.get(line.split(':')[3], 0) + 1
-        
+
         result = sum(1 for cpt in hash_counts.values() if cpt > 1)
         self.pprint(result, f'Number of accounts with identical password : {result}')
 
@@ -315,7 +329,7 @@ class ADcheck:
         ntds = self.ntds_dump()
         for line in ntds:
             parts = line.split(':')
-            user, _hash = parts[0], parts[3] 
+            user, _hash = parts[0], parts[3]
 
             if  _hash == '31d6cfe0d16ae931b73c59d7e0c089c0' and  user != guest:
                 result.append(user)
@@ -330,7 +344,7 @@ class ADcheck:
 
     async def gpo_by_ou(self):
         policies = [{'name': policy.get('name'), 'displayName': policy.get('displayName')} for policy in self.policies_entries]
-        
+
         groups = []
         for entry in self.all_entries:
             if 'gPLink' in entry:
@@ -396,7 +410,7 @@ class ADcheck:
                     users_attribute[attribute].append(user.get('sAMAccountName'))
         for attribute, result in users_attribute.items():
             self.pprint(result, f'Accounts with {attribute} attributes: {result}')
-    
+
     @admin_required
     async def laps(self):
         try:
@@ -410,7 +424,7 @@ class ADcheck:
                     break
             self.pprint(result, f'LAPS is installed : {result}', reverse=True)
 
-    async def pso(self):        
+    async def pso(self):
         pso = await self.ad_client.get_ADobjects(custom_filter='(objectClass=msDS-PasswordSettings)')
 
         result = []
@@ -477,7 +491,7 @@ class ADcheck:
         for policy in authn_container:
             if 'msDS-AuthNPolicySiloEnforced' in policy:
                 authn_silos.append(policy)
-        
+
         authn_policy_dict = {authn_policy.get('distinguishedName'): authn_policy for authn_policy in authn_policies}
 
         result = []
@@ -580,14 +594,14 @@ class ADcheck:
             file_content = self.smb_client.readFile(tree_id, file)
             self.smb_client.disconnectTree(tree_id)
 
-            
+
             csv_reader = DictReader(file_content.decode('utf-8').splitlines())
             result = [{'Subcategories': row.get('Subcategory'), 'Inclusion Settings': row.get('Inclusion Setting')} for row in csv_reader]
             self.pprint('INFO', f'Audit policy configured : \n{json.dumps(result, indent=4)}')
         except SessionError as e:
             if 'STATUS_OBJECT_PATH_NOT_FOUND' in str(e):
                 self.pprint(True, 'Audit policy not configured')
-        
+
     async def priv_rights(self):
         gpo_content = []
         for file_path in Path('GPOS').rglob('*.inf'):
@@ -678,7 +692,7 @@ class ADcheck:
     async def namedpipes(self):
         result = [pipe.get_longname() for pipe in self.smb_client.listPath('IPC$', r'\\*')]
         self.pprint('INFO', f'Named Pipes :\n{json.dumps(result, indent=4)}')
-    
+
     async def ldap_anonymous(self):
         # msldap : (False, Exception('Not implemented authentication method: NONE'))
         from ldap3 import Server, Connection, ANONYMOUS, ALL
@@ -686,19 +700,19 @@ class ADcheck:
         conn = Connection(Server(f'ldap://{self.dc_ip}', get_info=ALL), authentication=ANONYMOUS)
         result = conn.bind() and conn.search(self.base_dn, '(objectClass=*)', attributes=['*']) and bool(conn.entries)
         self.pprint(result, f'Ldap anonymous bind : {result}')
-  
+
     async def dfsr(self):
         msDFSR_flags = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=DFSR-GlobalSettings,CN=System,{self.base_dn}', custom_filter='(objectClass=msDFSR-GlobalSettings)'))[0].get('msDFSR-Flags')
         result = (msDFSR_flags == 48)
         self.pprint(result, f'DFSR SYSVOL is enabled : {result}', reverse=True)
 
-    @admin_required  
+    @admin_required
     async def share_ace(self):
         smb_url = re.sub(r'^[^+]+', 'smb', self.url)
         from adcheck.modules.SMBShareInspector import handle_share
 
         await handle_share(smb_url)
- 
+
     @admin_required
     async def wmi_last_update(self):
         # https://github.com/netinvent/windows_tools/blob/master/windows_tools/updates/__init__.py#L144
@@ -706,7 +720,7 @@ class ADcheck:
         last_update = max(hotfix_list, key=lambda x: x.get('InstalledOn')).get('InstalledOn')
         last_update_date = datetime.strptime(last_update, "%m/%d/%Y")
         ndays = (datetime.now() - last_update_date).days
-        
+
         result = ndays < 30
         self.pprint(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
 
@@ -743,7 +757,7 @@ class ADcheck:
         import httpx
 
         key_types = {6: 'TYPE_RSA', 10: 'TYPE_DSA', 16: 'TYPE_DH', 408: 'TYPE_EC', 480: 'TYPE_SM2'}
-        
+
         # Get the list of trusted CAs
         async with httpx.AsyncClient() as client:
             response = await client.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
@@ -752,7 +766,7 @@ class ADcheck:
 
         untrusted_ca = []
         disabled_certificates = []
-        
+
         # Get local certificates
         all_subkeys = {}
         ca_paths = ['AuthRoot', 'ROOT']
@@ -993,7 +1007,7 @@ class ADcheck:
         }
         result = all(self.reg_client(key) == hives.get(key) for key in hives)
         self.pprint(result, f'Firewall is disabled : {result}')
-    
+
     @admin_required
     async def reg_av(self):
         hives = {
@@ -1003,7 +1017,7 @@ class ADcheck:
             reg_items = [self.reg_client(key, subKey=True) for key in hives][0][0].items()
         except IndexError:
             reg_items = []
-        
+
         result = []
         for key, value in reg_items:
             if len(value) > 0:

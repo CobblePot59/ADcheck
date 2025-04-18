@@ -6,7 +6,7 @@ ADcheck is developed in pure Python to bypass operating system constraints.
 Although textual, a simple color scheme is used to navigate through the returned information (🔴 red for really bad, 🟢 green for okay, ⚪ white for purely informative). A sample report is available [here](https://html-preview.github.io/?url=https://raw.githubusercontent.com/CobblePot59/ADcheck/main/.github/report.html).
 
 > [!NOTE]
-> At present, this tool has 80 checks and more are to come (see the [TODO](#TODO)).
+> At present, this tool has 81 checks and more are to come (see the [TODO](#TODO)).
 
 The collected information includes :
 
@@ -85,6 +85,7 @@ The collected information includes :
   - [x] Verify if SMB signing is required
   - [x] Verify if Spooler service is enabled on remote target
   - [x] Verify if LDAP signature was required on target
+  - [x] Verify if Channel binding is enforced
 
 - [x] **Privilege and Trust Management**
   - [x] Registry access rights

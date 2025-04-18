@@ -1,5 +1,6 @@
 from adcheck.libs.impacket.structure import Structure
 from msldap.commons.factory import LDAPConnectionFactory
+from msldap.connection import MSLDAPClientConnection
 import socket
 import dns.resolver
 
@@ -54,24 +55,31 @@ def get_next_serial(dc_ip, domain):
     for answer in res:
         return answer.serial + 1
 
+
 class ADClient:
     def __init__(self, domain, url):
         self.domain = domain
         self.base_dn = f"DC={domain.split('.')[0]},DC={domain.split('.')[1]}"
         self.url = url
-        self.ldap_conn = None
         self.msldap_conn = None
         self.msldap_client = None
 
-    async def connect(self):
+    async def connect(self, cb_data=None):
         self.msldap_conn = LDAPConnectionFactory.from_url(self.url).get_connection()
         await self.msldap_conn.connect()
         await self.msldap_conn.bind()
 
         self.msldap_client = LDAPConnectionFactory.from_url(self.url).get_client()
+
+        if cb_data:
+            self.msldap_client_conn = MSLDAPClientConnection(self.msldap_client.target, self.msldap_client.creds)
+            await self.msldap_client_conn.connect()
+            self.msldap_client_conn.cb_data = cb_data
+            await self.msldap_client_conn.bind()
+
         await self.msldap_client.connect()
         return self.msldap_client
-    
+
     async def disconnect(self):
         await self.msldap_conn.disconnect()
         await self.msldap_client.disconnect()
@@ -85,10 +93,10 @@ class ADClient:
 
         ad_object = [ad_object.get('attributes') async for ad_object, e in ad_objects]
         return ad_object
-    
+
     async def add_DNSentry(self, domain, dc_ip, target, data):
         dns_root = f"DC={domain},CN=MicrosoftDNS,DC=DomainDnsZones,{self.base_dn}"
-        
+
         record_dn = f'DC={target},{dns_root}'
         node_data = {
             'objectClass': ['top', 'dnsNode'],

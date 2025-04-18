@@ -161,17 +161,15 @@ class ADcheck:
                 self.pprint(False, f'LDAP signature was required on target : True')
 
     async def channel_binding(self):
-        try:
-            ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldaps'))
-            await ad_client.connect(cb_data=b'\x00' * 73)
+        ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldaps'))
+        await ad_client.connect(cb_data=b'\x00' * 73)
+
+        err = str(ad_client.msldap_client_conn_err)
+        if 'data 80090346' in err:
+            result = True
+        elif 'data 52e' in err:
             result = False
-        except Exception as e:
-            if 'data 80090346' in str(e):
-                result = True
-            elif 'data 52e' in str(e):
-                result = False
-            else:
-                result = f"Unexpected error: {e}"
+
         self.pprint(result, f'Channel binding enforced : {result}', reverse=True)
 
     async def pre2000_group(self):

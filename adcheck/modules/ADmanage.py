@@ -63,6 +63,7 @@ class ADClient:
         self.url = url
         self.msldap_conn = None
         self.msldap_client = None
+        self.msldap_client_conn_err = None
 
     async def connect(self, cb_data=None):
         self.msldap_conn = LDAPConnectionFactory.from_url(self.url).get_connection()
@@ -72,10 +73,10 @@ class ADClient:
         self.msldap_client = LDAPConnectionFactory.from_url(self.url).get_client()
 
         if cb_data:
-            self.msldap_client_conn = MSLDAPClientConnection(self.msldap_client.target, self.msldap_client.creds)
-            await self.msldap_client_conn.connect()
-            self.msldap_client_conn.cb_data = cb_data
-            await self.msldap_client_conn.bind()
+            msldap_client_conn = MSLDAPClientConnection(self.msldap_client.target, self.msldap_client.creds)
+            await msldap_client_conn.connect()
+            msldap_client_conn.cb_data = cb_data
+            _ , self.msldap_client_conn_err = await msldap_client_conn.bind()
 
         await self.msldap_client.connect()
         return self.msldap_client

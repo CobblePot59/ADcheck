@@ -37,6 +37,7 @@ CHECKLIST = {
                 ("smb_signing", "Verify if SMB signing is required"),
                 ("recycle_bin", "Verify if Recycle Bin is enabled"),
                 ("ldap_signing", "Verify if LDAP signature was required on target"),
+                ("channel_binding", "Verify if Channel binding is enforced"),
                 ("krbtgt_password_age", "Verify if Kerberos password last changed < 40 days"),
                 ("can_add_computer", "Verify if Non-admin users can add up to 10 computer(s) to a domain"),
                 ("ldap_anonymous", "Verify LDAP anonymous binding"),

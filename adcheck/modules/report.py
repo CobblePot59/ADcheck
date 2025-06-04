@@ -2,7 +2,6 @@ from adcheck.modules.constants import CHECKLIST
 from jinja2 import Environment, FileSystemLoader
 from os import path
 from datetime import datetime
-import plotly.graph_objects as go
 import math
 
 
@@ -62,10 +61,7 @@ class ReportGenerator():
             md_file.write(markdown_content)
 
     def gen_html(self):
-        cpt_user = 0
-        cpt_domain = 0
-        cpt_privs = 0
-        cpt_policy = 0
+        cpt_user = cpt_domain = cpt_privs = cpt_policy = 0
 
         for result in self.results:
             name = result.get('name')
@@ -84,59 +80,27 @@ class ReportGenerator():
         def calculate_percentage(count, total):
             return int(math.ceil(count * (100 / len(total)))) if total else 0
 
-        privs_percentage = calculate_percentage(cpt_privs, self.privs_list)
-        user_percentage = calculate_percentage(cpt_user, self.user_list)
-        domain_percentage = calculate_percentage(cpt_domain, self.domain_list)
-        policy_percentage = calculate_percentage(cpt_policy, self.policy_list)
-        total_percentage = calculate_percentage(cpt_total, self.total_list)
+        scores = {
+            "total": calculate_percentage(cpt_total, self.total_list),
+            "privs": calculate_percentage(cpt_privs, self.privs_list),
+            "user": calculate_percentage(cpt_user, self.user_list),
+            "domain": calculate_percentage(cpt_domain, self.domain_list),
+            "policy": calculate_percentage(cpt_policy, self.policy_list),
+        }
 
-        def gen_svg(gauge_value, title):
-            tickvals = [0, 25, 50, 75, 100, gauge_value]
-            fig = go.Figure(go.Indicator(
-                mode='gauge+number',
-                title={'text': f'{title}', 'font': {'size': 20}},
-                value=gauge_value,
-                gauge={
-                    'axis': {
-                        'range': [0, 100],
-                        'tickmode': 'array',
-                        'tickvals': tickvals,
-                        'ticktext': [
-                              f'<b style="color:black; font-size:16px;">{gauge_value}</b>' if gauge_value == val else f'{val}'
-                              for val in tickvals
-                        ],
-                    },
-                    'bar': {'color': 'rgba(0,0,0,0)'},
-                    'steps': [
-                        {'range': [0, 25], 'color': 'red'},
-                        {'range': [25, 50], 'color': 'orange'},
-                        {'range': [50, 75], 'color': 'yellow'},
-                        {'range': [75, 100], 'color': 'green'},
-                        {'range': [gauge_value-0.1, gauge_value+0.1], 'color': 'black'},
-                    ],
-                }
-            ))
+        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            config = {
-              'displayModeBar': True,
-              'modeBarButtonsToRemove': ['toImage'],
-              'displaylogo': False
-            }
-            return fig.to_html(full_html=False, config=config)
-
-        # Render the template with generated SVGs and result
         html_content = self.template.render(
-            total_svg=gen_svg(total_percentage, 'Total Score'),
-            privs_svg=gen_svg(privs_percentage, 'Privilege and Trust Management'),
-            user_svg=gen_svg(user_percentage, 'User Account Management'),
-            domain_svg=gen_svg(domain_percentage, 'Computer and Domain Management'),
-            policy_svg=gen_svg(policy_percentage, 'Audit and Policy Management'),
+            domain=self.domain,
+            date=date_str,
+            filename=self.filename,
+            scores=scores,
             privs_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.privs_ids],
             user_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.user_ids],
             domain_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.domain_ids],
             policy_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.policy_ids]
         )
 
-        # Write to an output HTML file
+
         with open(f'{self.filename}.html', 'w', encoding='utf-8') as html_file:
             html_file.write(html_content)

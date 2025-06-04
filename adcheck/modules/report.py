@@ -88,11 +88,9 @@ class ReportGenerator():
             "policy": calculate_percentage(cpt_policy, self.policy_list),
         }
 
-        date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         html_content = self.template.render(
             domain=self.domain,
-            date=date_str,
+            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             filename=self.filename,
             scores=scores,
             privs_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.privs_ids],
@@ -101,6 +99,6 @@ class ReportGenerator():
             policy_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.policy_ids]
         )
 
-
+        # Write to an output HTML file
         with open(f'{self.filename}.html', 'w', encoding='utf-8') as html_file:
             html_file.write(html_content)

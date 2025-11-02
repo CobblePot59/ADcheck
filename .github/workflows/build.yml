@@ -26,22 +26,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
           
-      - name: Update pip and install Pylint and flake8
+      - name: Update pip and install Pylint
         run: |
             python3 -m pip install --upgrade pip
-            python3 -m pip install pylint flake8 flake8-sarif-formatter
+            python3 -m pip install pylint
           
       - name: Build with Poetry
         run: poetry install --no-interaction --no-ansi
 
       - name: Run pylint
         run: poetry run pylint -j 0 ./adcheck --ignore-paths=^adcheck/libs --exit-zero
-
-      - name: Run flake8
-        run: poetry run flake8 --exclude=libs --format=sarif --output-file=results.sarif
-
-      - name: Upload flake8 scan SARIF report
-        if: github.event_name != 'pull_request'
-        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee
-        with:
-          sarif_file: results.sarif

@@ -24,7 +24,7 @@ jobs:
       - name: Update pip and install Poetry
         run: |
             python3 -m pip install --upgrade pip
-            python3 -m pip install poetry
+            python3 -m pip install poetry pylint
           
       - name: Build with Poerty
         run: poetry install --no-interaction --no-ansi

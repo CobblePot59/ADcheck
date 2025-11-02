@@ -27,4 +27,7 @@ jobs:
             python3 -m pip install poetry
           
       - name: Build with Poerty
-        run: poetry build
+        run: poetry install --no-interaction --no-ansi
+
+      - name: Run linter
+        run: poetry run pylint ./adcheck

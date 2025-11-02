@@ -21,7 +21,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
           
-      - name: Update pip
+      - name: Update pip and install Poetry
         run: |
             python3 -m pip install --upgrade pip
             python3 -m pip install poetry

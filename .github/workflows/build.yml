@@ -30,4 +30,4 @@ jobs:
         run: poetry install --no-interaction --no-ansi
 
       - name: Run linter
-        run: poetry run pylint ./adcheck --ignore=libs
+        run: poetry run pylint -j 0 ./adcheck --ignore=libs

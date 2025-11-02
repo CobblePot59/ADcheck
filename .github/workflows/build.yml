@@ -21,13 +21,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
           
-      - name: Update pip and install Poetry
+      - name: Update pip and install Poetry and Pylint
         run: |
             python3 -m pip install --upgrade pip
             python3 -m pip install poetry pylint
           
-      - name: Build with Poerty
+      - name: Build with Poetry
         run: poetry install --no-interaction --no-ansi
 
-      - name: Run linter
+      - name: Run pylint
         run: poetry run pylint -j 0 ./adcheck --ignore-paths=^adcheck/libs --exit-zero

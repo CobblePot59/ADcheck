@@ -4,7 +4,6 @@ Desktop.ini
 
 .vscode/
 
-poetry.lock
 __pycache__
 build/
 dist/

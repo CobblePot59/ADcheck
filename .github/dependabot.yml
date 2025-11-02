@@ -6,3 +6,9 @@ updates:
     prefix: "pip"
   schedule:
     interval: "daily"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  commit-message:
+    prefix: "actions"
+  schedule:
+    interval: "daily"

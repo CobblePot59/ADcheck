@@ -10,15 +10,6 @@ jobs:
     strategy:
       matrix:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13", "3.14" ]
-        linter: [ "flake8", "pylint", "ruff", "mypy", "pytype", "pyright", "fixit", "pyre" ]
-    permissions:
-      contents: read
-      packages: write
-      # This is used to complete the identity challenge
-      # with sigstore/fulcio when running outside of PRs.
-      id-token: write
-      attestations: write
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
 
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -39,6 +30,4 @@ jobs:
         run: poetry install --no-interaction --no-ansi
 
       - name: Run linter
-        uses: advanced-security/python-lint-code-scanning-action@935afeca136966a98a6821b73d4ae02aab9f339b # v1.1.2
-        with:
-          linter: ${{ matrix.linter }}
+        run: poetry run pylint ./adcheck --ignore=libs

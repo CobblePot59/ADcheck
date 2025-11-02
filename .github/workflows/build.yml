@@ -22,7 +22,9 @@ jobs:
           cache: 'pip'
           
       - name: Update pip
-        run: python3 -m pip install --upgrade pip
+        run: |
+            python3 -m pip install --upgrade pip
+            python3 -m pip install poetry
           
       - name: Build with Poerty
         run: poetry build

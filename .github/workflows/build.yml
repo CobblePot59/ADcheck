@@ -38,7 +38,7 @@ jobs:
         run: poetry run pylint -j 0 ./adcheck --ignore-paths=^adcheck/libs --exit-zero
 
       - name: Run flake8
-        run: flake8 --exclude=libs --format=sarif --output-file=results.sarif
+        run: python3 -m flake8 --exclude=libs --format=sarif --output-file=results.sarif
 
       - name: Upload flake8 scan SARIF report
         if: github.event_name != 'pull_request'

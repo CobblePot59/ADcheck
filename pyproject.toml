@@ -21,17 +21,18 @@ python = ">=3.9"
 
 six = "^1.17.0"
 winacl = "^0.1.9"
-asysocks = "^0.2.13"
-asyauth = "^0.0.21"
+asysocks = "^0.2.18"
+asyauth = "^0.0.23"
 pyopenssl = "^25.0.0"
 ldap3 = "^2.9.1"
 dnspython = "^2.7.0"
 aiowmi = "^0.2.3"
-jinja2 = "^3.1.5"
+jinja2 = "^3.1.6"
 plotly = "^5.24.1"
 aiosmb = "^0.4.11"
 httpx = "^0.28.1"
 msldap = "^0.5.14"
+niquests = "^3.15.2"
 
 [build-system]
 requires = ["poetry-core"]

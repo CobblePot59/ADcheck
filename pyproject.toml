@@ -10,16 +10,19 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 dependencies = [
     "aiosmb>=0.4.14",
     "aiowmi>=0.2.3",
+    "httpx>=0.28.1",
     "jinja2>=3.1.6",
+    "ldap3>=2.9.1",
     "msldap",
     "msuaccalc>=0.1.0",
+    "pyopenssl>=25.3.0",
     "rich>=14.2.0",
-    "winacl"
+    "winacl",
 ]
 
 [project.urls]

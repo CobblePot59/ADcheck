@@ -858,7 +858,6 @@ class ADcheck:
 
         for reg_key in reg_keys:
             security_descriptor = await self.reg_client.security_descriptor(reg_key, as_ssdl=True)
-            print(security_descriptor)
             json_sd = parse_SDDL(security_descriptor)
 
             title = f"\n[bold yellow]{reg_key}[/bold yellow]\n"

@@ -1,14 +1,8 @@
-.DS_Store
-Thumbs.db
-Desktop.ini
+.vscode
 
-.vscode/
-
-poetry.lock
+uv.lock
+.venv
 __pycache__
-build/
-dist/
 
 /report.html
 GPOS
-.env

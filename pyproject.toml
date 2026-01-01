@@ -1,41 +1,40 @@
-[tool.poetry]
+[project]
 name = "ADcheck"
-version = "1.5.2"
+version = "1.6.0"
 description = "ADcheck, Assess the security of your Active Directory with few or all privileges."
 readme = "README.md"
-repository = "https://github.com/CobblePot59/ADcheck"
-authors = ["CobblePot59"]
-license = "GPL3"
+authors = [{ name = "CobblePot59" }]
+license = { text = "GPLv3" }
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
+requires-python = ">=3.9"
 
-packages = [
-    { include = "adcheck" }
+dependencies = [
+    "aiosmb>=0.4.14",
+    "aiowmi>=0.2.3",
+    "jinja2>=3.1.6",
+    "msldap",
+    "msuaccalc>=0.1.0",
+    "rich>=14.2.0",
+    "winacl"
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.9"
+[project.urls]
+Repository = "https://github.com/CobblePot59/ADcheck"
 
-six = "^1.17.0"
-winacl = "^0.1.9"
-asysocks = "^0.2.13"
-asyauth = "^0.0.21"
-pyopenssl = "^25.0.0"
-ldap3 = "^2.9.1"
-dnspython = "^2.7.0"
-aiowmi = "^0.2.3"
-jinja2 = "^3.1.5"
-plotly = "^5.24.1"
-aiosmb = "^0.4.11"
-httpx = "^0.28.1"
-msldap = "^0.5.14"
+[project.scripts]
+adcheck = "adcheck:run_main"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-adcheck = "adcheck.app:run_main"
+[tool.hatch.build.targets.wheel]
+packages = ["src/adcheck"]
+
+[tool.uv.sources]
+msldap = { git = "https://github.com/skelsec/msldap" }
+winacl = { path = "src/adcheck/libs/winacl", editable = true }

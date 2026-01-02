@@ -182,7 +182,6 @@ Uncover privilege abuse vectors and delegation chains:
 ADcheck provides readable, structured results with intuitive color-coding:
 
 - 🔴 **Red** → Critical vulnerability or dangerous misconfiguration requiring immediate remediation
-- 🟡 **Orange** → Major issue needing prompt attention
 - 🟢 **Green** → Secure configuration or compliant setting
 - ⚪ **White** → Informational reference data
 

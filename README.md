@@ -3,7 +3,7 @@
 > **Active Directory Security Assessment & Attack Surface Analysis**  
 > An open-source penetration testing tool to evaluate AD security, identify misconfigurations, and map exploitation paths before attackers do.
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://www.python.org)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org)
 [![License](https://img.shields.io/badge/License-GPL%20v3.0-blue.svg?style=flat-square)](LICENSE)
 
 ---
@@ -59,31 +59,33 @@ The output provides direct interpretation, not raw data answers you can act on i
 Detect account-level vulnerabilities and misconfigurations:
 <details>
   <summary>Click to expand/collapse</summary>
-    - [x] Admin accounts that can be delegated
-    - [x] Admin accounts not in "_Protected Users_" group
-    - [x] Accounts which can use DES authentication
-    - [x] Accounts vulnerable to ASRepRoasting attack
-    - [x] Accounts with `altSecurityIdentities` attributes
-    - [x] Accounts with `userPassword` attributes
-    - [x] Accounts with `unixUserPassword` attributes
-    - [x] Accounts with `unicodePwd` attributes
-    - [x] Accounts with `msDS-HostServiceAccount` attribute
-    - [x] Accounts with blank password
-    - [x] Accounts vulnerable to KerbeRoasting attack
-    - [x] Locked accounts
-    - [x] Number of accounts which have never expiring passwords
-    - [x] Number of accounts with identical passwords
-    - [x] Number of inactive accounts
-    - [x] Number of accounts in "_Schema Admins_" group
-    - [x] Accounts which have reversible passwords
-    - [x] Accounts vulnerable to timeroasting attack
-    - [x] Accounts that had admin rights in the past
-    - [x] Accounts with password not required
-    - [x] Name of Pre-Windows 2000 Compatible Access group members
-    - [x] Get List of users in Privesc group
-    - [x] Get Users with description
-    - [x] Verify if The native administrator account has been used recently
-    - [x] Get Group Managed Service Accounts
+
+- [x] Admin accounts that can be delegated
+- [x] Admin accounts not in "_Protected Users_" group
+- [x] Accounts which can use DES authentication
+- [x] Accounts vulnerable to ASRepRoasting attack
+- [x] Accounts with `altSecurityIdentities` attributes
+- [x] Accounts with `userPassword` attributes
+- [x] Accounts with `unixUserPassword` attributes
+- [x] Accounts with `unicodePwd` attributes
+- [x] Accounts with `msDS-HostServiceAccount` attribute
+- [x] Accounts with blank password
+- [x] Accounts vulnerable to KerbeRoasting attack
+- [x] Locked accounts
+- [x] Number of accounts which have never expiring passwords
+- [x] Number of accounts with identical passwords
+- [x] Number of inactive accounts
+- [x] Number of accounts in "_Schema Admins_" group
+- [x] Accounts which have reversible passwords
+- [x] Accounts vulnerable to timeroasting attack
+- [x] Accounts that had admin rights in the past
+- [x] Accounts with password not required
+- [x] Name of Pre-Windows 2000 Compatible Access group members
+- [x] Get List of users in Privesc group
+- [x] Get Users with description
+- [x] Verify if The native administrator account has been used recently
+- [x] Get Group Managed Service Accounts
+
 </details>
 
 ### 🔐 Audit & Policy Management (30+ checks)
@@ -91,36 +93,38 @@ Detect account-level vulnerabilities and misconfigurations:
 Verify security policy compliance and endpoint hardening:
 <details>
   <summary>Click to expand/collapse</summary>
-    - [x] Get Audit Policy
-    - [x] Get Default password policy
-    - [x] Get Group Policy Object by Organizational Unit
-    - [x] Name of Group Policy containing a password
-    - [x] Verify if Force logoff when logon hours expire
-    - [x] Verify if MSI packages are always installed with elevated privileges
-    - [x] Verify if CredentialGuard is enabled
-    - [x] Verify if LM hash storage disabled
-    - [x] Verify if Authentication limited to NTLMv2 mechanism only
-    - [x] Verify if AppLocker rules defined
-    - [x] Verify if gpp_autologon is enabled
-    - [x] Verify if Bitlocker is enabled
-    - [x] Verify if Firewall is disabled
-    - [x] Verify if IPv4 preferred over IPv6
-    - [x] Verify if LLMNR, NetBIOS or mDNS is enabled
-    - [x] Verify if Too many logons are kept in the LSA cache
-    - [x] Verify if Lsass runs as a protected process
-    - [x] Verify if Powershell v2 is enabled
-    - [x] Verify if Powershell events are logged
-    - [x] Verify if Powershell is configured in Restricted mode
-    - [x] Verify if RDP use NLA
-    - [x] Verify if RDP is secured over pass the hash attack
-    - [x] Verify if RDP session timeout is too short
-    - [x] Verify if UAC configuration is secure
-    - [x] Verify if WDigest authentication enabled
-    - [x] Verify if WPAD is disabled
-    - [x] Verify if Windows Script Host is disabled
-    - [x] Verify if WSUS server is not used
-    - [x] Get Name of AMSI installed
-    - [x] Trusted Root Certification Authorities status
+
+- [x] Get Audit Policy
+- [x] Get Default password policy
+- [x] Get Group Policy Object by Organizational Unit
+- [x] Name of Group Policy containing a password
+- [x] Verify if Force logoff when logon hours expire
+- [x] Verify if MSI packages are always installed with elevated privileges
+- [x] Verify if CredentialGuard is enabled
+- [x] Verify if LM hash storage disabled
+- [x] Verify if Authentication limited to NTLMv2 mechanism only
+- [x] Verify if AppLocker rules defined
+- [x] Verify if gpp_autologon is enabled
+- [x] Verify if Bitlocker is enabled
+- [x] Verify if Firewall is disabled
+- [x] Verify if IPv4 preferred over IPv6
+- [x] Verify if LLMNR, NetBIOS or mDNS is enabled
+- [x] Verify if Too many logons are kept in the LSA cache
+- [x] Verify if Lsass runs as a protected process
+- [x] Verify if Powershell v2 is enabled
+- [x] Verify if Powershell events are logged
+- [x] Verify if Powershell is configured in Restricted mode
+- [x] Verify if RDP use NLA
+- [x] Verify if RDP is secured over pass the hash attack
+- [x] Verify if RDP session timeout is too short
+- [x] Verify if UAC configuration is secure
+- [x] Verify if WDigest authentication enabled
+- [x] Verify if WPAD is disabled
+- [x] Verify if Windows Script Host is disabled
+- [x] Verify if WSUS server is not used
+- [x] Get Name of AMSI installed
+- [x] Trusted Root Certification Authorities status
+
 </details>
 
 ### 🖥️ Infrastructure & Domain (18+ checks)
@@ -128,25 +132,27 @@ Verify security policy compliance and endpoint hardening:
 Assess domain-wide architecture and security posture:
 <details>
   <summary>Click to expand/collapse</summary>
-    - [x] Computers with bitlocker keys
-    - [x] Get Domain Controllers
-    - [x] Get Functional level of domain
-    - [x] Get Kerberos config
-    - [x] Verify if Non-admin users can add up to 10 computer(s) to a domain
-    - [x] Get Supported Kerberos encryption algorithms
-    - [x] Verify if Kerberos password last changed < 40 days
-    - [x] Verify if LAPS is installed
-    - [x] Get Password Settings Object
-    - [x] Verify if Recycle Bin is enabled
-    - [x] Verify if The computer was recently backed up
-    - [x] Verify if The computer is up to date
-    - [x] Get Supported encryption by Domain Controllers
-    - [x] Verify if SMB signing is required
-    - [x] Verify if Spooler service is enabled on remote target
-    - [x] Verify if LDAP signature was required on target
-    - [x] Verify if Channel binding is enforced
-    - [x] Ldap anonymous bind
-    - [x] DFSR SYSVOL
+
+- [x] Computers with bitlocker keys
+- [x] Get Domain Controllers
+- [x] Get Functional level of domain
+- [x] Get Kerberos config
+- [x] Verify if Non-admin users can add up to 10 computer(s) to a domain
+- [x] Get Supported Kerberos encryption algorithms
+- [x] Verify if Kerberos password last changed < 40 days
+- [x] Verify if LAPS is installed
+- [x] Get Password Settings Object
+- [x] Verify if Recycle Bin is enabled
+- [x] Verify if The computer was recently backed up
+- [x] Verify if The computer is up to date
+- [x] Get Supported encryption by Domain Controllers
+- [x] Verify if SMB signing is required
+- [x] Verify if Spooler service is enabled on remote target
+- [x] Verify if LDAP signature was required on target
+- [x] Verify if Channel binding is enforced
+- [x] Ldap anonymous bind
+- [x] DFSR SYSVOL
+
 </details>
 
 ### 🔑 Privileges & Delegations (10+ checks)
@@ -154,18 +160,21 @@ Assess domain-wide architecture and security posture:
 Uncover privilege abuse vectors and delegation chains:
 <details>
   <summary>Click to expand/collapse</summary>
-    - [x] Registry access rights
-    - [x] Get Control delegations by container
-    - [x] Get Privilege Rights (SeDebugPrivilege, SeBackupPrivilege, ...)
-    - [x] Get Authentication policy silos
-    - [x] Name of Trust accounts for the delegation
-    - [x] Name of Computers with rbac
-    - [x] Verify if User can create dns record
-    - [x] Computers with constrained delegation
-    - [x] Get Group policy folder/file rights
-    - [x] WinRM authorization
-    - [x] Share accessible in read/write by everyone
+  
+- [x] Registry access rights
+- [x] Get Control delegations by container
+- [x] Get Privilege Rights (SeDebugPrivilege, SeBackupPrivilege, ...)
+- [x] Get Authentication policy silos
+- [x] Name of Trust accounts for the delegation
+- [x] Name of Computers with rbac
+- [x] Verify if User can create dns record
+- [x] Computers with constrained delegation
+- [x] Get Group policy folder/file rights
+- [x] WinRM authorization
+- [x] Share accessible in read/write by everyone
+
 </details>
+
 ---
 
 ## 📄 Clear, Actionable Output

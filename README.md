@@ -88,7 +88,7 @@ Detect account-level vulnerabilities and misconfigurations:
 
 </details>
 
-### 🔐 Audit & Policy Management (30+ checks)
+### 🔐 Audit & Policy Management
 
 Verify security policy compliance and endpoint hardening:
 <details>
@@ -127,7 +127,7 @@ Verify security policy compliance and endpoint hardening:
 
 </details>
 
-### 🖥️ Infrastructure & Domain (18+ checks)
+### 🖥️ Infrastructure & Domain
 
 Assess domain-wide architecture and security posture:
 <details>
@@ -155,7 +155,7 @@ Assess domain-wide architecture and security posture:
 
 </details>
 
-### 🔑 Privileges & Delegations (10+ checks)
+### 🔑 Privileges & Delegations
 
 Uncover privilege abuse vectors and delegation chains:
 <details>

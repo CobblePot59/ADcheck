@@ -40,4 +40,4 @@ packages = ["src/adcheck"]
 
 [tool.uv.sources]
 msldap = { git = "https://github.com/skelsec/msldap" }
-winacl = { path = "src/adcheck/libs/winacl", editable = true }
+winacl = { git = "https://github.com/skelsec/winacl" }

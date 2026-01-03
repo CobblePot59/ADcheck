@@ -591,7 +591,7 @@ class ADcheck:
 
     @admin_required
     async def control_delegations(self):
-        from adcheck.libs.winacl.winacl.dtyp.security_descriptor import SECURITY_DESCRIPTOR
+        from winacl.dtyp.security_descriptor import SECURITY_DESCRIPTOR
 
         ous_object = (await self.ad_client.get_ADobjects(custom_filter='(objectClass=organizationalUnit)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor']))
         containers_name = [f'CN=Computers,{self.base_dn}', f'CN=ForeignSecurityPrincipals,{self.base_dn}', f'CN=Keys,{self.base_dn}', f'CN=Managed Service Accounts,{self.base_dn}', f'CN=Program Data,{self.base_dn}', f'CN=Users,{self.base_dn}']

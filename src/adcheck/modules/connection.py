@@ -273,46 +273,19 @@ class SMBRegClient:
         else:
             raise ValueError("hives must be a dict or a list of dicts")
 
-    async def security_descriptor(self, fullpath, as_ssdl=False):
-        def to_ssdl(sd_string):
-            sd, current_ace, in_dacl = {"Revision": None, "Control": None, "Owner": None, "Group": None, "Sacl": None, "Dacl": []}, None, False
-            for line in sd_string.strip().splitlines():
-                line = line.strip()
-                if not line: continue
-                if any(line.startswith(f"{k}:") for k in sd if k != "Dacl"):
-                    k, v = map(str.strip, line.split(":", 1))
-                    sd[k] = int(v) if k in {"Revision", "Control"} else (None if v == "None" else v)
-                elif line.startswith("Dacl"):
-                    in_dacl = True
-                elif in_dacl:
-                    if line == "ACCESS_ALLOWED_ACE":
-                        if current_ace: sd["Dacl"].append(current_ace)
-                        current_ace = {"Type": line}
-                    elif current_ace:
-                        k, v = map(str.strip, line.split(":", 1))
-                        current_ace[k] = int(v) if k in {"Flags", "Mask"} else v
-            if current_ace: sd["Dacl"].append(current_ace)
-
-            sddl = f"O:{sd.get('Owner') or 'SY'}G:{sd.get('Group') or 'SY'}"
-            if sd["Dacl"]:
-                sddl += "D:" + "".join(
-                    f"({ace['Type']};{ace['Flags']};0x{int(ace['Mask']):x};;;{ace['Sid']})"
-                    for ace in sd["Dacl"]
-                )
-            return sddl
-
+    async def security_descriptor(self, fullpath, as_sddl=False):
         try:
             hkey = await self._open(fullpath)
             if hkey == "OpenRegPath is None":
                 return None
 
-            sd, err = await self.reg_api.GetKeySecurity(hkey, scmr.DACL_SECURITY_INFORMATION)
+            sd, err = await self.reg_api.GetKeySecurity(hkey, (scmr.OWNER_SECURITY_INFORMATION | scmr.GROUP_SECURITY_INFORMATION | scmr.DACL_SECURITY_INFORMATION))
             if err:
                 raise Exception(f"GetKeySecurity error: {err}")
 
             sd_bin = b''.join(sd) if isinstance(sd, list) else sd
-            if as_ssdl:
-                return to_ssdl(str(sd_bin))
+            if as_sddl:
+                return sd_bin.to_sddl()
             return sd_bin
 
         except Exception as e:

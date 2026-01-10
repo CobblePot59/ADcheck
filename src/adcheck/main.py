@@ -164,7 +164,8 @@ class ADcheck:
         from ldap3.core.exceptions import LDAPBindError
 
         try:
-            ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldap'))
+            url = self.url.replace(self.url.split('://')[0], 'ldap+simple')
+            ad_client = ADClient(domain=self.domain, url=url)
             await ad_client.connect()
             await ad_client.disconnect()
             self.pprint(True, f'LDAP signature was required on target : False')
@@ -607,7 +608,9 @@ class ADcheck:
             sddl = security_descriptor.to_sddl()
             json_sd = parse_SDDL(sddl)
 
-            acl_table(console=self.console, json_sd=json_sd, title=dn, well_known_sids=self.NEW_WELL_KNOWN_SIDS)
+            acl_table(console=self.console, json_sd=json_sd, title=dn, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
+
+    # NOTE: BLOODHOUND DO THAT
 
     async def krbtgt_encryption(self):
         encryption_type = int((await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('msDS-SupportedEncryptionTypes'))
@@ -716,7 +719,9 @@ class ADcheck:
 
             title = f"\n[bold yellow]{display_path}[/bold yellow]\n"
 
-            acl_table(console=self.console, json_sd=parsed_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS)
+            acl_table(console=self.console, json_sd=parsed_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
+
+    # NOTE : BLOODHOUND DO THAT
 
     async def users_description(self):
         result = []
@@ -755,7 +760,9 @@ class ADcheck:
 
                 title = f"\n[bold yellow][+] Listing ACL for share:[/bold yellow] {obj.unc_path}\n"
 
-                acl_table(console=self.console, json_sd=json_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS)
+                acl_table(console=self.console, json_sd=json_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
+    
+    # NOTE: NETEXEC DO THAT
 
     @admin_required
     async def wmi_last_update(self):
@@ -857,7 +864,7 @@ class ADcheck:
         reg_keys = ['HKLM\\SYSTEM', 'HKLM\\SECURITY', 'HKLM\\SAM']
 
         for reg_key in reg_keys:
-            security_descriptor = await self.reg_client.security_descriptor(reg_key, as_ssdl=True)
+            security_descriptor = await self.reg_client.security_descriptor(reg_key, as_sddl=True)
             json_sd = parse_SDDL(security_descriptor)
 
             title = f"\n[bold yellow]{reg_key}[/bold yellow]\n"

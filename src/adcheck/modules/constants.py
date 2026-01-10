@@ -281,36 +281,36 @@ WELL_KNOWN_SIDS = {
 SENSITIVE_TRUSTEES = ["everyone", "anonymous", "authenticated user", "guest"]
 
 # https://learn.microsoft.com/en-us/windows/win32/wmisdk/file-and-directory-access-rights-constants
-# FILE_ACCESS_RIGHT = {
-#     1: "read data from the file",
-#     2: "write data to the file",
-#     4: "append data to the file",
-#     8: "read extended attributes",
-#     16: "write extended attributes",
-#     32: "execute the file",
-#     128: "read file attributes",
-#     256: "change file attributes",
-#     65536: "delete the object",
-#     131072: "read the information in the security descriptor from the file",
-#     262144: "modify the DACL to the file",
-#     524288: "change the owner in the security descriptor to the file",
-#     1048576: "use the object for synchronization"
-# }
+FILE_ACCESS_RIGHT = {
+    1: "read data from the file",
+    2: "write data to the file",
+    4: "append data to the file",
+    8: "read extended attributes",
+    16: "write extended attributes",
+    32: "execute the file",
+    128: "read file attributes",
+    256: "change file attributes",
+    65536: "delete the object",
+    131072: "read the information in the security descriptor from the file",
+    262144: "modify the DACL to the file",
+    524288: "change the owner in the security descriptor to the file",
+    1048576: "use the object for synchronization"
+}
 
-# DIRECTORY_ACCESS_RIGHT = {
-#     1: "list the contents of the directory",
-#     2: "create a file in the directory",
-#     4: "create a subdirectory",
-#     8: "read extended attributes",
-#     16: "write extended attributes",
-#     32: "be traversed",
-#     64: "delete the directory and all the files it contains",
-#     65536: "delete the object",
-#     131072: "read the information in the security descriptor from the directory",
-#     262144: "modify the DACL to the directory",
-#     524288: "change the owner in the security descriptor to the directory",
-#     1048576: "use the object for synchronization"
-# }
+DIRECTORY_ACCESS_RIGHT = {
+    1: "list the contents of the directory",
+    2: "create a file in the directory",
+    4: "create a subdirectory",
+    8: "read extended attributes",
+    16: "write extended attributes",
+    32: "be traversed",
+    64: "delete the directory and all the files it contains",
+    65536: "delete the object",
+    131072: "read the information in the security descriptor from the directory",
+    262144: "modify the DACL to the directory",
+    524288: "change the owner in the security descriptor to the directory",
+    1048576: "use the object for synchronization"
+}
 
 # https://learn.microsoft.com/en-us/dotnet/api/system.directoryservices.activedirectoryrights?view=dotnet-plat-ext-8.0#fields
 # ENTRANCE_ACCESS_CONTROL = {
@@ -360,71 +360,6 @@ SENSITIVE_TRUSTEES = ["everyone", "anonymous", "authenticated user", "guest"]
 #     "msLAPS-PasswordExpirationTime" : b"t\xdehF\x88\xa48K\xaf\xf8\xcf\x9fB\x8e\x89\xaa",
 # }
 
-# DELEGATIONS_ACE = [
-#     ([
-#         {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['User'], 'InheritedObjectType': None},
-#         {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['User']}
-#     ], "Create, delete and manage user accounts"),
-    
-#     ([
-#         {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['User']},
-#         {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['User']}
-#     ], "Reset user passwords and force password change at next logon"),
-    
-#     ([
-#         {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['User']}
-#     ], "Read all user information"),
-    
-#     ([
-#         {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['Group'], 'InheritedObjectType': None},
-#         {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['Group']}
-#     ], "Create, delete and manage groups"),
-    
-#     ([
-#         {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Member'], 'InheritedObjectType': ['Group']}
-#     ], "Modify the membership of a group"),
-    
-#     ([
-#         {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Link'], 'InheritedObjectType': None},
-#         {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['GP-Options'], 'InheritedObjectType': None}
-#     ], "Manage Group Policy links"),
-    
-#     ([
-#         {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Planning)'], 'InheritedObjectType': None}
-#     ], "Generate Resultant Set of Policy (Planning)"),
-    
-#     ([
-#         {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Generate Resultant Set of Policy (Logging)'], 'InheritedObjectType': None}
-#     ], "Generate Resultant Set of Policy (Logging)"),
-    
-#     ([
-#         {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['inetOrgPerson'], 'InheritedObjectType': None},
-#         {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}
-#     ], "Create, delete, and manage inetOrgPerson accounts"),
-    
-#     ([
-#         {'PermissionsValue': ['All extended rights'], 'PermissionsObjects': ['Reset Password'], 'InheritedObjectType': ['inetOrgPerson']},
-#         {'PermissionsValue': ['Read all properties', 'Write all properties'], 'PermissionsObjects': ['Pwd-Last-Set'], 'InheritedObjectType': ['inetOrgPerson']}
-#     ], "Reset inetOrgPerson passwords and force password change at next logon"),
-    
-#     ([
-#         {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': [], 'InheritedObjectType': ['inetOrgPerson']}
-#     ], "Read all inetOrgPerson information"),
-    
-#     ([
-#         {'PermissionsValue': ['Create all child objects'], 'PermissionsObjects': ['Computer'], 'InheritedObjectType': None}
-#     ], "Join a computer to the domain"),
-    
-#     ([
-#         {'PermissionsValue': ['Create all child objects', 'Delete all child objects'], 'PermissionsObjects': ['ms-WMI-Som'], 'InheritedObjectType': None},
-#         {'PermissionsValue': 'Full Control', 'PermissionsObjects': [], 'InheritedObjectType': ['ms-WMI-Som']}
-#     ], "Create, Delete and Manage WMI Filters"),
-    
-#     ([
-#         {'PermissionsValue': ['Read all properties'], 'PermissionsObjects': ['msLAPS-Password'], 'InheritedObjectType': ['Computer']}
-#     ], "Read LAPS password"),
-# ]
-
 # https://learn.microsoft.com/fr-fr/windows/win32/sysinfo/registry-key-security-and-access-rights
 # REGISTRY_ACCESS_RIGHT = {
 #     "KEY_QUERY_VALUE": 1,
@@ -441,22 +376,16 @@ SENSITIVE_TRUSTEES = ["everyone", "anonymous", "authenticated user", "guest"]
 # }
 
 # REGISTRY_ACCESS_RIGHT = {
-#     "Query Value": 1,
-#     "Set Value": 2,
-#     "Create Subkey": 4,
-#     "Enumerate Subkeys": 8,
-#     "Notify": 16,
-#     "Create Link": 32,
-#     "Delete": 65536,
-#     "Read Control": 131072,
-#     "Read": 131097,
-#     "Write DAC": 262144,
-#     "Write Owner": 524288,
-#     "Full Control": 983103
-# }
-
-# REGISTRY_ACCESS_INHERITED = {
-#     0: "This key only",
-#     2: "This key and subkeys",
-#     10: "Subkeys only"
+#     1:        "Query Value",
+#     2:        "Set Value",
+#     4:        "Create Subkey",
+#     8:        "Enumerate Subkeys",
+#     16:       "Notify",
+#     32:       "Create Link",
+#     65536:    "Delete",
+#     131072:   "Read Control",
+#     131097:   "Read",
+#     262144:   "Write DAC",
+#     524288:   "Write Owner",
+#     983103:   "Full Control"
 # }

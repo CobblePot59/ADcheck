@@ -12,7 +12,7 @@ def admin_required(func):
             pass
     return wrapper
 
-def acl_table(console, json_sd, title = None, well_known_sids = None):
+def acl_table(console, json_sd, title=None, well_known_sids=None, sensitive_only=False):
     if title:
         console.print(f"\n[bold yellow]{title}[/bold yellow]")
 
@@ -26,6 +26,8 @@ def acl_table(console, json_sd, title = None, well_known_sids = None):
     table.add_column("Rights", style="white")
     table.add_column("Flags", style="dim")
 
+    sensitive_found = False
+
     for ace in json_sd["DACL"]:
         ace_type = ace.get("AceType", "-")
         raw_sid = ace.get("SID", "-")
@@ -34,19 +36,38 @@ def acl_table(console, json_sd, title = None, well_known_sids = None):
 
         sid = well_known_sids.get(raw_sid, raw_sid) if well_known_sids else raw_sid
 
-        if SENSITIVE_TRUSTEES and any(user in sid.lower() for user in SENSITIVE_TRUSTEES):
+        is_sensitive = SENSITIVE_TRUSTEES and any(user in sid.lower() for user in SENSITIVE_TRUSTEES)
+        
+        if sensitive_only and not is_sensitive:
+            continue
+            
+        if is_sensitive:
             sid = f"[bold red]{sid}[/bold red]"
+            sensitive_found = True
 
         table.add_row(ace_type, sid, rights, flags)
 
-    console.print(table)
+    if sensitive_only and not sensitive_found:
+        console.print("[dim italic]No rights granted to sensitive trustees[/dim italic]")
+    else:
+        console.print(table)
 
     owner_sid = json_sd.get('Owner SID', '-')
     group_sid = json_sd.get('Group SID', '-')
     owner = well_known_sids.get(owner_sid, owner_sid) if well_known_sids else owner_sid
     group = well_known_sids.get(group_sid, group_sid) if well_known_sids else group_sid
 
-    console.print(
-        f"[bold cyan]Owner:[/bold cyan] {owner}, "
-        f"[bold cyan]Group:[/bold cyan] {group}"
-    )
+    if sensitive_only:
+        parts = []
+        if SENSITIVE_TRUSTEES and any(user in owner.lower() for user in SENSITIVE_TRUSTEES):
+            parts.append(f"[bold cyan]Owner:[/bold cyan] [bold red]{owner}[/bold red]")
+        if SENSITIVE_TRUSTEES and any(user in group.lower() for user in SENSITIVE_TRUSTEES):
+            parts.append(f"[bold cyan]Group:[/bold cyan] [bold red]{group}[/bold red]")
+        
+        if parts:
+            console.print("   •   ".join(parts))
+    else:
+        console.print(
+            f"[bold cyan]Owner:[/bold cyan] {owner}, "
+            f"[bold cyan]Group:[/bold cyan] {group}"
+        )

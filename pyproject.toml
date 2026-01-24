@@ -1,6 +1,6 @@
 [project]
 name = "ADcheck"
-version = "1.6.0"
+version = "1.6.1"
 description = "ADcheck, Assess the security of your Active Directory with few or all privileges."
 readme = "README.md"
 authors = [{ name = "CobblePot59" }]
@@ -23,6 +23,7 @@ dependencies = [
     "pyopenssl>=25.3.0",
     "rich>=14.2.0",
     "winacl",
+    "winsddl>=0.1.0",
 ]
 
 [project.urls]

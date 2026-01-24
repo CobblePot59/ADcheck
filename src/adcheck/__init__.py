@@ -145,6 +145,7 @@ async def main():
     options.secure = args.secure
     options.kerberos = args.kerberos
     options.output = args.output
+    options.debug = debug
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
     ad_client = ADClient(domain=domain, url=url)

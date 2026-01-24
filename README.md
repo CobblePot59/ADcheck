@@ -233,7 +233,7 @@ Planned enhancements:
 - [ ] Persistent attack trace (mimikatz, certipy, ticket, dsrm, acl)
 - [ ] List of Named pipes
 - [ ] Verify if Spooler service is enabled on remote target
-- [ ] Outputs a human readable summary of acls
+- [x] Outputs a human readable summary of acls
 
 ---
 

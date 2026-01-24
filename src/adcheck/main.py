@@ -1,7 +1,8 @@
 from adcheck.modules.connection import ADClient, AioSMBClient, SMBRegClient, WMIquery
-from adcheck.modules.utils import admin_required, acl_table
-from adcheck.modules.constants import WELL_KNOWN_SIDS, PRIVESC_GROUP, SUPPORTED_ENCRYPTION
-from adcheck.libs.DescribeSDDL import parse_SDDL
+from adcheck.modules.utils import admin_required
+from adcheck.modules.constants import PRIVESC_GROUP, SUPPORTED_ENCRYPTION
+from winsddl.constants import WELL_KNOWN_SIDS
+from winsddl import SDDLParser
 from rich.console import Console
 from rich.table import Table
 from datetime import datetime, timezone
@@ -10,7 +11,6 @@ import asyncio
 import msuaccalc
 import json
 import re
-
 
 class ADcheck:
     def __init__(self, domain, username, password, hashes, aes_key, hostname, dc_ip, url, options=None):
@@ -29,6 +29,7 @@ class ADcheck:
         self.do_kerberos = options.kerberos
         self.output = options.output
         self.is_admin = options.is_admin
+        self.debug = options.debug
         self.report_results = []
         self.console = Console()
 
@@ -71,9 +72,6 @@ class ADcheck:
         self.computer_entries = await self.ad_client.get_ADobjects(custom_filter='(objectClass=computer)')
         self.policies_entries = [entry for entry in (await self.ad_client.get_ADobjects(custom_filter='(objectClass=groupPolicyContainer)')) if 'displayName' in entry]
         self.root_entry = next(iter(await self.ad_client.get_ADobjects(custom_filter=f"(&(objectClass=domain)(distinguishedName={self.base_dn}))")), None)
-        self.schema_objects = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=classSchema)')
-        self.schema_attributes = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=attributeSchema)')
-        self.extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)')
         self.domain_sid = (await self.domain_controlers(_return=True))[0].get('objectSid')[:41]
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain-', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
         self.PRIVESC_GROUP = {key.replace('domain', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
@@ -107,6 +105,11 @@ class ADcheck:
             return result
         else:
             self.pprint('INFO', f'Domain Controllers: {result2}')
+
+    async def get_policies(self):
+        unc_path = f'\\\\{self.dc_ip}\\sysvol\\{self.domain}\\Policies'
+        await self.smb_client.download_tree(unc_path, 'GPOS')
+        print(f"\n📁 \033[37mGPOs downloaded to current folder: ./GPOS\033[0m\n\n")
 
     async def can_add_computer(self):
         result = self.root_entry.get('ms-DS-MachineAccountQuota')
@@ -424,11 +427,6 @@ class ADcheck:
 
         self.console.print(table)
 
-    async def get_policies(self):
-        unc_path = f'\\\\{self.dc_ip}\\sysvol\\{self.domain}\\Policies'
-        await self.smb_client.download_tree(unc_path, 'GPOS')
-        print(f"\n📁 \033[37mGPOs downloaded to current folder: ./GPOS\033[0m\n\n")
-
     async def smb_signing(self):
         result = self.smb_client.smbconn.signing_required
         self.pprint(result, f'SMB signing is required : {result}', reverse=True)
@@ -594,6 +592,10 @@ class ADcheck:
     async def control_delegations(self):
         from winacl.dtyp.security_descriptor import SECURITY_DESCRIPTOR
 
+        # schema_objects = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=classSchema)', custom_attributes=[b'cn', b'schemaIDGUID'])
+        # schema_attributes = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Schema,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=attributeSchema)', custom_attributes=[b'cn', b'schemaIDGUID'])
+        # extended_rights = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=Extended-Rights,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=controlAccessRight)', custom_attributes=[b'cn', b'rightsGuid'])
+
         ous_object = (await self.ad_client.get_ADobjects(custom_filter='(objectClass=organizationalUnit)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor']))
         containers_name = [f'CN=Computers,{self.base_dn}', f'CN=ForeignSecurityPrincipals,{self.base_dn}', f'CN=Keys,{self.base_dn}', f'CN=Managed Service Accounts,{self.base_dn}', f'CN=Program Data,{self.base_dn}', f'CN=Users,{self.base_dn}']
         containers_object = [(await self.ad_client.get_ADobjects(custom_base_dn=container,custom_filter='(objectClass=container)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor']))[0] for container in containers_name]
@@ -605,10 +607,9 @@ class ADcheck:
             raw_sd = container.get('nTSecurityDescriptor')
 
             security_descriptor = SECURITY_DESCRIPTOR().from_bytes(raw_sd)
-            sddl = security_descriptor.to_sddl()
-            json_sd = parse_SDDL(sddl)
-
-            acl_table(console=self.console, json_sd=json_sd, title=dn, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
+            sd_parser = SDDLParser()
+            sd_parser.parse(security_descriptor.to_sddl())
+            sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, debug=self.debug)
 
     # NOTE: BLOODHOUND DO THAT
 
@@ -709,19 +710,14 @@ class ADcheck:
         unc_path = rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies'
         tree = await self.smb_client.list_tree_with_sd(unc_path)
         
-        parsed_sddl_dict = {}
-        for unc_path, sd in tree.items():
-            json_sd = parse_SDDL(sd.to_sddl())
-            parsed_sddl_dict[unc_path] = json_sd
+        for unc_path, security_descriptor in tree.items():
+            sd_parser = SDDLParser()
+            sd_parser.parse(security_descriptor.to_sddl())
 
-        for full_path, parsed_sd in parsed_sddl_dict.items():
-            display_path = full_path.replace(rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies', 'SYSVOL\\Policies')
-
+            display_path = unc_path.replace(rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies', 'SYSVOL\\Policies')
             title = f"\n[bold yellow]{display_path}[/bold yellow]\n"
 
-            acl_table(console=self.console, json_sd=parsed_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
-
-    # NOTE : BLOODHOUND DO THAT
+            sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, debug=self.debug)
 
     async def users_description(self):
         result = []
@@ -756,13 +752,12 @@ class ADcheck:
 
             if otype == 'share':
                 security_descriptor = obj.security_descriptor.to_sddl() if obj.security_descriptor else 'No SDDL'
-                json_sd = parse_SDDL(security_descriptor)
+                sd_parser = SDDLParser()
+                sd_parser.parse(security_descriptor)
 
                 title = f"\n[bold yellow][+] Listing ACL for share:[/bold yellow] {obj.unc_path}\n"
 
-                acl_table(console=self.console, json_sd=json_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS, sensitive_only=True)
-    
-    # NOTE: NETEXEC DO THAT
+                sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, debug=self.debug)
 
     @admin_required
     async def wmi_last_update(self):
@@ -865,11 +860,12 @@ class ADcheck:
 
         for reg_key in reg_keys:
             security_descriptor = await self.reg_client.security_descriptor(reg_key, as_sddl=True)
-            json_sd = parse_SDDL(security_descriptor)
+            sd_parser = SDDLParser()
+            sd_parser.parse(security_descriptor)
 
             title = f"\n[bold yellow]{reg_key}[/bold yellow]\n"
 
-            acl_table(console=self.console, json_sd=json_sd, title=title, well_known_sids=self.NEW_WELL_KNOWN_SIDS)
+            sd_parser.to_rich(console=self.console, title=title)
 
     @admin_required
     async def reg_uac(self):
@@ -1127,3 +1123,4 @@ class Options:
         self.do_kerberos = False
         self.output = False
         self.is_admin = False
+        self.debug = False

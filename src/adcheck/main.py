@@ -662,21 +662,18 @@ class ADcheck:
     async def audit_policy(self):
         from csv import DictReader
 
-        async def get_audit_policy_from_path(unc_path):
-            file_content = await self.smb_client.read_file(unc_path)
-            if not file_content:
-                return None
-            csv_reader = DictReader(file_content.splitlines())
-            return [{'Subcategories': row.get('Subcategory'), 'Inclusion Settings': row.get('Inclusion Setting')} for row in csv_reader]
-
         audit_paths = [
-            f'\\\\{self.dc_ip}\\C$\\Windows\\System32\\GroupPolicy\\Machine\\Microsoft\\Windows NT\\Audit\\audit.csv',
-            f'\\\\{self.dc_ip}\\C$\\Windows\\security\\audit\\audit.csv'
+            fr'\\{self.dc_ip}\C$\Windows\System32\GroupPolicy\Machine\Microsoft\Windows NT\Audit\audit.csv',
+            fr'\\{self.dc_ip}\C$\Windows\security\audit\audit.csv'
         ]
 
         for unc_path in audit_paths:
             try:
-                result = await get_audit_policy_from_path(unc_path)
+                file_content = await self.smb_client.read_file(unc_path)
+                if not file_content:
+                    continue
+                csv_reader = DictReader(file_content.splitlines())
+                result = [{'Subcategories': row.get('Subcategory'), 'Inclusion Settings': row.get('Inclusion Setting')} for row in csv_reader]
                 if result:
                     self.pprint('INFO', f'Audit policy configured : \n{json.dumps(result, indent=4)}')
                     return
@@ -979,12 +976,10 @@ class ADcheck:
 
     @admin_required  
     async def reg_lsass_ppl(self):
-        value = await self.reg_client.read_value('HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL')
-        try:
-            val = int(str(value).replace('\x00', '').strip())
-            result = val == 1 or val == 2
-        except (ValueError, TypeError):
-            result = False
+        hives = {
+            'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': [1, 2]
+        }
+        result = any([int(str(await self.reg_client.read_value(key)).replace('\x00', '').strip()) in hives.get(key) for key in hives])
         self.pprint(result, f'Lsass runs as a protected process (value is 1 or 2): {result}', reverse=True)
 
     @admin_required  

@@ -193,17 +193,22 @@ Each finding is directly interpretable—no manual analysis required.
 
 ## 🚀 Quick Start
 
+### Prerequisites
+
+```bash
+# Install UV (fastest Python package manager)
+pip install uv
+uv tool update-shell && source ~/.zshenv
+```
+
 ### Installation
 
 ```bash
-# 1. Install UV (fastest Python package manager)
-pip install uv
-
-# 2. Install ADcheck
+# 1. Install ADcheck
 uv tool install git+https://github.com/CobblePot59/ADcheck.git
 
-# 3. Run your assessment
-ADcheck -d 'example.com' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
+# 2. Run your assessment
+adcheck -d 'example.com' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 ```
 
 ### For Developers
@@ -213,7 +218,7 @@ ADcheck -d 'example.com' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'
 git clone https://github.com/CobblePot59/ADcheck.git
 cd ADcheck
 
-# 2. Install dependencies with UV
+# 2. Install dependencies
 uv sync
 
 # 3. Run your assessment

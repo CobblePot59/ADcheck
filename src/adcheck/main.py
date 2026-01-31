@@ -31,6 +31,7 @@ class ADcheck:
         self.is_admin = options.is_admin
         self.debug = options.debug
         self.report_results = []
+        self.report_tables = []
         self.console = Console()
 
     async def connect(self):
@@ -208,21 +209,32 @@ class ADcheck:
             result[group] = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(group)]
         
         table = Table(title="Privesc Groups")
-
         table.add_column("Group DN", style="cyan", no_wrap=True)
         table.add_column("Members (sAMAccountName)", style="green")
+
+        report_rows = []
 
         for group_dn, members in result.items():
             if members:
                 for i, member in enumerate(members):
                     if i == 0:
                         table.add_row(group_dn, member)
+                        report_rows.append([group_dn, member])
                     else:
                         table.add_row("", member)
+                        report_rows.append(["", member])
             else:
                 table.add_row(group_dn, "-")
+                report_rows.append([group_dn, "-"])
 
         self.console.print(table)
+
+        self.report_tables.append({
+            'title': 'Privesc Groups',
+            'headers': ['Group DN', 'Members (sAMAccountName)'],
+            'rows': report_rows,
+            'category': 'privilege'
+        })
 
     async def krbtgt_password_age(self):
         krbtgt_pwdLastSet = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('pwdLastSet')
@@ -397,17 +409,18 @@ class ADcheck:
 
     async def gpo_by_ou(self):
         policies = [{'name': policy.get('name'), 'displayName': policy.get('displayName')} for policy in self.policies_entries]
-
         groups = []
         for entry in self.all_entries:
             if 'gPLink' in entry:
                 groups.append({'dn': entry.get('distinguishedName'), 'name': re.findall(r'{(.*?)}', entry.get('gPLink'))})
 
         table = Table(title="Group Policy Objects by OU")
-
         table.add_column("OU DN", style="cyan", no_wrap=True)
         table.add_column("GPO Name", style="green")
         table.add_column("Display Name", style="magenta")
+
+        report_rows = []
+
         for group in groups:
             group_dn = group.get('dn')
             gp_links = []
@@ -415,17 +428,26 @@ class ADcheck:
                 for policy in policies:
                     if policy.get('name') == f'{{{name}}}':
                         gp_links.append((policy.get('name'), policy.get('displayName')))
-
             if gp_links:
                 for i, (name, display) in enumerate(gp_links):
                     if i == 0:
                         table.add_row(group_dn, name, display)
+                        report_rows.append([group_dn, name, display])
                     else:
                         table.add_row("", name, display)
+                        report_rows.append(["", name, display])
             else:
                 table.add_row(group_dn, "-", "-")
-
+                report_rows.append([group_dn, "-", "-"])
+        
         self.console.print(table)
+        
+        self.report_tables.append({
+            'title': 'Group Policy Objects by OU',
+            'headers': ['OU DN', 'GPO Name', 'Display Name'],
+            'rows': report_rows,
+            'category': 'policy'
+        })
 
     async def smb_signing(self):
         result = self.smb_client.smbconn.signing_required
@@ -695,16 +717,26 @@ class ADcheck:
                     value = self.NEW_WELL_KNOWN_SIDS.get(sid, sid)
                     values.append(value)
                 result[key] = values
+        
         table = Table(title="Privilege Rights")
-
         table.add_column("Right", style="cyan", no_wrap=True)
         table.add_column("Accounts / SIDs", style="green")
-
+        
+        report_rows = []
+        
         for right, accounts in result.items():
             accounts_str = ', '.join(accounts) if accounts else "-"
             table.add_row(right, accounts_str)
-
+            report_rows.append([right, accounts_str])
+        
         self.console.print(table)
+        
+        self.report_tables.append({
+            'title': 'Privilege Rights',
+            'headers': ['Right', 'Accounts / SIDs'],
+            'rows': report_rows,
+            'category': 'privilege'
+        })
 
     async def policies_ace(self):
         unc_path = rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies'

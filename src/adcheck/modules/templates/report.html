@@ -119,6 +119,42 @@
       margin-top: 2em;
     }
 
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1em 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table th {
+      background-color: #1e2a38;
+      color: white;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border: 1px solid #ddd;
+    }
+
+    table td {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      background-color: white;
+    }
+
+    table tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    table tbody tr:hover {
+      background-color: #f0f0f0;
+    }
+
+    .section h3 {
+      margin-top: 2em;
+      margin-bottom: 0.5em;
+      color: #1e2a38;
+    }
+
     footer {
       background: #1e2a38;
       color: #ccc;
@@ -184,7 +220,7 @@
   <div id="detail-view" class="hidden">
     <div class="detail-header">
       <h2 id="detail-title"></h2>
-      <button class="back-btn" onclick="goBack()">← Retour</button>
+      <button class="back-btn" onclick="goBack()">← Back</button>
     </div>
 
     <details open>
@@ -200,6 +236,7 @@
     <details>
       <summary>ℹ️ Info</summary>
       <div id="black-list" class="check-list"></div>
+      <div id="tables-container"></div>
     </details>
   </div>
 </div>
@@ -216,6 +253,13 @@
     "policy": {{ policy_list|tojson }}
   };
 
+  const tables = {
+    "privs": {{ privs_tables|tojson }},
+    "user": {{ user_tables|tojson }},
+    "domain": {{ domain_tables|tojson }},
+    "policy": {{ policy_tables|tojson }}
+  };
+
   function showDetail(type) {
     const mapping = {
       "privs": "Privilege and Trust Management",
@@ -229,14 +273,17 @@
     document.getElementById("detail-title").innerText = mapping[type];
 
     const sectionData = data[type] || [];
+    const sectionTables = tables[type] || [];
 
     const redList = document.getElementById("red-list");
     const greenList = document.getElementById("green-list");
     const blackList = document.getElementById("black-list");
+    const tablesContainer = document.getElementById("tables-container");
 
     redList.innerHTML = '';
     greenList.innerHTML = '';
     blackList.innerHTML = '';
+    tablesContainer.innerHTML = '';
 
     sectionData.forEach(item => {
       let div = document.createElement("div");
@@ -265,6 +312,42 @@
         div.innerHTML = `❌ ${content}`;
         redList.appendChild(div);
       }
+    });
+
+    sectionTables.forEach(table => {
+      const section = document.createElement("div");
+      section.classList.add("section");
+      
+      const title = document.createElement("p");
+      title.textContent = "ℹ️ " + table.title;
+      section.appendChild(title);
+
+      const tableEl = document.createElement("table");
+      
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      table.headers.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      tableEl.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      table.rows.forEach(row => {
+        const tr = document.createElement("tr");
+        row.forEach(cell => {
+          const td = document.createElement("td");
+          td.textContent = cell || '—';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      tableEl.appendChild(tbody);
+
+      section.appendChild(tableEl);
+      tablesContainer.appendChild(section);
     });
   }
 

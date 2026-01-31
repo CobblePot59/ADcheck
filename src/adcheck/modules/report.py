@@ -6,7 +6,7 @@ import math
 
 
 class ReportGenerator():
-    def __init__(self, results, domain):
+    def __init__(self, results, domain, additional_tables=None):
         self.results = results
         self.domain = domain
         self.env = Environment(loader=FileSystemLoader(path.dirname(__file__)))
@@ -19,6 +19,7 @@ class ReportGenerator():
         self.policy_list, _, self.policy_ids = self.checklist_parser('Audit and Policy Management')
 
         self.total_list = self.privs_list + self.user_list + self.domain_list + self.policy_list
+        self.additional_tables = additional_tables or []
 
     def checklist_parser(self, section_name):
         modules = []
@@ -34,71 +35,88 @@ class ReportGenerator():
         modules_ids = [module[0] for module in modules2]
         return modules, modules_ids_no_info, modules_ids
 
-    def gen_markdown(self):
-        def format_markdown_section(title, ids):
-            section_content = f"## {title}\n\n"
-            for result in self.results:
-                if result.get('name') in ids:
-                    color = result.get('color', '')
-                    message = result.get('message', '')
+    def _get_tables_for_category(self, category):
+        return [table for table in self.additional_tables if table.get('category') == category]
 
-                    if color == 'green':
-                        message = f'<span style="color:#26b260">{message}</span>'
-                    elif color == 'red':
-                        message = f'<span style="color:#c93131">{message}</span>'
+    def _format_markdown_table(self, table):
+        content = f"{table['title']}\n\n"
+        content += "| " + " | ".join(table['headers']) + " |\n"
+        content += "| " + " | ".join(["---"] * len(table['headers'])) + " |\n"
+        
+        for row in table['rows']:
+            formatted_row = [str(cell) if cell else " " for cell in row]
+            content += "| " + " | ".join(formatted_row) + " |\n"
+        
+        return content + "\n"
 
-                    section_content += f"- {message}\n"
+    def _format_markdown_section(self, title, ids, category):
+        section_content = f"## {title}\n\n"
+        
+        for result in self.results:
+            if result.get('name') in ids:
+                color = result.get('color', '')
+                message = result.get('message', '')
+
+                if color == 'green':
+                    message = f'<span style="color:#26b260">{message}</span>'
+                elif color == 'red':
+                    message = f'<span style="color:#c93131">{message}</span>'
+
+                section_content += f"- {message}\n"
+        
+        tables = self._get_tables_for_category(category)
+        if tables:
             section_content += "\n"
-            return section_content
+            for table in tables:
+                section_content += self._format_markdown_table(table)
+        
+        return section_content + "\n"
 
+    def gen_markdown(self):
         markdown_content = "# ADcheck Report\n\n"
-        markdown_content += format_markdown_section('Privilege and Trust Management', self.privs_ids)
-        markdown_content += format_markdown_section('User Account Management', self.user_ids)
-        markdown_content += format_markdown_section('Computer and Domain Management', self.domain_ids)
-        markdown_content += format_markdown_section('Audit and Policy Management', self.policy_ids)
+        markdown_content += self._format_markdown_section('Privilege and Trust Management', self.privs_ids, 'privilege')
+        markdown_content += self._format_markdown_section('User Account Management', self.user_ids, 'user')
+        markdown_content += self._format_markdown_section('Computer and Domain Management', self.domain_ids, 'domain')
+        markdown_content += self._format_markdown_section('Audit and Policy Management', self.policy_ids, 'policy')
 
         with open(f"{self.filename}.md", "w", encoding="utf-8") as md_file:
             md_file.write(markdown_content)
 
+    def _get_section_data(self, ids, category):
+        return {
+            'results': [{'message': r.get('message'), 'color': r.get('color')} for r in self.results if r.get('name') in ids],
+            'tables': self._get_tables_for_category(category)
+        }
+
     def gen_html(self):
-        cpt_user = cpt_domain = cpt_privs = cpt_policy = 0
+        sections = {
+            'privs': (self.privs_ids, self.privs_list, 'privilege'),
+            'user': (self.user_ids, self.user_list, 'user'),
+            'domain': (self.domain_ids, self.domain_list, 'domain'),
+            'policy': (self.policy_ids, self.policy_list, 'policy')
+        }
 
-        for result in self.results:
-            name = result.get('name')
-            color = result.get('color')
-            if 'green' in color:
-                if name in self.privs_ids:
-                    cpt_privs += 1
-                elif name in self.user_ids:
-                    cpt_user += 1
-                elif name in self.domain_ids:
-                    cpt_domain += 1
-                elif name in self.policy_ids:
-                    cpt_policy += 1
-        cpt_total = cpt_privs + cpt_user + cpt_domain + cpt_policy
-
+        counts = {key: sum(1 for r in self.results if r.get('color') == 'green' and r.get('name') in ids) 
+                  for key, (ids, _, _) in sections.items()}
+        
         def calculate_percentage(count, total):
             return int(math.ceil(count * (100 / len(total)))) if total else 0
 
-        scores = {
-            "total": calculate_percentage(cpt_total, self.total_list),
-            "privs": calculate_percentage(cpt_privs, self.privs_list),
-            "user": calculate_percentage(cpt_user, self.user_list),
-            "domain": calculate_percentage(cpt_domain, self.domain_list),
-            "policy": calculate_percentage(cpt_policy, self.policy_list),
-        }
+        scores = {key: calculate_percentage(counts[key], lst) for key, (_, lst, _) in sections.items()}
+        scores['total'] = calculate_percentage(sum(counts.values()), self.total_list)
+
+        section_data = {f'{key}_list': self._get_section_data(ids, cat)['results'] 
+                        for key, (ids, _, cat) in sections.items()}
+        section_data.update({f'{key}_tables': self._get_section_data(ids, cat)['tables'] 
+                             for key, (ids, _, cat) in sections.items()})
 
         html_content = self.template.render(
             domain=self.domain,
             date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             filename=self.filename,
             scores=scores,
-            privs_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.privs_ids],
-            user_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.user_ids],
-            domain_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.domain_ids],
-            policy_list=[{'message': result.get('message'), 'color': result.get('color')} for result in self.results if result.get('name') in self.policy_ids]
+            **section_data
         )
 
-        # Write to an output HTML file
         with open(f'{self.filename}.html', 'w', encoding='utf-8') as html_file:
             html_file.write(html_content)

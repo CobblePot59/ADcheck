@@ -177,7 +177,7 @@ async def main():
             await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
 
         if args.output:
-            report_generator = ReportGenerator(adcheck.report_results, domain)
+            report_generator = ReportGenerator(adcheck.report_results, domain, additional_tables=adcheck.report_tables)
             if args.output == 'html':
                 report_generator.gen_html()
             elif args.output == 'md':

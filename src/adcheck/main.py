@@ -685,16 +685,27 @@ class ADcheck:
     async def audit_policy(self):
         from csv import DictReader
 
-        try:
-            unc_path = f'\\\\{self.dc_ip}\\C$\\Windows\\System32\\GroupPolicy\\Machine\\Microsoft\\Windows NT\\Audit\\audit.csv'
-            file_content = await self.smb_client.read_file(unc_path)
+        audit_paths = [
+            fr'\\{self.dc_ip}\C$\Windows\System32\GroupPolicy\Machine\Microsoft\Windows NT\Audit\audit.csv',
+            fr'\\{self.dc_ip}\C$\Windows\security\audit\audit.csv'
+        ]
 
-            csv_reader = DictReader(file_content.splitlines())
-            result = [{'Subcategories': row.get('Subcategory'), 'Inclusion Settings': row.get('Inclusion Setting')} for row in csv_reader]
-            self.pprint('INFO', f'Audit policy configured : \n{json.dumps(result, indent=4)}')
-        except Exception as e:
-            if 'OBJECT_PATH_NOT_FOUND' in str(e):
-                self.pprint(True, 'Audit policy not configured')
+        for unc_path in audit_paths:
+            try:
+                file_content = await self.smb_client.read_file(unc_path)
+                if not file_content:
+                    continue
+                csv_reader = DictReader(file_content.splitlines())
+                result = [{'Subcategories': row.get('Subcategory'), 'Inclusion Settings': row.get('Inclusion Setting')} for row in csv_reader]
+                if result:
+                    self.pprint('INFO', f'Audit policy configured : \n{json.dumps(result, indent=4)}')
+                    return
+            except Exception as e:
+                if 'OBJECT_PATH_NOT_FOUND' not in str(e):
+                    self.pprint(True, f'Error reading audit policy: {e}')
+                    return
+        
+        self.pprint(True, 'Audit policy not configured')
 
     async def priv_rights(self):
         gpo_content = []
@@ -994,10 +1005,10 @@ class ADcheck:
     @admin_required  
     async def reg_lsass_ppl(self):
         hives = {
-            'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': '1'
+            'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': [1, 2]
         }
-        result = await self.reg_client.check_values(hives)
-        self.pprint(result, f'Lsass runs as a protected process : {result}', reverse=True)
+        result = any([int(str(await self.reg_client.read_value(key)).replace('\x00', '').strip()) in hives.get(key) for key in hives])
+        self.pprint(result, f'Lsass runs as a protected process (value is 1 or 2): {result}', reverse=True)
 
     @admin_required  
     async def reg_pwsh2(self):
@@ -1074,10 +1085,11 @@ class ADcheck:
 
     @admin_required  
     async def reg_wpad(self):
-        hives = {
-            'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\AutoDetect': 0
-        }
-        result = await self.reg_client.check_values(hives)
+        hives = [
+            {'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\AutoDetect': 0},
+            {'HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\WinHTTP\\DisableWpad': 1}
+        ]
+        result = await self.reg_client.check_values(hives, any_match=True)
         self.pprint(result, f'WPAD is disabled : {result}', reverse=True)
 
     @admin_required

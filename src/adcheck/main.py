@@ -702,8 +702,7 @@ class ADcheck:
                     return
             except Exception as e:
                 if 'OBJECT_PATH_NOT_FOUND' not in str(e):
-                    self.pprint(True, f'Error reading audit policy: {e}')
-                    return
+                    continue
         
         self.pprint(True, 'Audit policy not configured')
 
@@ -1004,11 +1003,12 @@ class ADcheck:
 
     @admin_required  
     async def reg_lsass_ppl(self):
-        hives = {
-            'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': [1, 2]
-        }
-        result = any([int(str(await self.reg_client.read_value(key)).replace('\x00', '').strip()) in hives.get(key) for key in hives])
-        self.pprint(result, f'Lsass runs as a protected process (value is 1 or 2): {result}', reverse=True)
+        hives = [
+            {'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': 1},
+            {'HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\RunAsPPL': 2}
+        ]
+        result = await self.reg_client.check_values(hives, any_match=True)
+        self.pprint(result, f'Lsass runs as a protected process : {result}', reverse=True)
 
     @admin_required  
     async def reg_pwsh2(self):

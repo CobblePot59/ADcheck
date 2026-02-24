@@ -167,15 +167,18 @@ class ADcheck:
     async def ldap_signing(self):
         from ldap3.core.exceptions import LDAPBindError
 
+        ad_client = None
         try:
             url = self.url.replace(self.url.split('://')[0], 'ldap+simple')
             ad_client = ADClient(domain=self.domain, url=url)
             await ad_client.connect()
-            await ad_client.disconnect()
             self.pprint(True, f'LDAP signature was required on target : False')
         except LDAPBindError as e:
             if 'strongerAuthRequired:' in str(e):
                 self.pprint(False, f'LDAP signature was required on target : True')
+        finally:
+            if ad_client:
+                await ad_client.disconnect()
 
     async def channel_binding(self):
         ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldaps'))

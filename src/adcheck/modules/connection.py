@@ -20,9 +20,12 @@ class ADClient:
 
         if cb_data:
             msldap_client_conn = MSLDAPClientConnection(self.msldap_client.target, self.msldap_client.creds)
-            await msldap_client_conn.connect()
-            msldap_client_conn.cb_data = cb_data
-            _, self.msldap_client_conn_err = await msldap_client_conn.bind()
+            try:
+                await msldap_client_conn.connect()
+                msldap_client_conn.cb_data = cb_data
+                _, self.msldap_client_conn_err = await msldap_client_conn.bind()
+            finally:
+                await msldap_client_conn.disconnect()
 
         await self.msldap_client.connect()
         return self.msldap_client

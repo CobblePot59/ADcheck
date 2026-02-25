@@ -57,7 +57,8 @@ CHECKLIST = {
                 ("can_update_dns", "Verify if User can create dns record"),
                 ("silos", "Get Authentication policy silos", "INFO"),
                 ("priv_rights", "Get Privilege Rights (SeDebugPrivilege, SeBackupPrivilege, ...)", "INFO"),
-                ("policies_ace", "Get Group policy folder/file rights", "INFO")
+                ("policies_ace", "Get Group policy folder/file rights", "INFO"),
+                ("trusts", "Get Trust Relationships, Trusting Direction, and Trust Transitivity", "INFO")
             ]
         }
     ],
@@ -186,3 +187,22 @@ PRIVESC_GROUP = {
     "S-1-5-32-574": "Certificate Operators",
     "domain-517": "Cert Publishers",
 }
+
+TRUST_DIRECTIONS = {
+    1: "Inbound",
+    2: "Outbound",
+    3: "Bidirectional",
+}
+
+TRUST_ATTRIBUTE_FLAGS = [
+    (0x001, "Non-Transitive"),
+    (0x002, "Uplevel-Only"),
+    (0x004, "Quarantined Domain"),
+    (0x008, "Forest Transitive"),
+    (0x010, "Cross Organization"),
+    (0x020, "Within Forest"),
+    (0x040, "Treat as External"),
+    (0x080, "Uses RC4 Encryption"),
+    (0x100, "Cross Organization No TGT Delegation"),
+    (0x2000, "PAM Trust"),
+]

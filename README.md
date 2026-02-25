@@ -152,6 +152,7 @@ Assess domain-wide architecture and security posture:
 - [x] Verify if Channel binding is enforced
 - [x] Ldap anonymous bind
 - [x] DFSR SYSVOL
+- [x] Get Trust Relationships
 
 </details>
 
@@ -198,7 +199,7 @@ Each finding is directly interpretable—no manual analysis required.
 ```bash
 # Install UV (fastest Python package manager)
 pip install uv
-uv tool update-shell && source ~/.zshrc
+uv tool update-shell && source ~/.zshenv
 ```
 
 ### Installation
@@ -233,7 +234,7 @@ uv run adcheck -d 'example.com' -u 'Administrator' -p 'Password1' --dc-ip '192.1
 
 Planned enhancements:
 
-- [ ] Trusts
+- [x] Trusts
 - [ ] Azure (Entra ID)
 - [ ] Persistent attack trace (mimikatz, certipy, ticket, dsrm, acl)
 - [ ] List of Named pipes

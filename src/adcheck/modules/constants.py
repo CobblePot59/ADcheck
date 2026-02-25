@@ -52,7 +52,7 @@ CHECKLIST = {
             ],
             "Privilege and Trust Management": [
                 ("trusted_for_delegation", "Name of Trust accounts for the delegation"),
-                ("rbac", "Name of Computers with rbac"),
+                ("rbcd", "Name of Computers with rbcd"),
                 ("constrained_delegation", "Computers with constrained delegation"),
                 ("can_update_dns", "Verify if User can create dns record"),
                 ("silos", "Get Authentication policy silos", "INFO"),

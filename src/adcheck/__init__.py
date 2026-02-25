@@ -79,6 +79,7 @@ def parse_arguments():
     parser.add_argument('-L', '--list-modules', action='store_true', help='\033[32mList available modules.\033[0m')
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', choices=['html', 'md'], help='Generate report file in HTML or Markdown format.')
+    parser.add_argument('-e', '--exploit', action='store_true', help='Show exploitation hints for supported modules.')
     parser.add_argument('--debug', action='store_true', help='Print method name.')
     parser.add_argument('--version', action='version', version=f'ADcheck v{__version__}')
 
@@ -145,6 +146,7 @@ async def main():
     options.secure = args.secure
     options.kerberos = args.kerberos
     options.output = args.output
+    options.exploit = args.exploit
     options.debug = debug
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)

@@ -29,7 +29,7 @@ class ADcheck:
         self.do_kerberos = options.kerberos
         self.output = options.output
         self.is_admin = options.is_admin
-        self.debug = options.debug
+        self.verbose = options.verbose
         self.exploit = options.exploit
         self.report_results = []
         self.report_tables = []
@@ -410,7 +410,7 @@ class ADcheck:
         result = sum(len(users) for users in hash_to_users.values() if len(users) > 1)
         self.pprint(result, f'Number of accounts with identical password : {result}')
 
-        if self.debug:
+        if self.verbose:
             for nt_hash, users in hash_to_users.items():
                 if len(users) > 1:
                     self.pprint('INFO', f'NT hash {nt_hash} shared by: {", ".join(sorted(users))}')
@@ -675,7 +675,7 @@ class ADcheck:
             security_descriptor = SECURITY_DESCRIPTOR().from_bytes(raw_sd)
             sd_parser = SDDLParser()
             sd_parser.parse(security_descriptor.to_sddl())
-            sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, debug=self.debug)
+            sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, debug=self.verbose)
         
         self.pprint('EXPLOIT', 'nxc ldap dc_ip -u "user" -p "password" --bloodhound -c all')
 
@@ -807,7 +807,7 @@ class ADcheck:
             display_path = unc_path.replace(rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies', 'SYSVOL\\Policies')
             title = f"\n[bold yellow]{display_path}[/bold yellow]\n"
 
-            sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, debug=self.debug)
+            sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, debug=self.verbose)
         self.pprint('EXPLOIT', '[https://github.com/Hackndo/pyGPOAbuse] python3 pygpoabuse.py "domain/user:password" -dc-ip dc_ip -gpo-id gpo_id')
 
     async def users_description(self):
@@ -815,7 +815,10 @@ class ADcheck:
         for user in self.user_entries:
             if 'description' in user and not self.NEW_WELL_KNOWN_SIDS.get(user.get('objectSid')):
                 result.append(user.get('sAMAccountName'))
-        self.pprint('INFO', f'Users with description : {result}')
+        if self.verbose:
+            self.pprint('INFO', f'Users with description : {result}')
+        else:
+            self.pprint('INFO', f'Users with description : {len(result)}')
         self.pprint('EXPLOIT', 'ldapdomaindump -u "domain\\user" -p "password" --no-grep --no-json dc_ip')
 
     # async def namedpipes(self):
@@ -877,7 +880,7 @@ class ADcheck:
 
                 title = f"\n[bold yellow][+] Listing ACL for share:[/bold yellow] {obj.unc_path}\n"
 
-                sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, debug=self.debug)
+                sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, debug=self.verbose)
         self.pprint('EXPLOIT', '[https://github.com/blacklanternsecurity/MANSPIDER] python3 manspider ip -f "words" -d domain -u "user" -p "password"')
 
     @admin_required
@@ -1263,5 +1266,5 @@ class Options:
         self.do_kerberos = False
         self.output = False
         self.is_admin = False
-        self.debug = False
+        self.verbose = False
         self.exploit = False

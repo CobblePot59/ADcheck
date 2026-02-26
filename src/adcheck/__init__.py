@@ -80,7 +80,8 @@ def parse_arguments():
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', choices=['html', 'md'], help='Generate report file in HTML or Markdown format.')
     parser.add_argument('-e', '--exploit', action='store_true', help='Show exploitation hints for supported modules.')
-    parser.add_argument('--debug', action='store_true', help='Print method name.')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Increase output verbosity (show more detailed information).')
+    parser.add_argument('--debug', action='store_true', help='Enable debug logging.')
     parser.add_argument('--version', action='version', version=f'ADcheck v{__version__}')
 
     args = parser.parse_args()
@@ -147,7 +148,7 @@ async def main():
     options.kerberos = args.kerberos
     options.output = args.output
     options.exploit = args.exploit
-    options.debug = debug
+    options.verbose = args.verbose
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
     ad_client = ADClient(domain=domain, url=url)

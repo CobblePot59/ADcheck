@@ -668,6 +668,7 @@ class ADcheck:
         domains_object = await self.ad_client.get_ADobjects(custom_filter='(objectClass=Domain)', custom_attributes=[b'distinguishedName', b'nTSecurityDescriptor'])
 
         containers =  ous_object + containers_object + domains_object
+        displayed = 0
         for container in containers:
             dn = container.get('distinguishedName')
             raw_sd = container.get('nTSecurityDescriptor')
@@ -675,7 +676,11 @@ class ADcheck:
             security_descriptor = SECURITY_DESCRIPTOR().from_bytes(raw_sd)
             sd_parser = SDDLParser()
             sd_parser.parse(security_descriptor.to_sddl())
-            sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, debug=self.verbose)
+            if sd_parser.to_rich(console=self.console, title=dn, sensitive_trustee=True, verbose=self.verbose):
+                displayed += 1
+
+        if displayed == 0:
+            self.pprint('INFO', 'Control delegations: No rights granted to sensitive trustees')
         
         self.pprint('EXPLOIT', 'nxc ldap dc_ip -u "user" -p "password" --bloodhound -c all')
 
@@ -799,7 +804,8 @@ class ADcheck:
     async def policies_ace(self):
         unc_path = rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies'
         tree = await self.smb_client.list_tree_with_sd(unc_path)
-        
+
+        displayed = 0
         for unc_path, security_descriptor in tree.items():
             sd_parser = SDDLParser()
             sd_parser.parse(security_descriptor.to_sddl())
@@ -807,7 +813,11 @@ class ADcheck:
             display_path = unc_path.replace(rf'\\{self.dc_ip}\sysvol\{self.domain}\Policies', 'SYSVOL\\Policies')
             title = f"\n[bold yellow]{display_path}[/bold yellow]\n"
 
-            sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, debug=self.verbose)
+            if sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, sensitive_rights=True, verbose=self.verbose):
+                displayed += 1
+
+        if displayed == 0:
+            self.pprint('INFO', 'Policies ACL: No rights granted to sensitive trustees')
         self.pprint('EXPLOIT', '[https://github.com/Hackndo/pyGPOAbuse] python3 pygpoabuse.py "domain/user:password" -dc-ip dc_ip -gpo-id gpo_id')
 
     async def users_description(self):
@@ -868,6 +878,7 @@ class ADcheck:
 
     @admin_required
     async def share_ace(self):
+        displayed = 0
         async for obj, otype, err in self.smb_client.smbmachine.enum_all_recursively(depth=1, fetch_share_sd=True):
             if err:
                 self.console.print(f"[red]Error : {err}[/red]")
@@ -880,7 +891,11 @@ class ADcheck:
 
                 title = f"\n[bold yellow][+] Listing ACL for share:[/bold yellow] {obj.unc_path}\n"
 
-                sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, debug=self.verbose)
+                if sd_parser.to_rich(console=self.console, title=title, sensitive_trustee=True, verbose=self.verbose):
+                    displayed += 1
+
+        if displayed == 0:
+            self.pprint('INFO', 'Share ACL: No rights granted to sensitive trustees')
         self.pprint('EXPLOIT', '[https://github.com/blacklanternsecurity/MANSPIDER] python3 manspider ip -f "words" -d domain -u "user" -p "password"')
 
     @admin_required

@@ -152,19 +152,24 @@ async def main():
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
     ad_client = ADClient(domain=domain, url=url)
-    await ad_client.connect()
+    try:
+        await ad_client.connect()
+    except Exception as e:
+        print("\033[31mError: invalid credentials, authentication method or hostname.\033[0m")
+        return
 
     # Check if user is admin
     try:
         domain_sid = (await ad_client.msldap_client.get_ad_info())[0].objectSid
         admin_groups = ['S-1-5-32-544', f'{domain_sid}-512', f'{domain_sid}-519']
-        user_groups = (await ad_client.msldap_client.get_user(username))[0].memberOf
-        if not user_groups:
+        try:
+            user_groups = (await ad_client.msldap_client.get_user(username))[0].memberOf
+            if isinstance(user_groups, str):
+                user_groups = [(await ad_client.msldap_client.get_group_by_dn(user_groups))[0].objectSid]
+            else:
+                user_groups = [(await ad_client.msldap_client.get_group_by_dn(dn))[0].objectSid for dn in user_groups]
+        except Exception as e:
             user_groups = [f'{domain_sid}-513']
-        elif isinstance(user_groups, str):
-            user_groups = [(await ad_client.msldap_client.get_group_by_dn(user_groups))[0].objectSid]
-        else:
-            user_groups = [(await ad_client.msldap_client.get_group_by_dn(dn))[0].objectSid for dn in user_groups]
     finally:
         await ad_client.disconnect()
 

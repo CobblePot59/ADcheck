@@ -48,7 +48,9 @@ CHECKLIST = {
                 ("functional_level", "Get Functional level of domain", "INFO"),
                 ("domain_controlers", "Get Domain Controllers", "INFO"),
                 ("bitlocker", "Computers with bitlocker keys", "INFO"),
-                ("dfsr", "Verify if DFSR SYSVOL is enabled")
+                ("dfsr", "Verify if DFSR SYSVOL is enabled"),
+                ("namedpipes", "Get List of Named pipes", "INFO"),
+                ("spooler", "Verify if Spooler service is enabled on remote target")
             ],
             "Privilege and Trust Management": [
                 ("trusted_for_delegation", "Name of Trust accounts for the delegation"),
@@ -105,7 +107,7 @@ CHECKLIST = {
                 ("reg_ace", "Registry access rights", "INFO"),
                 ("control_delegations", "Get Control delegations by container", "INFO"),
                 ("reg_winrm", "Get WSManConfig", "INFO"),
-                ("share_ace", "List SMB shares and their ACL ")
+                ("share_ace", "Get List SMB shares and their ACL ")
             ]
         },
     ]

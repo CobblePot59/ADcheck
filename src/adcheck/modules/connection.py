@@ -70,6 +70,7 @@ from aiosmb.commons.connection.factory import SMBConnectionFactory
 from aiosmb.commons.interfaces.machine import SMBMachine
 from aiosmb.commons.interfaces.file import SMBFile
 from aiosmb.commons.interfaces.directory import SMBDirectory
+from aiosmb.protocol.smb2.commands.create import CreateDisposition, CreateOptions, ShareAccess, FileAccessMask, FileAttributes
 import os
 
 
@@ -183,6 +184,29 @@ class AioSMBClient:
 
         return tree
 
+    async def list_named_pipes(self):
+        host = self.smbconn.target.get_hostname_or_ip()
+        tree, err = await self.smbconn.tree_connect(f"\\\\{host}\\IPC$")
+        if err:
+            raise err
+        fid, err = await self.smbconn.create(
+            tree.tree_id, "",
+            FileAccessMask.FILE_READ_ATTRIBUTES | FileAccessMask.FILE_READ_DATA,
+            ShareAccess.FILE_SHARE_READ | ShareAccess.FILE_SHARE_WRITE | ShareAccess.FILE_SHARE_DELETE,
+            CreateOptions.FILE_DIRECTORY_FILE | CreateOptions.FILE_SYNCHRONOUS_IO_NONALERT,
+            CreateDisposition.FILE_OPEN,
+            FileAttributes.FILE_ATTRIBUTE_DIRECTORY,
+        )
+        if err:
+            raise err
+        pipes = []
+        while True:
+            entries, err = await self.smbconn.query_directory(tree.tree_id, fid)
+            if err or not entries:
+                break
+            pipes += [e.FileName for e in entries if e.FileName not in ('.', '..')]
+        await self.smbconn.close(tree.tree_id, fid)
+        return sorted(pipes)
 
 from aiosmb.dcerpc.v5.common.service import ServiceStatus
 from aiosmb.dcerpc.v5 import scmr

@@ -153,6 +153,8 @@ Assess domain-wide architecture and security posture:
 - [x] Ldap anonymous bind
 - [x] DFSR SYSVOL
 - [x] Get Trust Relationships
+- [x] Get List of Named pipes
+- [x] Verify if Spooler service is enabled on remote target
 
 </details>
 
@@ -237,8 +239,8 @@ Planned enhancements:
 - [x] Trusts
 - [ ] Azure (Entra ID)
 - [ ] Persistent attack trace (mimikatz, certipy, ticket, dsrm, acl)
-- [ ] List of Named pipes
-- [ ] Verify if Spooler service is enabled on remote target
+- [x] List of Named pipes
+- [x] Verify if Spooler service is enabled on remote target
 - [x] Outputs a human readable summary of acls
 
 ---

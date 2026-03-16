@@ -200,8 +200,8 @@ Each finding is directly interpretable—no manual analysis required.
 
 ```bash
 # Install UV (fastest Python package manager)
-pip install uv
-uv tool update-shell && source ~/.zshenv
+pip install uv --break-system-packages
+uv tool update-shell && source ~/.zshrc
 ```
 
 ### Installation

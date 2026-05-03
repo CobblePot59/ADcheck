@@ -134,15 +134,17 @@ class ADcheck:
         self.pprint('EXPLOIT', f'https://github.com/danielmiessler/SecLists/tree/master/Passwords/Common-Credentials\n{'':9}https://www.netexec.wiki/smb-protocol/password-spraying')
 
     async def native_admin_logon(self):
+        admin_lastLogon = None
         for user in self.user_entries:
             if user.get('objectSid') == f'{self.domain_sid.rstrip("-")}-500':
                 admin_lastLogon = user.get('lastLogon')
-        admin_lastLogon_date = datetime.strptime(str(admin_lastLogon), '%Y-%m-%d %H:%M:%S.%f%z').date()
-        ndays = (datetime.now().date() - admin_lastLogon_date).days
 
-        result = False
-        if ndays < 30:
-            result = True
+        if admin_lastLogon is None:
+            self.pprint(False, f'The native administrator account has never logged on')
+            return
+
+        ndays = (datetime.now().date() - admin_lastLogon.date()).days
+        result = ndays < 30
         self.pprint(result, f'The native administrator account has been used recently : {ndays} day(s) ago')
         self.pprint('EXPLOIT', 'bash seth.sh eth0 <ATTACKER IP> <ADMIN IP> <DC IP>')
 
@@ -174,20 +176,18 @@ class ADcheck:
         self.pprint('EXPLOIT', 'impacket-secretsdump "domain/user:password@ip"')
 
     async def ldap_signing(self):
-        from ldap3.core.exceptions import LDAPBindError
-
-        ad_client = None
+        ad_client = ADClient(domain=self.domain, url=self.url.replace(self.url.split('+')[0], 'ldap'))
         try:
-            url = self.url.replace(self.url.split('://')[0], 'ldap+simple')
-            ad_client = ADClient(domain=self.domain, url=url)
-            await ad_client.connect()
-            self.pprint(True, f'LDAP signature was required on target : False')
-        except LDAPBindError as e:
-            if 'strongerAuthRequired:' in str(e):
-                self.pprint(False, f'LDAP signature was required on target : True')
+            await ad_client.connect(disable_signing=True)
+            err = str(ad_client.msldap_client_signing_err)
+            if 'stronger' in err.lower():
+                self.pprint(False, 'LDAP signature was required on target : True')
+            else:
+                self.pprint(True, 'LDAP signature was required on target : False')
+        except Exception as e:
+            self.pprint(None, f'LDAP signing check failed: {e}')
         finally:
-            if ad_client:
-                await ad_client.disconnect()
+            await ad_client.disconnect()
         self.pprint('EXPLOIT', 'impacket-ntlmrelayx -t ldap://dc_ip --escalate-user user')
 
     async def channel_binding(self):
@@ -195,15 +195,13 @@ class ADcheck:
         try:
             await ad_client.connect(cb_data=b'\x00' * 73)
             err = str(ad_client.msldap_client_conn_err)
-
-            if 'data 80090346' in err:
-                result = True
-            else:
-                result = False
-            self.pprint(result, f'Channel binding enforced : {result}', reverse=True)
+        except (OSError, TimeoutError, asyncio.TimeoutError) as e:
+            self.pprint(False, f'LDAPS not configured on target')
         except Exception as e:
-            if 'Connect to the LDAP server before binding.' in str(e):
-                self.pprint(True, f'Channel binding enforced : False')
+            if 'data 80090346' in str(e):
+                self.pprint(False, 'Channel binding enforced : True')
+            else:
+                self.pprint(True, 'Channel binding enforced : False')
         finally:
             await ad_client.disconnect()
         self.pprint('EXPLOIT', 'impacket-ntlmrelayx -t ldap://dc_ip --escalate-user user')
@@ -561,7 +559,7 @@ class ADcheck:
 
     async def supported_encryption(self):
         dcs = await self.domain_controlers(_return=True)
-        encryption_values = [int(dc.get('msDS-SupportedEncryptionTypes')) for dc in dcs]
+        encryption_values = [int(dc.get('msDS-SupportedEncryptionTypes') or 0) for dc in dcs]
         dcs_encryption = [f"{dc.get('sAMAccountName')}: [{SUPPORTED_ENCRYPTION.get(value)}]" for dc, value in zip(dcs, encryption_values)]
         result = not all(value in {8, 16, 24} for value in encryption_values)
         self.pprint(result, f'Supported encryption by Domain Controllers : \n{json.dumps(dcs_encryption, indent=4)}')
@@ -688,7 +686,11 @@ class ADcheck:
     async def gpp_password(self):
         result = []
         for file_path in Path('GPOS').rglob('*.xml'):
-            for line in open(file_path):
+            try:
+                lines = open(file_path).readlines()
+            except (UnicodeDecodeError, OSError):
+                continue
+            for line in lines:
                 if 'cpassword' in line:
                     entry = Path(file_path).parts[1]
                     for policy in self.policies_entries:
@@ -714,10 +716,13 @@ class ADcheck:
     async def kerberos_hardened(self):
         result = {}
         for file_path in Path('GPOS').rglob('*.inf'):
-            for line in open(file_path, encoding='utf-16'):
-                match = re.match(r"(MaxTicketAge|MaxRenewAge|MaxServiceAge|MaxClockSkew|TicketValidateClient)\s*=\s*(\d+)", line)
-                if match:
-                    result[match.group(1)] = match.group(2)
+            try:
+                for line in open(file_path, encoding='utf-16'):
+                    match = re.match(r"(MaxTicketAge|MaxRenewAge|MaxServiceAge|MaxClockSkew|TicketValidateClient)\s*=\s*(\d+)", line)
+                    if match:
+                        result[match.group(1)] = match.group(2)
+            except (UnicodeDecodeError, OSError):
+                continue
         self.pprint('INFO', f'Kerberos config :\n{json.dumps(result, indent=4)}')
 
     @admin_required
@@ -759,6 +764,8 @@ class ADcheck:
         for lines in gpo_content:
             for line in lines.strip().split('\n'):
                 parts = line.split('=')
+                if len(parts) < 2:
+                    continue
                 key = parts[0].strip()
                 values = []
                 for sid in parts[1].split(','):
@@ -921,10 +928,13 @@ class ADcheck:
         key_types = {6: 'TYPE_RSA', 10: 'TYPE_DSA', 16: 'TYPE_DH', 408: 'TYPE_EC', 480: 'TYPE_SM2'}
 
         # Get the list of trusted CAs
-        async with httpx.AsyncClient() as client:
-            response = await client.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
-
-        trusted_ca = {row.get('SHA-256 Fingerprint'): row for row in DictReader(StringIO(response.text))}
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get('https://ccadb-public.secure.force.com/microsoft/IncludedCACertificateReportForMSFTCSV')
+            trusted_ca = {row.get('SHA-256 Fingerprint'): row for row in DictReader(StringIO(response.text))}
+        except (httpx.RequestError, httpx.TimeoutException) as e:
+            self.pprint('INFO', f'Could not fetch trusted CA list: {e}')
+            return
 
         untrusted_ca = []
         disabled_certificates = []

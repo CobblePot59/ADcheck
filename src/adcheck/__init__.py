@@ -111,6 +111,12 @@ def parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, opti
 async def main():
     from getpass import getpass
 
+    loop = asyncio.get_running_loop()
+    loop.set_exception_handler(
+        lambda l, ctx: None if 'Task was destroyed but it is pending' in ctx.get('message', '')
+        else l.default_exception_handler(ctx)
+    )
+
     start_time = time.time()
     args = parse_arguments()
 
@@ -151,12 +157,37 @@ async def main():
     options.verbose = args.verbose
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
+
+    protocol = 'LDAPS' if options.secure else 'LDAP'
+    if options.kerberos:
+        auth_method = 'Kerberos+AES' if aes_key else ('Kerberos+RC4' if hashes else 'Kerberos')
+    else:
+        auth_method = 'NTLM+Hash' if hashes else 'NTLM'
+    target = hostname or dc_ip
+    print(f"\033[36mTarget\033[0m    : {target} ({dc_ip})" if hostname else f"\033[36mTarget\033[0m    : {target}")
+    print(f"\033[36mDomain\033[0m    : {domain}")
+    print(f"\033[36mUsername\033[0m  : {username}")
+    print(f"\033[36mProtocol\033[0m  : {protocol}")
+    print(f"\033[36mAuth\033[0m      : {auth_method}")
+    print()
+
     ad_client = ADClient(domain=domain, url=url)
     try:
         await ad_client.connect()
-    except Exception as e:
-        print("\033[31mError: invalid credentials, authentication method or hostname.\033[0m")
+    except (OSError, TimeoutError, asyncio.TimeoutError) as e:
+        print("\033[31mError: unable to reach the domain controller.\033[0m")
         return
+    except Exception as e:
+        print("\033[31mError: invalid credentials or authentication method.\033[0m")
+        return
+
+    server_info = ad_client.msldap_client.get_server_info()
+    if server_info:
+        dc_domain_dn = server_info.get('defaultNamingContext', '').lower()
+        if dc_domain_dn and dc_domain_dn != ad_client.base_dn.lower():
+            print(f"\033[31mError: domain '{domain}' does not match the DC's domain '{dc_domain_dn}'.\033[0m")
+            await ad_client.disconnect()
+            return
 
     # Check if user is admin
     try:

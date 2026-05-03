@@ -11,10 +11,14 @@ class ADClient:
         self.msldap_client = None
         self.msldap_client_conn_err = None
 
-    async def connect(self, cb_data=None):
+    async def connect(self, cb_data=None, disable_signing=False):
         self.msldap_conn = LDAPConnectionFactory.from_url(self.url).get_connection()
-        await self.msldap_conn.connect()
-        await self.msldap_conn.bind()
+        _, err = await self.msldap_conn.connect()
+        if err is not None:
+            raise err
+        _, err = await self.msldap_conn.bind()
+        if err is not None:
+            raise err
 
         self.msldap_client = LDAPConnectionFactory.from_url(self.url).get_client()
 
@@ -27,7 +31,18 @@ class ADClient:
             finally:
                 await msldap_client_conn.disconnect()
 
-        await self.msldap_client.connect()
+        if disable_signing:
+            msldap_client_conn = MSLDAPClientConnection(self.msldap_client.target, self.msldap_client.creds)
+            msldap_client_conn._disable_signing = True
+            try:
+                await msldap_client_conn.connect()
+                _, self.msldap_client_signing_err = await msldap_client_conn.bind()
+            finally:
+                await msldap_client_conn.disconnect()
+
+        _, err = await self.msldap_client.connect()
+        if err is not None:
+            raise err
         return self.msldap_client
 
     async def disconnect(self):
@@ -238,8 +253,8 @@ class SMBRegClient:
                     break
             else:
                 raise Exception(f"Get RegAPI error after retry: {err}")
-        except Exception:
-            pass
+        except Exception as e:
+            logging.warning(f"RemoteRegistry connection failed: {e}")
 
     async def disconnect(self):
         await self.smb_client.disconnect()

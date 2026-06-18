@@ -4,181 +4,105 @@
   <meta charset="UTF-8">
   <title>ADcheck Report - {{ domain }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background-color: white;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-    }
+    :root { --ink:#1e2a38; --muted:#5a6b7b; }
+    html, body { height:100%; margin:0; font-family:'Roboto',sans-serif; background:#f4f6f8; color:#222; display:flex; flex-direction:column; }
+    header { background:linear-gradient(90deg,#1e2a38,#2f3e4d); color:#fff; padding:1.5em 2em; text-align:center; }
+    header h1 { margin:0; font-size:1.8em; }
+    header p { margin:.5em 0 0; font-size:.95em; color:#ccc; }
+    .container { padding:2em; max-width:1200px; margin:auto; flex:1; width:100%; box-sizing:border-box; }
 
-    header {
-      background: linear-gradient(90deg, #1e2a38, #2f3e4d);
-      color: white;
-      padding: 1.5em 2em;
-      text-align: center;
-    }
+    /* summary banner */
+    .summary-banner { display:flex; flex-wrap:wrap; gap:1.5em; margin-bottom:2em; }
+    .gauge { flex:0 0 200px; background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:1.5em; text-align:center; }
+    .gauge .score { font-size:3em; font-weight:700; line-height:1; }
+    .gauge .score small { font-size:.35em; font-weight:400; color:#888; }
+    .gauge .label { margin-top:.4em; color:#555; font-size:.9em; }
+    .score-good{color:#2a9d8f}.score-fair{color:#e9c46a}.score-poor{color:#f4a261}.score-bad{color:#c93131}
 
-    header h1 {
-      margin: 0;
-      font-size: 1.8em;
-    }
+    .sev-cards { flex:1 1 400px; display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1em; }
+    .sev-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:1em; text-align:center; border-top:4px solid #ccc; cursor:pointer; transition:transform .15s,box-shadow .15s; }
+    .sev-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.14); }
+    .sev-card.active { outline:3px solid var(--ink); outline-offset:2px; }
+    .sev-card .count { font-size:2em; font-weight:700; }
+    .sev-card .name { font-size:.85em; color:#555; text-transform:uppercase; letter-spacing:.5px; }
+    .sev-card.all  { border-top-color:#1e2a38; } .sev-card.all .count{color:#1e2a38}
+    .sev-card.crit { border-top-color:#7b0d0d; } .sev-card.crit .count{color:#7b0d0d}
+    .sev-card.high { border-top-color:#c93131; } .sev-card.high .count{color:#c93131}
+    .sev-card.med  { border-top-color:#f4a261; } .sev-card.med .count{color:#f4a261}
+    .sev-card.low  { border-top-color:#4a90d9; } .sev-card.low .count{color:#4a90d9}
 
-    header p {
-      margin: 0.5em 0 0;
-      font-size: 0.95em;
-      color: #ccc;
-    }
+    h2.block-title { color:var(--ink); margin:1.5em 0 .3em; }
+    .hint { color:var(--muted); font-size:.9em; margin:0 0 1em; }
 
-    .container {
-      padding: 2em;
-      max-width: 1200px;
-      margin: auto;
-      flex: 1;
-      width: 100%;
-    }
+    /* category groups */
+    .cat-group { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:1.2em; overflow:hidden; }
+    .cat-head { display:flex; align-items:center; gap:.7em; padding:.9em 1.2em; background:#f0f3f6; border-left:6px solid #ccc; cursor:pointer; user-select:none; }
+    .cat-head:hover { background:#e9eef3; }
+    .cat-head .cat-toggle { font-size:1.1em; color:var(--muted); transition:transform .2s; width:1em; display:inline-block; }
+    .cat-group.collapsed .cat-toggle { transform:rotate(-90deg); }
+    .cat-head .cat-title { font-weight:700; color:var(--ink); font-size:1.05em; }
+    .cat-head .cat-count { color:var(--muted); font-size:.85em; }
+    .cat-group.crit .cat-head{border-left-color:#7b0d0d}.cat-group.high .cat-head{border-left-color:#c93131}
+    .cat-group.med .cat-head{border-left-color:#f4a261}.cat-group.low .cat-head{border-left-color:#4a90d9}
+    .cat-group.ok .cat-head{border-left-color:#2a9d8f}
+    .cat-body { display:block; }
+    .cat-group.collapsed .cat-body { display:none; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5em;
-    }
+    .finding-row { display:flex; align-items:center; gap:1em; padding:.7em 1.2em; border-top:1px solid #eee; cursor:pointer; transition:background .12s; }
+    .finding-row:hover { background:#f6f9fc; }
+    .finding-row .msg { flex:1; }
+    .finding-row .msg .vector { display:block; margin-top:3px; font-size:.72em; color:var(--muted); background:#eef1f4; padding:1px 6px; border-radius:4px; font-family:Consolas,Menlo,monospace; word-break:break-all; width:fit-content; }
+    .finding-row .chev { color:#bbb; font-size:1.2em; }
 
-    .card {
-      border-radius: 12px;
-      padding: 1.5em;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-      background-color: white;
-    }
+    .badge { display:inline-block; min-width:42px; text-align:center; padding:3px 8px; border-radius:6px; font-weight:700; color:#fff; font-size:.85em; }
+    .sev-critical{background:#7b0d0d}.sev-high{background:#c93131}.sev-medium{background:#f4a261;color:#3a2400}.sev-low{background:#4a90d9}.sev-none{background:#2a9d8f}
+    .sev-pill { display:inline-block; padding:1px 8px; border-radius:10px; font-size:.72em; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
 
-    .card:hover {
-      transform: scale(1.02);
-    }
+    .empty { padding:1.2em; color:#2a9d8f; }
+    .data-table { width:100%; border-collapse:collapse; font-size:.88em; margin:.8em 0 1em; }
+    .data-table th { background:#f0f3f6; color:var(--ink); text-align:left; padding:.5em .8em; border-bottom:2px solid #d0d9e2; font-weight:600; }
+    .data-table td { padding:.45em .8em; border-bottom:1px solid #eee; vertical-align:top; word-break:break-word; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .section-label { display:flex; align-items:center; gap:.4em; font-size:.72em; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:.5em 1.2em; border-top:2px solid #dee4ed; }
+    .section-label.first { border-top:none; }
+    .section-label.lbl-failed { background:#fdf0f0; border-top-color:#f0c0c0; color:#8b1a1a; }
+    .section-label.lbl-passed { background:#f0faf5; border-top-color:#b0dfc8; color:#1a6b3a; }
+    .section-label.lbl-info   { background:#eef3fb; border-top-color:#b0c8e8; color:#1a3a6b; }
+    .finding-row.row-static { cursor:default; }
+    .finding-row.row-static:hover { background:transparent; }
+    .info-item { padding:.55em 1.2em .7em; border-top:1px solid #eee; }
+    .info-head { display:flex; align-items:center; gap:.7em; margin-bottom:.1em; }
+    .badge-info { background:#5a6b7b; }
+    pre.info-pre { background:#11161c; color:#e6edf3; padding:.9em 1em; border-radius:8px; overflow-x:auto; font-size:.8em; line-height:1.5; margin:.4em 0 0 3.5em; white-space:pre-wrap; word-break:break-word; }
+    .info-item .table-title { font-size:.8em; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:.1em 0 .3em; }
 
-    .card h3 {
-      margin-top: 0;
-      font-size: 1.2em;
-    }
+    /* slide-in detail panel */
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
+    .overlay.open { opacity:1; pointer-events:auto; }
+    .panel { position:fixed; top:0; right:0; height:100%; width:min(560px,92vw); background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,.2); transform:translateX(100%); transition:transform .25s; z-index:50; display:flex; flex-direction:column; }
+    .panel.open { transform:translateX(0); }
+    .panel-head { padding:1.3em 1.5em; background:linear-gradient(90deg,#1e2a38,#2f3e4d); color:#fff; }
+    .panel-head .ph-top { display:flex; align-items:center; gap:.6em; margin-bottom:.6em; }
+    .panel-head h3 { margin:0; font-size:1.15em; line-height:1.35; }
+    .panel-close { position:absolute; top:1.1em; right:1.2em; background:transparent; border:none; color:#fff; font-size:1.6em; cursor:pointer; line-height:1; }
+    .panel-body { padding:1.5em; overflow-y:auto; }
+    .field { margin-bottom:1.4em; }
+    .field .k { font-size:.75em; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:600; margin-bottom:.35em; }
+    .field .v { font-size:.97em; line-height:1.5; }
+    .field .state { display:inline-block; padding:2px 10px; border-radius:6px; background:#fce8e8; color:#c93131; font-weight:700; font-size:.85em; }
+    .field pre { background:#11161c; color:#e6edf3; padding:.9em 1em; border-radius:8px; overflow-x:auto; font-size:.82em; line-height:1.5; margin:0; white-space:pre-wrap; word-break:break-word; }
+    .field code.inl { background:#eef1f4; padding:1px 6px; border-radius:4px; font-family:Consolas,Menlo,monospace; font-size:.8em; word-break:break-all; }
+    .field a { color:#1f6feb; word-break:break-all; }
+    .copy-btn { float:right; background:#2f3e4d; color:#fff; border:none; border-radius:5px; padding:3px 9px; font-size:.75em; cursor:pointer; }
 
-    .score {
-      font-size: 2em;
-      font-weight: bold;
-    }
-
-    .score.red { color: #c93131; }
-    .score.orange { color: #f4a261; }
-    .score.yellow { color: #e9c46a; }
-    .score.green { color: #2a9d8f; }
-
-    .hidden {
-      display: none;
-    }
-
-    .detail-view {
-      padding: 2em;
-    }
-
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .back-btn {
-      padding: 0.5em 1em;
-      background-color: #1e2a38;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .check-list {
-      margin-top: 2em;
-    }
-
-    .check-text {
-      margin-bottom: 0.8em;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .green-text { color: #26b260; }
-    .red-text { color: #c93131; }
-    .black-text { color: #1e2a38; }
-
-    summary {
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 2em;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1em 0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    table th {
-      background-color: #1e2a38;
-      color: white;
-      padding: 12px;
-      text-align: left;
-      font-weight: 600;
-      border: 1px solid #ddd;
-    }
-
-    table td {
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      background-color: white;
-    }
-
-    table tbody tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    table tbody tr:hover {
-      background-color: #f0f0f0;
-    }
-
-    .section h3 {
-      margin-top: 2em;
-      margin-bottom: 0.5em;
-      color: #1e2a38;
-    }
-
-    footer {
-      background: #1e2a38;
-      color: #ccc;
-      text-align: center;
-      padding: 1.2em;
-      font-size: 0.85em;
-    }
-
-    footer a {
-      color: #4fd1c5;
-      text-decoration: none;
-    }
-
-    footer strong {
-      color: #4fd1c5;
-    }
-
-    @media (max-width: 768px) {
-      .detail-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1em;
-      }
-    }
+    .toggle-btn { display:inline-flex; align-items:center; gap:.35em; padding:.3em .85em; border-radius:6px; border:1px solid #c8d3dc; background:#fff; color:var(--ink); font-size:.82em; font-weight:600; cursor:pointer; text-decoration:none; transition:background .15s,border-color .15s; }
+    .toggle-btn:hover { background:#eef1f4; border-color:#a0b0bc; }
+    .toggle-btn svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2.5; }
+    .toggle-bar { display:flex; gap:.6em; margin-bottom:1em; }
+    footer { background:#1e2a38; color:#ccc; text-align:center; padding:1.2em; font-size:.85em; }
+    footer a, footer strong { color:#4fd1c5; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -190,171 +114,211 @@
 
 <div class="container">
 
-  <div id="summary-view">
-    <h2 style="text-align:center; margin-bottom: 1.5em;">Global Score :
-      <span class="score {{ 'green' if scores.total >= 75 else 'yellow' if scores.total >= 50 else 'orange' if scores.total >= 25 else 'red' }}">
-        {{ scores.total }}%
-      </span>
-    </h2>
+  {% set score_class = 'score-good' if global_score >= 75 else 'score-fair' if global_score >= 50 else 'score-poor' if global_score >= 25 else 'score-bad' %}
 
-    <div class="cards">
-      <div class="card" onclick="showDetail('privs')">
-        <h3>Privilege and Trust Management</h3>
-        <div class="score {{ 'green' if scores.privs >= 75 else 'yellow' if scores.privs >= 50 else 'orange' if scores.privs >= 25 else 'red' }}">{{ scores.privs }}%</div>
-      </div>
-      <div class="card" onclick="showDetail('user')">
-        <h3>User Account Management</h3>
-        <div class="score {{ 'green' if scores.user >= 75 else 'yellow' if scores.user >= 50 else 'orange' if scores.user >= 25 else 'red' }}">{{ scores.user }}%</div>
-      </div>
-      <div class="card" onclick="showDetail('domain')">
-        <h3>Computer and Domain Management</h3>
-        <div class="score {{ 'green' if scores.domain >= 75 else 'yellow' if scores.domain >= 50 else 'orange' if scores.domain >= 25 else 'red' }}">{{ scores.domain }}%</div>
-      </div>
-      <div class="card" onclick="showDetail('policy')">
-        <h3>Audit and Policy Management</h3>
-        <div class="score {{ 'green' if scores.policy >= 75 else 'yellow' if scores.policy >= 50 else 'orange' if scores.policy >= 25 else 'red' }}">{{ scores.policy }}%</div>
-      </div>
+  <div class="summary-banner">
+    <div class="gauge">
+      <div class="score {{ score_class }}">{{ global_score }}<small>/100</small></div>
+      <div class="label">CVSS-weighted posture</div>
+      <div class="label" style="margin-top:.6em;">Avg CVSS : <strong>{{ avg_cvss }}</strong></div>
+      <div class="label">Failed checks : <strong>{{ total_failed }}</strong></div>
+    </div>
+    <div class="sev-cards">
+      <div class="sev-card all active" data-sev="all" onclick="filterSev('all',this)"><div class="count">{{ total_failed }}</div><div class="name">All</div></div>
+      <div class="sev-card crit" data-sev="Critical" onclick="filterSev('Critical',this)"><div class="count">{{ sev_counts.Critical }}</div><div class="name">Critical</div></div>
+      <div class="sev-card high" data-sev="High" onclick="filterSev('High',this)"><div class="count">{{ sev_counts.High }}</div><div class="name">High</div></div>
+      <div class="sev-card med" data-sev="Medium" onclick="filterSev('Medium',this)"><div class="count">{{ sev_counts.Medium }}</div><div class="name">Medium</div></div>
+      <div class="sev-card low" data-sev="Low" onclick="filterSev('Low',this)"><div class="count">{{ sev_counts.Low }}</div><div class="name">Low</div></div>
     </div>
   </div>
 
-  <div id="detail-view" class="hidden">
-    <div class="detail-header">
-      <h2 id="detail-title"></h2>
-      <button class="back-btn" onclick="goBack()">← Back</button>
+  <h2 class="block-title">Findings by category</h2>
+  <div class="toggle-bar">
+    <a href="#" class="toggle-btn" onclick="toggleAll(true);return false;"><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg>Collapse all</a>
+    <a href="#" class="toggle-btn" onclick="toggleAll(false);return false;"><svg viewBox="0 0 12 12"><path d="M2 8l4-4 4 4"/></svg>Expand all</a>
+  </div>
+
+  <div id="cat-container">
+  {% for cat in categories_ordered %}
+  {% set cc = 'crit' if cat.worst >= 9 else 'high' if cat.worst >= 7 else 'med' if cat.worst >= 4 else 'low' if cat.worst > 0 else 'ok' %}
+  <div class="cat-group {{ cc }}" data-category="{{ cat.title }}">
+    <div class="cat-head" onclick="toggleCat(this)">
+      <span class="cat-toggle">▾</span>
+      <span class="cat-title">{{ cat.title }}</span>
+      <span class="cat-count">—
+        {%- if cat.findings %} {{ cat.findings|length }} failed{%- if cat.passed or cat.info or cat.tables %},{%- endif %}{%- endif %}
+        {%- if cat.passed %} {{ cat.passed|length }} passed{%- if cat.info or cat.tables %},{%- endif %}{%- endif %}
+        {%- if cat.info %} {{ cat.info|length }} info{%- if cat.tables %},{%- endif %}{%- endif %}
+        {%- if cat.tables %} {{ cat.tables|length }} table(s){%- endif %}
+      </span>
     </div>
-
-    <details open>
-      <summary>❌ Ko</summary>
-      <div id="red-list" class="check-list"></div>
-    </details>
-
-    <details>
-      <summary>✅ Ok</summary>
-      <div id="green-list" class="check-list"></div>
-    </details>
-
-    <details>
-      <summary>ℹ️ Info</summary>
-      <div id="black-list" class="check-list"></div>
-      <div id="tables-container"></div>
-    </details>
+    <div class="cat-body">
+    {% if cat.findings %}
+    <div class="section-label lbl-failed first">✗ Failed checks</div>
+    {% for f in cat.findings %}
+    <div class="finding-row" data-sev="{{ f.severity }}" onclick='openPanel({{ loop.index0 }}, "{{ cat.title|replace('"','\\"') }}")'>
+      <span class="badge {{ f.css }}">{{ '%.1f'|format(f.cvss) }}</span>
+      <span class="sev-pill {{ f.css }}">{{ f.severity }}</span>
+      <span class="msg">
+        {{ f.message.split('\n')[0] }}
+        <span class="vector">{{ f.vector }}</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if cat.passed %}
+    <div class="section-label lbl-passed{% if not cat.findings %} first{% endif %}">✓ Passed checks</div>
+    {% for item in cat.passed %}
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">{{ item.message.split('\n')[0] }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if cat.info or cat.tables %}
+    <div class="section-label lbl-info{% if not cat.findings and not cat.passed %} first{% endif %}">ℹ Info</div>
+    {% for item in cat.info %}
+    {% set lines = item.message.split('\n') %}
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">{{ lines[0] }}</span>
+      </div>
+      {% if lines|length > 1 %}
+      <pre class="info-pre">{{ lines[1:]|join('\n') }}</pre>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% for table in cat.tables %}
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <div class="table-title">{{ table.title }}</div>
+      </div>
+      <table class="data-table">
+        <thead><tr>{% for h in table.headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in table.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+    </div>
+    {% endfor %}
+    {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="cat-group"><div class="empty">No checks found. ✅</div></div>
+  {% endfor %}
   </div>
 </div>
+
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<aside class="panel" id="panel">
+  <div class="panel-head">
+    <button class="panel-close" onclick="closePanel()">×</button>
+    <div class="ph-top">
+      <span class="badge" id="p-badge"></span>
+      <span class="sev-pill" id="p-sev"></span>
+    </div>
+    <h3 id="p-title"></h3>
+  </div>
+  <div class="panel-body">
+    <div class="field"><div class="k">Category</div><div class="v" id="p-cat"></div></div>
+    <div class="field"><div class="k">State</div><div class="v"><span class="state" id="p-state"></span></div></div>
+    <div class="field"><div class="k">CVSS vector</div><div class="v"><code class="inl" id="p-vector"></code></div></div>
+    <div class="field"><div class="k">Exploit command <button class="copy-btn" onclick="copyExploit()">copy</button></div><div class="v" id="p-exploit"></div></div>
+    <div class="field"><div class="k">Fix</div><div class="v" id="p-fix"></div></div>
+  </div>
+</aside>
 
 <footer>
   Report generated by <strong>CobblePot59</strong> — <a href="https://github.com/CobblePot59/ADcheck" target="_blank">GitHub ADcheck</a>
 </footer>
 
 <script>
-  const data = {
-    "privs": {{ privs_list|tojson }},
-    "user": {{ user_list|tojson }},
-    "domain": {{ domain_list|tojson }},
-    "policy": {{ policy_list|tojson }}
-  };
+  const FINDINGS = {{ top_findings|tojson }};
 
-  const tables = {
-    "privs": {{ privs_tables|tojson }},
-    "user": {{ user_tables|tojson }},
-    "domain": {{ domain_tables|tojson }},
-    "policy": {{ policy_tables|tojson }}
-  };
+  function isUrl(s){ return /^https?:\/\//i.test(s.trim()) || /^\[https?:\/\//i.test(s.trim()); }
 
-  function showDetail(type) {
-    const mapping = {
-      "privs": "Privilege and Trust Management",
-      "user": "User Account Management",
-      "domain": "Computer and Domain Management",
-      "policy": "Audit and Policy Management",
-    };
+  function findByKey(category, idx){
+    const inCat = FINDINGS.filter(f => f.category === category);
+    return inCat[idx];
+  }
 
-    document.getElementById("summary-view").classList.add("hidden");
-    document.getElementById("detail-view").classList.remove("hidden");
-    document.getElementById("detail-title").innerText = mapping[type];
+  let currentExploit = "";
 
-    const sectionData = data[type] || [];
-    const sectionTables = tables[type] || [];
+  function openPanel(idx, category){
+    const f = findByKey(category, idx);
+    if(!f) return;
+    document.getElementById('p-title').textContent = (f.message.split('\n')[0]) || f.name;
+    const badge = document.getElementById('p-badge');
+    badge.textContent = f.cvss.toFixed(1); badge.className = 'badge ' + f.css;
+    const sev = document.getElementById('p-sev');
+    sev.textContent = f.severity; sev.className = 'sev-pill ' + f.css;
+    document.getElementById('p-cat').textContent = f.category;
+    document.getElementById('p-state').textContent = f.state;
+    document.getElementById('p-vector').textContent = f.vector;
 
-    const redList = document.getElementById("red-list");
-    const greenList = document.getElementById("green-list");
-    const blackList = document.getElementById("black-list");
-    const tablesContainer = document.getElementById("tables-container");
+    currentExploit = f.exploit || "N/A";
+    const atk = document.getElementById('p-exploit');
+    if(isUrl(currentExploit)){
+      const clean = currentExploit.replace(/^\[/,'').replace(/\]$/,'');
+      atk.innerHTML = '<a href="'+clean+'" target="_blank">'+clean+'</a>';
+    } else {
+      atk.innerHTML = '<pre>'+escapeHtml(currentExploit)+'</pre>';
+    }
+    document.getElementById('p-fix').textContent = f.fix || "";
 
-    redList.innerHTML = '';
-    greenList.innerHTML = '';
-    blackList.innerHTML = '';
-    tablesContainer.innerHTML = '';
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('panel').classList.add('open');
+  }
 
-    sectionData.forEach(item => {
-      let div = document.createElement("div");
-      let content = item.message;
+  function closePanel(){
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('panel').classList.remove('open');
+  }
 
-      if (content.includes("{") && content.includes("}")) {
-        try {
-          const jsonStart = content.indexOf('{');
-          const json = JSON.stringify(JSON.parse(content.slice(jsonStart)), null, 2);
-          content = content.slice(0, jsonStart) + '<pre>' + json + '</pre>';
-        } catch (e) {}
-      }
+  function copyExploit(){
+    navigator.clipboard && navigator.clipboard.writeText(currentExploit);
+  }
 
-      div.classList.add("check-text");
+  function toggleCat(headEl){
+    headEl.parentElement.classList.toggle('collapsed');
+  }
 
-      if (item.color === "green") {
-        div.classList.add("green-text");
-        div.innerHTML = `✅ ${content}`;
-        greenList.appendChild(div);
-      } else if (item.color === "black") {
-        div.classList.add("black-text");
-        div.innerHTML = `ℹ️ ${content}`;
-        blackList.appendChild(div);
+  function toggleAll(collapse){
+    document.querySelectorAll('#cat-container .cat-group').forEach(g => {
+      g.classList.toggle('collapsed', collapse);
+    });
+  }
+
+  function filterSev(sev, el){
+    document.querySelectorAll('.sev-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const showAll = sev === 'all';
+    document.querySelectorAll('#cat-container .cat-group').forEach(group => {
+      group.querySelectorAll('.section-label.lbl-passed, .finding-row.row-static, .section-label.lbl-info, .info-item').forEach(node => {
+        node.style.display = showAll ? '' : 'none';
+      });
+      let visible = 0;
+      group.querySelectorAll('.finding-row[data-sev]').forEach(row => {
+        const show = showAll || row.getAttribute('data-sev') === sev;
+        row.style.display = show ? '' : 'none';
+        if(show) visible++;
+      });
+      if(showAll){
+        group.style.display = '';
       } else {
-        div.classList.add("red-text");
-        div.innerHTML = `❌ ${content}`;
-        redList.appendChild(div);
+        group.style.display = visible ? '' : 'none';
+        if(visible) group.classList.remove('collapsed');
       }
     });
-
-    sectionTables.forEach(table => {
-      const section = document.createElement("div");
-      section.classList.add("section");
-      
-      const title = document.createElement("p");
-      title.textContent = "ℹ️ " + table.title;
-      section.appendChild(title);
-
-      const tableEl = document.createElement("table");
-      
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      table.headers.forEach(header => {
-        const th = document.createElement("th");
-        th.textContent = header;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      tableEl.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      table.rows.forEach(row => {
-        const tr = document.createElement("tr");
-        row.forEach(cell => {
-          const td = document.createElement("td");
-          td.textContent = cell || '—';
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      tableEl.appendChild(tbody);
-
-      section.appendChild(tableEl);
-      tablesContainer.appendChild(section);
-    });
   }
 
-  function goBack() {
-    document.getElementById("detail-view").classList.add("hidden");
-    document.getElementById("summary-view").classList.remove("hidden");
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
 </script>
 
 </body>

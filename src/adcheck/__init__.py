@@ -1,6 +1,6 @@
 from adcheck.modules.connection import ADClient
 from adcheck.main import ADcheck, Options
-from adcheck.modules.constants import CHECKLIST
+from adcheck.modules.constants import CHECKLIST, ANSI
 from adcheck.modules.report import ReportGenerator
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from importlib.metadata import version
@@ -13,6 +13,7 @@ __version__ = version("ADcheck")
 
 async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_key=None, debug=False):
     i = 0
+    quiet = getattr(obj, 'quiet', False)
     await getattr(obj, 'get_policies')()
 
     excluded_methods = ['get_policies']
@@ -33,36 +34,38 @@ async def launch_all_methods(obj, is_admin=False, module=None, hashes=None, aes_
                 await getattr(obj, module)()
         except Exception as e:
             if debug:
-                print(f"\033[33m{module}: {e}\033[0m")
+                print(f"{ANSI['yellow']}{module}: {e}{ANSI['reset']}")
             else:
-                print(f"\033[33m{module}: error\033[0m")
+                print(f"{ANSI['yellow']}{module}: error{ANSI['reset']}")
     else:
         for section, modules in CHECKLIST_EXEC.items():
-            print(f"\n\033[33m{'=' * 20} {section} {'=' * 20}\033[0m\n")
+            if not quiet:
+                print(f"\n{ANSI['yellow']}{'=' * 20} {section} {'=' * 20}{ANSI['reset']}\n")
             for module in modules:
                 method_name = module[0]
                 if method_name and method_name not in excluded_methods:
                     if not is_admin and not hasattr(getattr(ADcheck, method_name), '__wrapped__') or is_admin:
                         i += 1
-                        print(f'{i} - ', end='')
+                        if not quiet:
+                            print(f'{i} - ', end='')
                         try:
-                            if debug:
+                            if debug and not quiet:
                                 print(f"{method_name}")
                             await getattr(obj, method_name)()
                         except Exception as e:
                             if debug:
-                                print(f"\033[33m{method_name}: {e}\033[0m")
-                            else:
-                                print(f"\033[33m{method_name}: error\033[0m")
+                                print(f"{ANSI['yellow']}{method_name}: {e}{ANSI['reset']}")
+                            elif not quiet:
+                                print(f"{ANSI['yellow']}{method_name}: error{ANSI['reset']}")
 
 def parse_arguments():
-    epilog = """
-\033[36mExample of use:\033[0m
-  \033[33madcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'\033[0m
+    epilog = f"""
+{ANSI['cyan']}Example of use:{ANSI['reset']}
+  {ANSI['yellow']}adcheck -d 'adcheck.int' -u 'Administrator' -p 'Password1' --dc-ip '192.168.1.1'{ANSI['reset']}
 """
-    
+
     parser = ArgumentParser(
-        description='\033[36mADcheck - Active Directory Security Checker\033[0m',
+        description=f"{ANSI['cyan']}ADcheck - Active Directory Security Checker{ANSI['reset']}",
         epilog=epilog,
         formatter_class=RawDescriptionHelpFormatter
     )
@@ -76,10 +79,12 @@ def parse_arguments():
     parser.add_argument('--dc-ip', help='IP address of the Domain Controller.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
     parser.add_argument('-k', '--kerberos', action='store_true', help='Use kerberos instead of NTLM.')
-    parser.add_argument('-L', '--list-modules', action='store_true', help='\033[32mList available modules.\033[0m')
+    parser.add_argument('-L', '--list-modules', action='store_true', help=f"{ANSI['green']}List available modules.{ANSI['reset']}")
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', choices=['html', 'md'], help='Generate report file in HTML or Markdown format.')
     parser.add_argument('-e', '--exploit', action='store_true', help='Show exploitation hints for supported modules.')
+    parser.add_argument('-f', '--fix', action='store_true', help='Show fix advice under each failed check.')
+    parser.add_argument('--summarize', action='store_true', help='Print only a prioritized summary (category, state, CVSS, exploit and fix)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Increase output verbosity (show more detailed information).')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging.')
     parser.add_argument('--version', action='version', version=f'ADcheck v{__version__}')
@@ -123,18 +128,18 @@ async def main():
     if args.list_modules:
         for category, sections in CHECKLIST.items():
             if 'HIGH' in category:
-                print(f"\033[91m{category}\033[0m")
+                print(f"{ANSI['red']}{category}{ANSI['reset']}")
             else:
-                print(f"\033[36m{category}\033[0m")
-            
+                print(f"{ANSI['cyan']}{category}{ANSI['reset']}")
+
             for section, modules in sections[0].items():
-                print(f'    \033[33m{section}\033[0m')
+                print(f"    {ANSI['yellow']}{section}{ANSI['reset']}")
                 for module in modules:
                     module_name, module_desc = module[0], module[1]
                     if not module_name:
                         print(f'        {module_name.ljust(34)} {module_desc}')
                     else:
-                        print(f'        \033[32m[*]\033[0m \033[35m{module_name.ljust(30)}\033[0m {module_desc}')
+                        print(f"        {ANSI['green']}[*]{ANSI['reset']} {ANSI['magenta']}{module_name.ljust(30)}{ANSI['reset']} {module_desc}")
             print()
         sys.exit(0)
 
@@ -155,6 +160,8 @@ async def main():
     options.output = args.output
     options.exploit = args.exploit
     options.verbose = args.verbose
+    options.fix = args.fix
+    options.quiet = args.summarize
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
 
@@ -164,28 +171,28 @@ async def main():
     else:
         auth_method = 'NTLM+Hash' if hashes else 'NTLM'
     target = hostname or dc_ip
-    print(f"\033[36mTarget\033[0m    : {target} ({dc_ip})" if hostname else f"\033[36mTarget\033[0m    : {target}")
-    print(f"\033[36mDomain\033[0m    : {domain}")
-    print(f"\033[36mUsername\033[0m  : {username}")
-    print(f"\033[36mProtocol\033[0m  : {protocol}")
-    print(f"\033[36mAuth\033[0m      : {auth_method}")
+    print(f"{ANSI['cyan']}Target{ANSI['reset']}    : {target} ({dc_ip})" if hostname else f"{ANSI['cyan']}Target{ANSI['reset']}    : {target}")
+    print(f"{ANSI['cyan']}Domain{ANSI['reset']}    : {domain}")
+    print(f"{ANSI['cyan']}Username{ANSI['reset']}  : {username}")
+    print(f"{ANSI['cyan']}Protocol{ANSI['reset']}  : {protocol}")
+    print(f"{ANSI['cyan']}Auth{ANSI['reset']}      : {auth_method}")
     print()
 
     ad_client = ADClient(domain=domain, url=url)
     try:
         await ad_client.connect()
     except (OSError, TimeoutError, asyncio.TimeoutError) as e:
-        print("\033[31mError: unable to reach the domain controller.\033[0m")
+        print(f"{ANSI['red']}Error: unable to reach the domain controller.{ANSI['reset']}")
         return
     except Exception as e:
-        print("\033[31mError: invalid credentials or authentication method.\033[0m")
+        print(f"{ANSI['red']}Error: invalid credentials or authentication method.{ANSI['reset']}")
         return
 
     server_info = ad_client.msldap_client.get_server_info()
     if server_info:
         dc_domain_dn = server_info.get('defaultNamingContext', '').lower()
         if dc_domain_dn and dc_domain_dn != ad_client.base_dn.lower():
-            print(f"\033[31mError: domain '{domain}' does not match the DC's domain '{dc_domain_dn}'.\033[0m")
+            print(f"{ANSI['red']}Error: domain '{domain}' does not match the DC's domain '{dc_domain_dn}'.{ANSI['reset']}")
             await ad_client.disconnect()
             return
 
@@ -215,17 +222,24 @@ async def main():
             await adcheck.connect()
             await launch_all_methods(adcheck, module=module, hashes=hashes, aes_key=aes_key, debug=debug)
 
-        if args.output:
-            report_generator = ReportGenerator(adcheck.report_results, domain, additional_tables=adcheck.report_tables)
-            if args.output == 'html':
-                report_generator.gen_html()
-            elif args.output == 'md':
-                report_generator.gen_markdown()
+        report_generator = ReportGenerator(adcheck.report_results, domain, additional_tables=adcheck.report_tables)
+        if args.summarize:
+            report_generator.gen_cli_summary(summarize=True)
+        report_path = None
+        if args.output == 'html':
+            report_path = report_generator.gen_html()
+        elif args.output == 'md':
+            report_path = report_generator.gen_markdown()
+        if report_path:
+            from pathlib import Path as _Path
+            uri = _Path(report_path).as_uri()
+            link = f"\033]8;;{uri}\033\\{report_path}\033]8;;\033\\"
+            print(f"\n{ANSI['white']}Report saved :{ANSI['reset']} {link}")
     finally:
         await adcheck.disconnect()
 
     elapsed = time.time() - start_time
-    print(f"\n\033[37m✓ Elapsed time : {elapsed:.2f}s\033[0m")
+    print(f"\n{ANSI['white']}✓ Elapsed time : {elapsed:.2f}s{ANSI['reset']}")
 
 
 def run_main():

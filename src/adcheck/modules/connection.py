@@ -81,6 +81,219 @@ class ADClient:
         return await self.msldap_conn.delete(record_dn)
 
 
+import asyncio
+import os
+from base64 import b64decode
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
+from uuid import UUID
+
+try:
+    from src.adws import ADWSConnect, KerberosAuth, NTLMAuth
+    from src.soap_templates import NAMESPACES as ADWS_NAMESPACES
+    from src.ad_dns_manager_adws import add_dns_record_adws, remove_dns_record_adws, get_rootdse_contexts
+    from winacl.dtyp.sid import SID
+    _ADWS_AVAILABLE = True
+    _ADWS_IMPORT_ERROR = None
+except ImportError as _e:
+    _ADWS_AVAILABLE = False
+    _ADWS_IMPORT_ERROR = _e
+
+
+# ADWS returns every attribute as XML text (base64 for binary syntaxes); msldap returns
+# richly-typed Python values (datetime, int, canonical SID strings, raw bytes for security
+# descriptors, ...) that the rest of ADcheck relies on. The helpers below recreate that
+# shape from the ADWS XML so both backends are interchangeable from main.py's point of view.
+_ADWS_XSI_TYPE = '{http://www.w3.org/2001/XMLSchema-instance}type'
+_ADWS_FILETIME_ATTRS = {
+    'accountExpires', 'lastLogoff', 'badPasswordTime', 'lastLogon',
+    'pwdLastSet', 'lastLogonTimestamp', 'lockoutTime',
+}
+_ADWS_ALWAYS_LIST_ATTRS = {
+    'memberOf', 'servicePrincipalName', 'msDS-AllowedToDelegateTo',
+    'msDS-PSOAppliesTo', 'altSecurityIdentities',
+}
+_ADWS_INT_SYNTAXES = {'Integer', 'Enumeration', 'LargeInteger'}
+
+
+def _adws_coerce_value(attr_name, syntax, value_elem):
+    text = value_elem.text
+    if text is None:
+        return None
+    xsi_type = value_elem.attrib.get(_ADWS_XSI_TYPE)
+
+    if xsi_type == 'xsd:base64Binary':
+        raw = b64decode(text)
+        if syntax == 'SidString' or attr_name == 'objectSid':
+            return str(SID.from_bytes(raw))
+        if attr_name == 'objectGUID':
+            return str(UUID(bytes_le=raw)).upper()
+        return raw
+
+    if xsi_type == 'xsd:boolean':
+        return text.strip().lower() == 'true'
+
+    if attr_name in _ADWS_FILETIME_ATTRS:
+        ticks = int(text)
+        if ticks <= 0 or ticks >= 0x7FFFFFFFFFFFFFFF:
+            return datetime(1601, 1, 1, tzinfo=timezone.utc)
+        return datetime(1601, 1, 1, tzinfo=timezone.utc) + timedelta(microseconds=ticks / 10)
+
+    if syntax in _ADWS_INT_SYNTAXES:
+        return int(text)
+
+    return text
+
+
+def _adws_parse_items(et, pull_client):
+    objects = []
+    for item in pull_client._iter_response_objects(et):
+        obj = {}
+        for part in list(item):
+            values = part.findall('./ad:value', namespaces=ADWS_NAMESPACES)
+            if not values:
+                continue
+            attr_name = pull_client._get_tag_name(part)
+            syntax = part.attrib.get('LdapSyntax')
+            coerced = [_adws_coerce_value(attr_name, syntax, value) for value in values]
+            obj[attr_name] = coerced if (len(coerced) > 1 or attr_name in _ADWS_ALWAYS_LIST_ATTRS) else coerced[0]
+        if obj:
+            objects.append(obj)
+    return objects
+
+
+class _ADWSObject:
+    """Attribute-style accessor mirroring the small objects msldap returns
+    (get_ADobjects() itself returns plain dicts on both backends)."""
+
+    def __init__(self, attrs):
+        self._attrs = attrs
+
+    def __getattr__(self, name):
+        return self._attrs.get(name)
+
+
+class _MsldapClient:
+    """Mimics the subset of msldap's client API, backed by ADWS queries through
+    the owning ADWSClient's get_ADobjects()."""
+
+    def __init__(self, adws_client):
+        self._adws = adws_client
+
+    def get_server_info(self):
+        return self._adws._server_info
+
+    async def _first(self, **kwargs):
+        try:
+            results = await self._adws.get_ADobjects(**kwargs)
+        except Exception as e:
+            return (None, e)
+        return (_ADWSObject(results[0]), None) if results else (None, None)
+
+    async def get_ad_info(self):
+        return await self._first(custom_filter='(objectClass=domain)', custom_attributes=['objectSid'])
+
+    async def get_dn_for_objectsid(self, sid):
+        obj, err = await self._first(custom_filter=f'(objectSid={sid})', custom_attributes=['distinguishedName'])
+        return (obj.distinguishedName if obj else None, err)
+
+    async def get_user_by_dn(self, dn):
+        return await self._first(custom_base_dn=dn, custom_filter='(objectClass=*)')
+
+    async def get_group_by_dn(self, dn):
+        return await self._first(custom_base_dn=dn, custom_filter='(objectClass=*)')
+
+    async def get_user(self, username):
+        return await self._first(custom_filter=f'(sAMAccountName={username})')
+
+    async def get_group_members(self, group_dn):
+        obj, err = await self._first(custom_base_dn=group_dn, custom_filter='(objectClass=*)', custom_attributes=['member'])
+        if err or not obj or not obj.member:
+            return
+        for member_dn in ([obj.member] if isinstance(obj.member, str) else obj.member):
+            yield await self._first(custom_base_dn=member_dn, custom_filter='(objectClass=*)', custom_attributes=['sAMAccountName'])
+
+
+class ADWSClient:
+    """Directory collection backend speaking ADWS (net.tcp/9389) via SOAPy, exposing the
+    same surface as ADClient."""
+
+    def __init__(self, domain, url):
+        self.domain = domain
+        self.base_dn = ",".join([f"DC={part}" for part in domain.split('.')])
+        parts = urlsplit(url)
+        self.host = parts.hostname
+        self.username = (parts.username or '').rsplit('\\', 1)[-1]
+        self._secret = parts.password
+        self._auth_method = parts.scheme.split('+', 1)[-1]
+        self._pull_client = None
+        self._server_info = {}
+        self.msldap_client = _MsldapClient(self)
+
+    def _build_auth(self):
+        method = self._auth_method
+        if method == 'kerberos-aes':
+            raise NotImplementedError("ADWS doesn't support AES-key Kerberos (SOAPy: ccache only). Use --protocol ldap.")
+        if method.startswith('kerberos'):
+            if method == 'kerberos-rc4':
+                raise NotImplementedError("ADWS doesn't support Kerberos with an NT hash (SOAPy: ccache only). Use --protocol ldap.")
+            if not os.environ.get('KRB5CCNAME'):
+                raise RuntimeError("ADWS Kerberos auth requires KRB5CCNAME to point to a valid credential cache.")
+            return KerberosAuth(kdc_host=self.host)
+        if method == 'ntlm-nt':
+            return NTLMAuth(hashes=self._secret)
+        return NTLMAuth(password=self._secret)
+
+    async def connect(self):
+        if not _ADWS_AVAILABLE:
+            raise ImportError(f"ADWS support requires the SOAPy package: {_ADWS_IMPORT_ERROR}")
+
+        auth = self._build_auth()
+        self._pull_client = await asyncio.to_thread(ADWSConnect.pull_client, self.host, self.domain, self.username, auth)
+        resource_client = await asyncio.to_thread(ADWSConnect, self.host, self.domain, self.username, auth, "Resource")
+        try:
+            self._server_info = await asyncio.to_thread(get_rootdse_contexts, resource_client)
+        except Exception:
+            self._server_info = {}
+        finally:
+            await asyncio.to_thread(resource_client._nmf._sock.close)
+
+    async def disconnect(self):
+        if self._pull_client:
+            await asyncio.to_thread(self._pull_client._nmf._sock.close)
+
+    async def get_ADobjects(self, custom_base_dn=None, custom_filter=None, custom_attributes=None):
+        attributes = None
+        if custom_attributes:
+            names = [a.decode() if isinstance(a, bytes) else a for a in custom_attributes if a not in ('*', b'*')]
+            attributes = names or None
+        et = await asyncio.to_thread(self._pull_client.pull, query=custom_filter or '(objectClass=*)',
+                                      basedn=custom_base_dn or self.base_dn, attributes=attributes)
+        return _adws_parse_items(et, self._pull_client)
+
+    async def add_DNSentry(self, domain, hostname, ip):
+        auth = self._build_auth()
+        try:
+            ok = await asyncio.to_thread(add_dns_record_adws, f'{hostname}.{domain}', ip, self.username, self.host, domain, auth)
+            return ok, None
+        except Exception as e:
+            return False, e
+
+    async def del_DNSentry(self, domain, hostname):
+        auth = self._build_auth()
+        try:
+            ok = await asyncio.to_thread(remove_dns_record_adws, f'{hostname}.{domain}', None,
+                                          self.username, self.host, domain, auth, ldapdelete=True)
+            return ok, None
+        except Exception as e:
+            return False, e
+
+
+def build_ad_client(protocol, domain, url):
+    """Pick the directory-collection backend: LDAP (msldap, default) or ADWS (SOAPy)."""
+    return ADWSClient(domain=domain, url=url) if protocol == 'adws' else ADClient(domain=domain, url=url)
+
+
 from aiosmb.commons.connection.factory import SMBConnectionFactory
 from aiosmb.commons.interfaces.machine import SMBMachine
 from aiosmb.commons.interfaces.file import SMBFile

@@ -1,4 +1,8 @@
-from adcheck.modules.connection import ADClient
+import warnings
+warnings.filterwarnings('ignore', category=SyntaxWarning)
+warnings.filterwarnings('ignore', message=r'.*RFC 5280.*')
+
+from adcheck.modules.connection import build_ad_client
 from adcheck.main import ADcheck, Options
 from adcheck.modules.constants import CHECKLIST, ANSI
 from adcheck.modules.report import ReportGenerator
@@ -79,6 +83,7 @@ def parse_arguments():
     parser.add_argument('--dc-ip', help='IP address of the Domain Controller.')
     parser.add_argument('-s', '--secure', action='store_true', help='Use SSL for secure communication.')
     parser.add_argument('-k', '--kerberos', action='store_true', help='Use kerberos instead of NTLM.')
+    parser.add_argument('--protocol', choices=['ldap', 'adws'], default='ldap', help='Protocol used to collect directory information.')
     parser.add_argument('-L', '--list-modules', action='store_true', help=f"{ANSI['green']}List available modules.{ANSI['reset']}")
     parser.add_argument('-M', '--module', help='Module to use.')
     parser.add_argument('-o', '--output', choices=['html', 'md'], help='Generate report file in HTML or Markdown format.')
@@ -157,6 +162,7 @@ async def main():
     options = Options()
     options.secure = args.secure
     options.kerberos = args.kerberos
+    options.protocol = args.protocol
     options.output = args.output
     options.exploit = args.exploit
     options.verbose = args.verbose
@@ -165,7 +171,10 @@ async def main():
 
     url = parse_url(domain, username, hashes, aes_key, password, hostname, dc_ip, options)
 
-    protocol = 'LDAPS' if options.secure else 'LDAP'
+    if options.protocol == 'adws':
+        protocol = 'ADWS'
+    else:
+        protocol = 'LDAPS' if options.secure else 'LDAP'
     if options.kerberos:
         auth_method = 'Kerberos+AES' if aes_key else ('Kerberos+RC4' if hashes else 'Kerberos')
     else:
@@ -178,7 +187,7 @@ async def main():
     print(f"{ANSI['cyan']}Auth{ANSI['reset']}      : {auth_method}")
     print()
 
-    ad_client = ADClient(domain=domain, url=url)
+    ad_client = build_ad_client(options.protocol, domain=domain, url=url)
     try:
         await ad_client.connect()
     except (OSError, TimeoutError, asyncio.TimeoutError) as e:
@@ -190,7 +199,7 @@ async def main():
 
     server_info = ad_client.msldap_client.get_server_info()
     if server_info:
-        dc_domain_dn = server_info.get('defaultNamingContext', '').lower()
+        dc_domain_dn = (server_info.get('defaultNamingContext') or '').lower()
         if dc_domain_dn and dc_domain_dn != ad_client.base_dn.lower():
             print(f"{ANSI['red']}Error: domain '{domain}' does not match the DC's domain '{dc_domain_dn}'.{ANSI['reset']}")
             await ad_client.disconnect()

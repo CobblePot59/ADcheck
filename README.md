@@ -237,6 +237,7 @@ uv run adcheck -d 'example.com' -u 'Administrator' -p 'Password1' --dc-ip '192.1
 Planned enhancements:
 
 - [x] Trusts
+- [x] ADWS collection backend
 - [ ] Azure (Entra ID)
 - [ ] Persistent attack trace (mimikatz, certipy, ticket, dsrm, acl)
 - [x] List of Named pipes

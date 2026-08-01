@@ -1,4 +1,4 @@
-from adcheck.modules.connection import ADClient, AioSMBClient, SMBRegClient, WMIquery
+from adcheck.modules.connection import ADClient, AioSMBClient, SMBRegClient, WMIquery, build_ad_client
 from adcheck.modules.utils import admin_required
 from adcheck.modules.constants import PRIVESC_GROUP, SUPPORTED_ENCRYPTION, TRUST_DIRECTIONS, TRUST_ATTRIBUTE_FLAGS, CHECK_METADATA, ANSI
 from winsddl.constants import WELL_KNOWN_SIDS
@@ -25,6 +25,7 @@ class ADcheck:
         self.dc_ip = dc_ip
         self.url = url
         self.smb_url = re.sub(r'^[^+]+', 'smb', self.url)
+        self.protocol = getattr(options, 'protocol', 'ldap')
         self.is_secure = options.secure
         self.do_kerberos = options.kerberos
         self.output = options.output
@@ -53,7 +54,7 @@ class ADcheck:
             await asyncio.wait_for(self.ad_client.disconnect(), timeout=2.0)
 
     async def _ad_client(self):
-        ad_client = ADClient(domain=self.domain, url=self.url)
+        ad_client = build_ad_client(self.protocol, domain=self.domain, url=self.url)
         await ad_client.connect()
         return ad_client
 
@@ -486,7 +487,7 @@ class ADcheck:
 
     async def can_update_dns(self):
         result, e = await self.ad_client.add_DNSentry(domain=self.domain, hostname='fakehost', ip='7.7.7.7')
-        # await self.ad_client.del_DNSentry(domain=self.domain, hostname='fakehost')
+        await self.ad_client.del_DNSentry(domain=self.domain, hostname='fakehost')
         self.pprint(result, f'User can create dns record : {result}')
 
     async def auth_attributes(self):
